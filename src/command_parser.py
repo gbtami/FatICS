@@ -30,6 +30,8 @@ import trie
 import admin
 import timeseal
 import block
+import block_codes
+
 
 class CommandList(object):
     def __init__(self):
@@ -51,7 +53,7 @@ class CommandParser(object):
         if not utf8.check_user_utf8(s):
             conn.write(_("Command ignored: invalid characters.\n"))
             # no exact code for this situation
-            return block.BLK_ERROR_BADCOMMAND
+            return block_codes.BLKCMD_ERROR_BADCOMMAND
 
         # previously the prefix '$' was used to not expand aliases
         # and '$$' was used to not update the idle time.  But these
@@ -71,7 +73,7 @@ class CommandParser(object):
 
         if len(s) == 0:
             # ignore blank line
-            return block.BLK_NULL
+            return block_codes.BLKCMD_NULL
 
         # Parse moves.  Note that this takes place before stripping any
         # leading '$'.  Jin actually sends moves prefixed with '$', but
@@ -79,7 +81,7 @@ class CommandParser(object):
         # do that.
         if conn.session.game:
             if conn.session.game.parse_move(s, conn):
-                return block.BLK_GAME_MOVE
+                return block_codes.BLKCMD_GAME_MOVE
 
         if s.startswith('$'):
             s = s[1:].lstrip()
@@ -90,23 +92,23 @@ class CommandParser(object):
             except alias.AliasError:
                 conn.write(_("Command failed: There was an error expanding aliases.\n"))
                 # no exact code
-                return block.BLK_ERROR_BADCOMMAND
+                return block_codes.BLKCMD_ERROR_BADCOMMAND
 
         if conn.user.admin_level > admin.Level.user:
             cmds = command_list.admin_cmds
         else:
             cmds = command_list.cmds
 
-        ret = block.BLK_SUCCESS
         cmd = None
         m = self.command_re.match(s)
         assert(m)
         word = m.group(1).lower()
+        ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper())
         try:
             cmd = cmds[word]
         except KeyError:
             conn.write(_("%s: Command not found.\n") % word)
-            ret = block.BLK_ERROR_BADCOMMAND
+            ret = block_codes.BLKCMD_ERROR_BADCOMMAND
         except trie.NeedMore:
             matches = cmds.all_children(word)
             assert(len(matches) > 0)
@@ -116,13 +118,13 @@ class CommandParser(object):
                 conn.write(_("""Ambiguous command "%(cmd)s". Matches: %(matches)s\n""")
                     % {'cmd': word, 'matches':
                         ' '.join([c.name for c in matches])})
-                ret = block.BLK_ERROR_AMBIGUOUS
+                ret = block_codes.BLKCMD_ERROR_AMBIGUOUS
         if cmd:
             try:
                 args = self.parse_args(m.group(2), cmd.param_str)
                 cmd.run(args, conn)
             except BadCommandError:
-                ret = block.BLK_ERROR_BADCOMMAND
+                ret = block_codes.BLKCMD_ERROR_BADCOMMAND
                 cmd.usage(conn)
 
         return ret
