@@ -103,7 +103,7 @@ class CommandParser(object):
         m = self.command_re.match(s)
         assert(m)
         word = m.group(1).lower()
-        ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper())
+        ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper(), block_codes.BLKCMD_SUCCESS)
         try:
             cmd = cmds[word]
         except KeyError:
