@@ -279,6 +279,10 @@ class TestBackward(Test):
         self.expect('backs up 2 moves', t)
         t.write('c5\n')
         self.expect('moves: c5', t)
+        t.write('back 999\n')
+        self.expect('backs up 999 moves', t)
+        t.write('back 999\n')
+        self.expect("You're at the beginning of the game", t)
         t.write('unex\n')
         self.close(t)
 

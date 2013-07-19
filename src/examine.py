@@ -149,6 +149,8 @@ class ExaminedGame(Game):
                 (self.number, conn.user.name, n))
         for i in range(0, n):
             self.variant.undo_move()
+            if self.variant.pos.ply == 0:
+                break
         self.send_boards()
 
     def _check_result(self):

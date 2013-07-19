@@ -20,7 +20,7 @@ import time
 import subprocess
 
 class Server(object):
-    location = "London, England"
+    location = "Fremont, California, USA"
     try:
         #version = subprocess.check_output(["hg", "parents", "--template",
         #    "r{rev} ({date|isodate})"])
