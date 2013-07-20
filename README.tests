@@ -1,5 +1,8 @@
 Running the tests
 =================
+To set up the tests, you first need to modify src/local_config.py
+with your database settings.
+
 You can run the tests with "./chessd test".  The server must be running
 or you will get an error.  To run a specific test, use e.g.
 "trial test.test_kibitz.TestXkibitz".
