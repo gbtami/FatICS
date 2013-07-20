@@ -18,8 +18,7 @@
 
 from test import *
 
-# right now we don't return the correct command codes
-success_code = 2
+finger_code = 37
 
 class TestBlock(Test):
     def test_block(self):
@@ -35,7 +34,7 @@ class TestBlock(Test):
         self.expect('%c0%c519%c%c\r\n' % (0x15, 0x16, 0x16, 0x17), t)
 
         t.write('3 finger\n')
-        self.expect('%c3%c%s%cFinger of ' % (0x15, 0x16, success_code, 0x16), t)
+        self.expect('%c3%c%s%cFinger of ' % (0x15, 0x16, finger_code, 0x16), t)
         self.expect('\r\n%c' % 0x17, t)
 
         t.write('1 iset block 0\n')

@@ -1,7 +1,8 @@
 Running the tests
 =================
-To set up the tests, you first need to modify src/local_config.py
-with your database settings.
+To set up the tests, you first need to create a src/local_config.py
+with the admin password and server address. An example is at
+src/local_config.py.sample.
 
 You can run the tests with "./chessd test".  The server must be running
 or you will get an error.  To run a specific test, use e.g.
