@@ -22,16 +22,8 @@ import re
 import timeseal
 import alias
 
-BLOCK_START = chr(0x15)
-BLOCK_SEPARATOR = chr(0x16)
-BLOCK_END = chr(0x17)
+from block_codes import BLOCK_START, BLOCK_SEPARATOR, BLOCK_END, BLKCMD_ERROR_NOSEQUENCE
 
-BLK_NULL = 0
-BLK_GAME_MOVE = 1
-BLK_SUCCESS = 2 # fudge by wmahan
-BLK_ERROR_BADCOMMAND = 512
-BLK_ERROR_AMBIGUOUS = 514
-BLK_ERROR_NOSEQUENCE = 519
 
 class Block(object):
     def send_block(self, identifier, code, output, conn):
@@ -43,7 +35,7 @@ class Block(object):
     def start_block(self, s, conn):
         m = self.block_re.match(s)
         if not m:
-            self.send_block(0, BLK_ERROR_NOSEQUENCE, '', conn)
+            self.send_block(0, BLKCMD_ERROR_NOSEQUENCE, '', conn)
             return (None, s)
         assert(not conn.buffer_output)
         conn.output_buffer = ''
