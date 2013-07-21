@@ -27,10 +27,7 @@ from twisted.trial import unittest
 
 LOCAL_IP = '127.0.0.1'
 
-sys.path.append('src/')
-
-from local_config import admin_passwd, host, port
-
+from local_config import admin_passwd, host, port, compatibility_port
 
 def connect():
     try:

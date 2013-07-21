@@ -30,7 +30,7 @@ import lang
 
 from config import config
 from db import db
-from timeseal import timeseal, REPLY as TIMESEAL_REPLY
+from timeseal import timeseal, TIMESEAL_PONG
 from session import Session
 from login import login
 
@@ -133,10 +133,15 @@ class Connection(basic.LineReceiver):
             if t != 0:
                 if dec[0:10] == 'TIMESTAMP|':
                     self.session.use_timeseal = True
+                    self.session.timeseal_version = 1
                     return
                 elif dec[0:10] == 'TIMESEAL2|':
                     self.session.use_timeseal = True
+                    self.session.timeseal_version = 2
                     return
+                else:
+                    self.write("unknown timeseal version\n")
+                    self.loseConnection('timeseal error')
                 # we don't detect zipseal here, because we use
                 # the port number to detect it
             # no timeseal; continue
@@ -187,7 +192,7 @@ class Connection(basic.LineReceiver):
         send_prompts()
 
     def handleLine_prompt(self, line):
-        if line == TIMESEAL_REPLY:
+        if line == TIMESEAL_PONG:
             self.session.pong(self.session.timeseal_last_timestamp)
             return
 

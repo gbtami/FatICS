@@ -18,6 +18,7 @@
 
 from test import *
 
+sys.path.append('src/')
 import speed_variant
 
 class TestGinfo(Test):

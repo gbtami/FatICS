@@ -133,10 +133,12 @@ class Session(object):
         # don't send another ping if one is already pending
         assert(self.use_timeseal or self.use_zipseal)
         # Always send a ping with a move in a game being played.
-        # Otherwise, send a ping if one is not alredy pending.
+        # Otherwise, send a ping if one is not already pending.
         if for_move or not self.ping_sent:
             if self.use_zipseal:
                 self.conn.write(timeseal.ZIPSEAL_PING)
+            elif self.timeseal_version == 2:
+                self.conn.write(timeseal.TIMESEAL_2_PING)
             else:
                 self.conn.write(timeseal.TIMESEAL_1_PING)
             self.ping_sent.append((time.time(), for_move))

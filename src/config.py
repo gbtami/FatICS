@@ -18,9 +18,9 @@
 #
 
 class Config(object):
-    port = 5000
+    port = 5003
     zipseal_port = 5001
-    compatibility_port = 5003
+    compatibility_port = 5000
 
     db_host = "localhost"
     db_db = "chess"

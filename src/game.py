@@ -537,9 +537,9 @@ class PlayedGame(Game):
         for u in online.gin_var:
             u.write_nowrap(create_str_2)
 
-        p = self.get_user_to_move()
-        if p.has_timeseal():
-            p.session.ping(for_move=True)
+        #p = self.get_user_to_move()
+        #if p.has_timeseal():
+        #    p.session.ping(for_move=True)
         self.send_boards()
 
     def _resume(self, adj, a, b):
@@ -705,7 +705,11 @@ class PlayedGame(Game):
             moved_side = opp(self.variant.get_turn())
             if self.clock.is_ticking:
                 if conn.user.has_timeseal():
-                    assert(conn.session.move_sent_timestamp is not None)
+                    if conn.session.move_sent_timestamp is None:
+                        conn.write('timeseal error: your timeseal did not reply to the server ping\n')
+                        print('client of %s failed to reply to timeseal ping' % conn.user.name)
+                        conn.loseConnection('timeseal error')
+                        return
                     elapsed_ms = (conn.session.timeseal_last_timestamp -
                         conn.session.move_sent_timestamp)
                     time = self.clock.got_move(moved_side,
@@ -725,14 +729,15 @@ class PlayedGame(Game):
         assert(mv == self.variant.pos.get_last_move())
         mv.time = time
 
-        p = self.get_user_to_move()
-        if p.has_timeseal():
-            p.session.ping(for_move=True)
         super(PlayedGame, self).next_move(mv, conn)
+        p = self.get_user_to_move()
+        if p.has_timeseal() and self.clock.is_ticking:
+            p.session.ping(for_move=True)
 
         if self.variant.name == "bughouse":
             # bughouse is a special case because a checkmate or stalemate
             # on one board doesn't necessariy end the games
+            # XXX maybe move this into the bughouse file
             if self.variant.pos.is_checkmate:
                 if (self.variant.pos.is_contact_or_knight_mate
                         or self.bug_link.variant.pos.is_stalemate):

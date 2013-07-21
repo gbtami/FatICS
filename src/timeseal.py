@@ -19,9 +19,10 @@
 import re
 import subprocess
 
-TIMESEAL_1_PING = '[G]\n'
-ZIPSEAL_PING = '[G]\x00'
-REPLY = '\x02\x39' # also known as "\x29" or "9"
+TIMESEAL_1_PING = '\n[G]\n'
+TIMESEAL_2_PING = '\n[G]\x00\n'
+ZIPSEAL_PING = '\n[G]\x00'
+TIMESEAL_PONG = '\x02\x39' # also known as "\x029" or "9"
 
 class Timeseal(object):
     _timeseal_pat = re.compile(r'''^(\d+): (.*)\n$''')

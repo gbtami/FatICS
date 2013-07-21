@@ -42,7 +42,7 @@ def heartbeat():
     # However, this method is simple, and FICS timeseal 2 seems to do it
     # this way (pinging all capable clients every 10 seconds).
     for u in online.online:
-        if u.session.use_zipseal:
+        if u.session.use_zipseal or (u.session.use_timeseal and u.session.timeseal_version == 2):
             u.session.ping()
 
     # forfeit games on time

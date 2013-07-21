@@ -32,13 +32,14 @@ class TestTimeseal(Test):
     def test_timeseal(self):
         if not os.path.exists(timeseal_prog):
             raise unittest.SkipTest('no timeseal binary')
+        t = self.connect_as_guest('GuestABCD')
 
         try:
             import pexpect
         except ImportError:
             raise unittest.SkipTest('pexpect module not installed')
 
-        process = pexpect.spawn(timeseal_prog, [host, str(port)])
+        process = pexpect.spawn(timeseal_prog, [host, str(compatibility_port)])
 
         process.expect_exact('login:')
         process.send('admin\n')
@@ -50,9 +51,45 @@ class TestTimeseal(Test):
         process.expect_exact('Finger of admin')
         process.expect_exact('Timeseal:    On')
 
+        t.write('set style 12\n')
+        process.send('set style 12\n')
+
+        t.write('match admin 1 0 white\n')
+        process.expect_exact('Challenge:')
+        process.send('a\n')
+        process.expect_exact('Creating:')
+        self.expect('Creating:', t)
+
+        t.write('e4\n')
+        self.expect('<12> ', t)
+        process.expect_exact('<12> ')
+
+        process.send('c5\n')
+        self.expect('<12> ', t)
+        process.expect_exact('<12> ')
+
+        t.write('Nf3\n')
+        self.expect('<12> ', t)
+        process.expect_exact('<12> ')
+
+        process.send('e6\n')
+        self.expect('<12> ', t)
+        process.expect_exact('<12> ')
+
+        t.write('d4\n')
+        self.expect('<12> ', t)
+        process.expect_exact('<12> ')
+
+        t.write('abort\n')
+        process.send('abort\n')
+        self.expect('aborted', t)
+        process.expect_exact('aborted')
+
         process.send('quit\n')
         process.expect_exact('Thank you for using')
         process.expect_exact(pexpect.EOF)
+
+        self.close(t)
         process.close()
 
 class TestTimesealWindows(Test):
@@ -68,7 +105,7 @@ class TestTimesealWindows(Test):
             raise unittest.SkipTest('pexpect module not installed')
 
         process = pexpect.spawn(wine_prog,
-            [timeseal_prog_win, host, str(port)])
+            [timeseal_prog_win, host, str(compatibility_port)])
 
         process.expect_exact('login:')
         process.send('admin\n')

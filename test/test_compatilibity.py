@@ -18,8 +18,6 @@
 
 from test import *
 
-compatibility_port = 5003
-
 class TestCompatibility(Test):
     def test_compatibility(self):
         """ Test the compatibility port used for old clients that don't
