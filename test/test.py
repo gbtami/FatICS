@@ -25,13 +25,14 @@ import string
 
 from twisted.trial import unittest
 
-LOCAL_IP = '127.0.0.1'
+sys.path.append('src/')
 
-from local_config import admin_passwd, host, port, compatibility_port
+from local_config import *
 
 def connect():
     try:
         t = telnetlib.Telnet(host, port, 120)
+        t.closed = False
     except socket.gaierror:
         t = None
     except socket.error:
@@ -123,10 +124,12 @@ class Test(unittest.TestCase):
         return t
 
     def close(self, t):
+        assert(not t.closed)
         t.write('quit\n')
         t.read_until('Thank you for using')
         t.read_all()
         t.close()
+        t.closed = True
 
     def _adduser(self, name, passwd, lists=[]):
         t = self.connect_as_admin()

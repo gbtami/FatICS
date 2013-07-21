@@ -49,7 +49,7 @@ class TestTimeseal(Test):
 
         process.send('finger\n')
         process.expect_exact('Finger of admin')
-        process.expect_exact('Timeseal:    On')
+        process.expect_exact('Timeseal 1:  On')
 
         t.write('set style 12\n')
         process.send('set style 12\n')
@@ -114,7 +114,7 @@ class TestTimesealWindows(Test):
 
         process.send('finger\n')
         process.expect_exact('Finger of admin')
-        process.expect_exact('Timeseal:    On')
+        process.expect_exact('Timeseal 1:  On')
 
         process.send('quit\n')
         process.expect_exact('Thank you for using')

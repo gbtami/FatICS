@@ -90,10 +90,13 @@ class Finger(Command):
                     conn.write(A_('Host:        %s\n') % u.session.conn.ip)
 
             if u.is_online:
-                if u.session.use_timeseal:
-                    conn.write(_('Timeseal:    On\n'))
-                elif u.session.use_zipseal:
+                if u.session.use_zipseal:
                     conn.write(_('Zipseal:     On\n'))
+                elif u.session.use_timeseal:
+                    if u.session.timeseal_version == 1:
+                        conn.write(_('Timeseal 1:  On\n'))
+                    elif u.session.timeseal_version == 2:
+                        conn.write(_('Timeseal 2:  On\n'))
                 else:
                     conn.write(_('Zipseal:     Off\n'))
 

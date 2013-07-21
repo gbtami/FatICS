@@ -118,9 +118,6 @@ class TestNotify(Test):
         self.close(t2)
         self.close(t)
 
-        t = self.connect_as_admin()
-        t2 = self.connect_as('testplayer')
-
     @with_player('TestPlayer')
     def test_notifiedby_notify(self):
         t = self.connect_as_admin()
@@ -327,7 +324,7 @@ class TestGnotify(Test):
 
 class TestPinVar(Test):
     def test_pin_var(self):
-        t = self.connect_as_admin()
+        t = self.connect_as_guest()
         t.write('set pin 1\n')
         self.expect('You will now hear logins/logouts.', t)
 
@@ -335,17 +332,33 @@ class TestPinVar(Test):
         self.expect('[GuestTest has connected.]', t)
         self.close(t2)
         self.expect('[GuestTest has disconnected.]', t)
-        self.close(t)
-
-        t = self.connect_as_admin()
-        t2 = self.connect_as_guest('GuestTwo')
-        self.expect('[GuestTwo has connected.]', t)
-        self.close(t2)
-        self.expect('[GuestTwo has disconnected.]', t)
 
         t.write('set pin\n')
         self.expect('You will not hear logins/logouts.', t)
         self.close(t)
+
+    @with_player('TestPlayer')
+    def test_admin_pin_var(self):
+        t = self.connect_as_admin()
+        t.write('set pin 1\n')
+        self.expect('You will now hear logins/logouts.', t)
+
+        t2 = self.connect_as_guest('GuestTest')
+        self.expect('[GuestTest (U: %s) has connected.]' % LOCAL_IP, t)
+        self.close(t2)
+        self.expect('[GuestTest has disconnected.]', t)
+        self.close(t)
+
+        t = self.connect_as_admin()
+        t2 = self.connect_as('testplayer')
+        self.expect('[TestPlayer (R: %s) has connected.]' % LOCAL_IP, t)
+        self.close(t2)
+        self.expect('[TestPlayer has disconnected.]', t)
+
+        t.write('set pin\n')
+        self.expect('You will not hear logins/logouts.', t)
+        self.close(t)
+
 
 class TestGinVar(Test):
     def test_gin_var(self):

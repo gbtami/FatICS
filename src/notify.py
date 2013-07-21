@@ -83,12 +83,19 @@ def notify_pin(user, arrived):
             connection.written_users.add(u)
 
     if online.pin_var:
-        # XXX fics displays the IP address to admins
         if arrived:
             pin_var_str = '\n[%s has connected.]\n' % user.name
+            if user.is_guest:
+                reg_flag = 'U'
+            else:
+                reg_flag = 'R'
+            admin_pin_var_str = '\n[%s (%s: %s) has connected.]\n' % (user.name, reg_flag, user.session.conn.ip)
         else:
             pin_var_str = '\n[%s has disconnected.]\n' % user.name
         for u in online.pin_var:
-            u.write(pin_var_str)
+            if u.is_admin() and arrived:
+                u.write(admin_pin_var_str)
+            else:
+                u.write(pin_var_str)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
