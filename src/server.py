@@ -46,10 +46,10 @@ available here: %s
 
     def get_license(self):
         f = open('COPYING', 'r')
-        return 'Copyright(C) 2010 Wil Mahan\n\n%s\nThe source code for the version of the server you are using is available here:\n%s\n\n' % (f.read(), self.get_server_link())
+        return 'Copyright(C) 2010-2013 Wil Mahan\n\n%s\nThe source code for the version of the server you are using is available here:\n%s\n\n' % (f.read(), self.get_server_link())
 
     def get_server_link(self):
-        return 'http://bitbucket.org/wmahan/fatics'
+        return 'https://bitbucket.org/wmahan/fatics'
 
 try:
     server

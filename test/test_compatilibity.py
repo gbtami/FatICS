@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright (C) 2010  Wil Mahan <wmahan+fatics@gmail.com>
 #
 # This file is part of FatICS.
@@ -25,8 +26,10 @@ class TestCompatibility(Test):
         t = telnetlib.Telnet(host, compatibility_port)
         self.expect('??? FatICS', t)
         self.expect('freechess.org', t) # for Babas
-        t.write("guest\n\n")
+        t.write("guestabcd\n\n")
         self.expect('fics% ', t)
+        t.write('t guestabcd a à b\n')
+        self.expect('tells you: a ? b', t)
         t.write('quit\n')
         self.expect('??? Thank you', t)
         t.close()

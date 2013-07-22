@@ -21,7 +21,7 @@ import subprocess
 
 TIMESEAL_1_PING = '\n[G]\n'
 TIMESEAL_2_PING = '\n[G]\x00\n'
-ZIPSEAL_PING = '\n[G]\x00'
+ZIPSEAL_PING = '[G]\x00'
 TIMESEAL_PONG = '\x02\x39' # also known as "\x029" or "9"
 
 class Timeseal(object):
