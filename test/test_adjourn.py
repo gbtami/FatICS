@@ -199,6 +199,25 @@ class TestAdjourn(Test):
         self.close(t)
         self.close(t2)
 
+    def test_adjourn_guest(self):
+        t1 = self.connect_as_admin()
+        t2 = self.connect_as_guest()
+
+        t2.write('match admin 3 0\n')
+        self.expect('Challenge: ', t1)
+        t1.write('a\n')
+
+        self.expect('Creating: ', t1)
+        self.expect('Creating: ', t2)
+
+        t1.write('adjourn\n')
+        self.expect('All players must be registered to adjourn a game.  Use "abort".', t1)
+        t2.write('adjourn\n')
+        self.expect('All players must be registered to adjourn a game.  Use "abort".', t2)
+
+        self.close(t1)
+        self.close(t2)
+
 class TestNoescape(Test):
     @with_player('TestOne')
     @with_player('TestTwo')

@@ -74,7 +74,9 @@ class Adjourn(Command, GameMixin):
         if not g:
             return
         g = conn.user.session.game
-        #if g.variant.pos.ply < 5:
+        if conn.user.is_guest or g.get_opp(conn.user).is_guest:
+            conn.write(_('All players must be registered to adjourn a game.  Use "abort".\n'))
+            return
         offer.Adjourn(g, conn.user)
 
 @ics_command('draw', 'o')
