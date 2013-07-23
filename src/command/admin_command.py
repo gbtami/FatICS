@@ -18,6 +18,7 @@
 #
 
 import datetime
+from twisted.internet import reactor
 
 import user
 import command_parser
@@ -309,5 +310,30 @@ class Showcomment(Command):
                 else:
                     for c in comments:
                         conn.write(A_('%s at %s: %s\n') % (c['admin_name'], c['when_added'], c['txt']))
+
+@ics_command('shutdown', 'p', admin.Level.admin)
+class Shutdown(Command):
+    def run(self, args, conn):
+        if args[0] is None:
+            if reactor.shuttingDown:
+                reactor.shuttingDown.cancel()
+                reactor.shuttingDown = False
+                for u in online.online:
+                    u.write_("\n\n    *** Server shutdown canceled by %s ***\n\n" % conn.user.name)
+                return
+            mins = 5
+        elif args[0] < 0:
+            conn.write(A_('Invalid shutdown time.\n'))
+            return
+        else:
+            mins = args[0]
+
+        for u in online.online:
+            u.nwrite_("\n\n    *** The server is shutting down in %d minute, initiated by %s ***\n\n", "\n\n    *** The server is shutting down in %d minutes, initiated by %s ***\n\n", mins, (mins, conn.user.name))
+
+        if reactor.shuttingDown:
+            reactor.shuttingDown.cancel()
+        reactor.shuttingDown = reactor.callLater(mins * 60, reactor.stop)
+
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

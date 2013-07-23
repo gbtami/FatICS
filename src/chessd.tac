@@ -26,7 +26,7 @@ import os
 import sys
 from twisted.application import service, internet
 from twisted.internet.protocol import ServerFactory
-from twisted.internet import epollreactor, task
+from twisted.internet import task, reactor
 
 sys.path.insert(0, 'src/')
 
@@ -43,6 +43,8 @@ import telnet
 import connection
 import var
 import timer
+
+reactor.shuttingDown = False
 
 if os.geteuid() == 0:
     sys.path.append('.')

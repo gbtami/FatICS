@@ -119,7 +119,7 @@ class LoginTest(Test):
         self.expect('*** Invalid password! ***', t2)
 
         # there should be a delay after a failed login
-        t2.write('admin\n')
+        t2.write('g\n\n')
         self.expect_not('login:', t2, timeout=1)
         self.expect('login:', t2, timeout=5)
 
@@ -128,7 +128,6 @@ class LoginTest(Test):
         self.expect('On for:', t)
         self.close(t)
 
-        t2.write("%s\n" % admin_passwd)
         self.expect('fics%', t2)
         self.close(t2)
 

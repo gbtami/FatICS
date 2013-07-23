@@ -255,7 +255,7 @@ class Connection(basic.LineReceiver):
             self.transport.write(s)
 
     def unpause(self):
-        """ Resume logging in after a pause do to an incorrect
+        """ Resume logging in after a pause due to an incorrect
         password. """
         self._paused = False
         self.login()

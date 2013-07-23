@@ -70,7 +70,7 @@ class TestLlogons(Test):
     def test_llogons(self):
         # in case a previous test logged out in the past second, we make
         # sure this login is clearly ordered after it
-        time.sleep(1.5)
+        time.sleep(2)
         t = self.connect_as_admin()
         t.write('llogons -1\n')
         self.expect('Usage:', t)

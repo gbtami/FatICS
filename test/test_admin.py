@@ -761,4 +761,26 @@ class AreloadTest(Test):
         self.expect('reloaded online', t, timeout=10)
         self.close(t)
 
+class ShutdownTest(Test):
+    def test_shutdown(self):
+        t = self.connect_as_admin()
+        t.write('shutdown -1\n')
+        self.expect('nvalid shutdown time', t)
+        t.write('shutdown 1\n')
+        self.expect('The server is shutting down in 1 minute, initiated by admin', t)
+        t.write('shutdown\n')
+        self.expect('shutdown canceled by admin', t)
+        t.write('shutdown 2\n')
+        self.expect('The server is shutting down in 2 minutes, initiated by admin', t)
+        t.write('shutdown\n')
+        self.expect('shutdown canceled by admin', t)
+        self.close(t)
+
+    def test_shutdown_for_real(self):
+        self._skip('prevents other tests')
+        t = self.connect_as_admin()
+        t.write('shutdown 0\n')
+        self.expect('The server is shutting down in 0 minutes, initiated by admin', t)
+        self.expect_EOF(t)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
