@@ -61,8 +61,8 @@ class Test(unittest.TestCase):
             print("\ngot {{%s}}" % repr(ret))
         self.assert_(ret == 'fics% ')
 
-    def expect_not(self, str, t):
-        ret = t.read_until(str, 0.3)
+    def expect_not(self, str, t, timeout=0.3):
+        ret = t.read_until(str, timeout)
         if str in ret:
             print "got {{%s}}" % (ret + t.read_lazy())
         self.assert_(not str in ret)

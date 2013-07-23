@@ -88,8 +88,8 @@ class LoginTest(Test):
         t.write('admin\n')
         self.expect('is a registered', t)
 
-        t.write('not the password\n')
-        self.expect('*** Invalid password! ***', t)
+        t.write('\n')
+        self.expect('login:', t)
 
         t.write('ADMIN\n')
         self.expect('"admin" is a registered name', t)
@@ -117,11 +117,20 @@ class LoginTest(Test):
         t2 = self.connect()
         t2.write('admin\nwrongpass\n')
         self.expect('*** Invalid password! ***', t2)
-        t2.close()
+
+        # there should be a delay after a failed login
+        t2.write('admin\n')
+        self.expect_not('login:', t2, timeout=1)
+        self.expect('login:', t2, timeout=5)
+
         time.sleep(0.1)
         t.write('finger\n')
         self.expect('On for:', t)
         self.close(t)
+
+        t2.write("%s\n" % admin_passwd)
+        self.expect('fics%', t2)
+        self.close(t2)
 
 class PromptTest(Test):
     def test_prompt(self):

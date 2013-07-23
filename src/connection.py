@@ -56,6 +56,8 @@ class Connection(basic.LineReceiver):
     buffer_output = False
     ivar_pat = re.compile(r'%b([01]{32})')
     timeout_check = None
+    _paused = False
+    _pause_buffer = []
 
     def connectionMade(self):
         lang.langs['en'].install(names=['ngettext'])
@@ -93,6 +95,10 @@ class Connection(basic.LineReceiver):
 
     def lineReceived(self, line):
         #print '((%s,%s))\n' % (self.state, repr(line))
+        if self._paused:
+            self._pause_buffer.append(line)
+            return
+
         if self.session.use_timeseal:
             (t, dline) = timeseal.decode_timeseal(line)
         elif self.session.use_zipseal:
@@ -178,8 +184,8 @@ class Connection(basic.LineReceiver):
                 self.prompt()
             else:
                 self.write('\n**** Invalid password! ****\n\n')
-                self.login()
-        assert(self.state != 'passwd')
+                self._paused = True
+                reactor.callLater(3, self.unpause)
 
     def prompt(self):
         self.user = self.claimed_user
@@ -247,6 +253,15 @@ class Connection(basic.LineReceiver):
             self.output_buffer += s
         else:
             self.transport.write(s)
+
+    def unpause(self):
+        """ Resume logging in after a pause do to an incorrect
+        password. """
+        self._paused = False
+        self.login()
+        for line in self._pause_buffer:
+            self.lineReceived(line)
+        self._pause_buffer = []
 
 
     def log(self, s):
