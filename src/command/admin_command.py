@@ -26,6 +26,7 @@ import online
 import admin
 import speed_variant
 import list_
+import channel
 from reload import reload
 
 from db import db
@@ -311,6 +312,40 @@ class Showcomment(Command):
                     for c in comments:
                         conn.write(A_('%s at %s: %s\n') % (c['admin_name'], c['when_added'], c['txt']))
 
+@ics_command('ftell', 'o', admin.Level.admin)
+class Ftell(Command):
+    def run(self, args, conn):
+        ch = channel.chlist[0]
+        if not args[0]:
+            if not conn.session.ftell:
+                conn.write(A_("You were not forwarding a conversation.\n"))
+            else:
+                conn.write(A_("Stopping the forwarding of the conversation with %s.") % conn.session.ftell.name)
+                conn.session.ftell.session.ftell_admins.remove(conn.user)
+                ch.tell(A_("I will no longer be forwarding the conversation between *%s* and myself.") % conn.session.ftell.name, conn.user)
+                conn.session.ftell = None
+        else:
+            u = user.find_by_name_exact_for_user(args[0], conn)
+            if u:
+                if u == conn.user:
+                    conn.write(A_('Nobody wants to listen to you talking to yourself! :-)\n'))
+                else:
+                    if conn.user not in ch.online or not conn.user.hears_channels():
+                            conn.write(A_("Not forwarding because you are not listening to channel 0.\n"))
+                            return
+                    if conn.session.ftell:
+                        conn.session.ftell.session.ftell_admins.remove(conn.user)
+                        ch.tell(A_("I will no longer be forwarding the conversation between *%s* and myself.") % conn.session.ftell.name, conn.user)
+                        conn.session.ftell = None
+                    ch.tell(A_("I will be forwarding the conversation between *%s* and myself to channel 0.") % u.name, conn.user)
+                    conn.session.ftell = u
+                    u.session.ftell_admins.add(conn.user)
+
+@ics_command('hideinfo', 'd', admin.Level.admin)
+class Hideinfo(Command):
+    def run(self, args, conn):
+        var.vars['hideinfo'].set(conn.user, str(args[0]))
+
 @ics_command('shutdown', 'p', admin.Level.admin)
 class Shutdown(Command):
     def run(self, args, conn):
@@ -319,7 +354,7 @@ class Shutdown(Command):
                 reactor.shuttingDown.cancel()
                 reactor.shuttingDown = False
                 for u in online.online:
-                    u.write_("\n\n    *** Server shutdown canceled by %s ***\n\n" % conn.user.name)
+                    u.write_("\n\n    *** Server shutdown canceled by %s ***\n\n", conn.user.name)
                 return
             mins = 5
         elif args[0] < 0:

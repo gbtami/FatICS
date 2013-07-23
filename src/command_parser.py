@@ -63,13 +63,13 @@ class CommandParser(object):
         if s.startswith('$$'):
             s = s[2:].lstrip()
         else:
-            conn.user.session.last_command_time = time.time()
-            if conn.user.session.idlenotified_by:
-                for u in conn.user.session.idlenotified_by:
+            conn.session.last_command_time = time.time()
+            if conn.session.idlenotified_by:
+                for u in conn.session.idlenotified_by:
                     u.write_('\nNotification: %s has unidled.\n',
                         (conn.user.name,))
                     u.session.idlenotifying.remove(conn.user)
-                conn.user.session.idlenotified_by.clear()
+                conn.session.idlenotified_by.clear()
 
         if len(s) == 0:
             # ignore blank line

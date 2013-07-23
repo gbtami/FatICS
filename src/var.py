@@ -308,6 +308,7 @@ class VarList(object):
         # not persistent
         BoolVar("tourney", False, N_("Your tournament variable is now set.\n"), N_("Your tournament variable is no longer set.\n")).add_as_var()
         BoolVar("flip", False, N_("Flip on.\n"), N_("Flip off.\n")).add_as_var()
+        BoolVar("hideinfo", False, N_("Private user information now not shown.\n"), N_("Private user information now shown.\n")).persist().add_as_var()
 
         IntVar("time", 2, min=0).persist().add_as_var()
         IntVar("inc", 12, min=0).persist().add_as_var()

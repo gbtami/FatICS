@@ -23,6 +23,7 @@ import var
 import game
 import timeseal
 import partner
+import channel
 
 from game_list import GameList
 
@@ -54,6 +55,8 @@ class Session(object):
         self.followed_by = set()
         self.idlenotifying = set()
         self.idlenotified_by = set()
+        self.ftell = None
+        self.ftell_admins = set()
 
     def set_user(self, user):
         self.user = user
@@ -115,6 +118,19 @@ class Session(object):
                 s.remove()
             self.conn.write(_('Your seeks have been removed.\n'))
         assert(not self.seeks)
+
+        # remove ftells
+        if self.ftell:
+            self.ftell.session.ftell_admins.remove(self.user)
+            channel.chlist[0].tell("I am logging out now - conversation forwarding stopped.", self.user)
+
+        if self.ftell_admins:
+            ch = channel.chlist[0]
+            for adm in self.ftell_admins:
+                ch.tell(A_("*%s* has logged out - conversation forwarding stopped.") % self.user.name, adm)
+                adm.write(A_("%s, whose tells you were forwarding, has logged out.\n") % self.user.name)
+                adm.session.ftell = None
+            self.ftell_admins = []
 
     def set_ivars_from_str(self, s):
         """Parse a %b string sent by Jin to set ivars before logging in."""

@@ -50,7 +50,7 @@ class BaseUser(object):
         self._title_str = None
 
     def __eq__(self, other):
-        return self.name == other.name
+        return other and (self.name == other.name)
 
     def __hash__(self):
         return hash(self.name)

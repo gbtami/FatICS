@@ -82,7 +82,7 @@ class Finger(Command):
                 rating.show_ratings(u, conn)
             if u.admin_level > admin.Level.user:
                 conn.write(A_('Admin level: %s\n') % admin.level.to_str(u.admin_level))
-            if conn.user.admin_level > admin.Level.user:
+            if conn.user.is_admin() and not conn.user.vars['hideinfo']:
                 if not u.is_guest:
                     conn.write(A_('Email:       %s\n') % u.email)
                     conn.write(A_('Real name:   %s\n') % u.real_name)

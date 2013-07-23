@@ -70,6 +70,7 @@ CREATE TABLE `user` (
   -- `tolerance`
   `noescape` BOOLEAN NOT NULL DEFAULT 0 COMMENT 'agree to forfeit on disconnect',
   `notakeback` BOOLEAN NOT NULL DEFAULT 0 COMMENT 'automatically reject takeback requests',
+  `hideinfo` BOOLEAN NOT NULL DEFAULT 0 COMMENT 'admins only: hide private user info',
 
   -- other flags
   `simopen` BOOLEAN NOT NULL DEFAULT 0 COMMENT 'open for simul',

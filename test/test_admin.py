@@ -391,6 +391,25 @@ class BanTest(Test):
         self.close(t)
         self.close(t2)
 
+    def test_hideinfo(self):
+        t = self.connect_as_admin()
+        t.write('set hideinfo 1\n')
+        self.expect('Private user information now not shown.', t)
+        t.write('f\n')
+        self.expect_not('Host:', t)
+        self.close(t)
+
+        # should be preseved across logouts
+        t = self.connect_as_admin()
+        t.write('f\n')
+        self.expect_not('Host:', t)
+        t.write('set hideinfo\n')
+        self.expect('Private user information now shown.', t)
+        t.write('f\n')
+        self.expect('Host:', t)
+
+        self.close(t)
+
 class FilterTest(Test):
     def test_filter_ip(self):
         t = self.connect_as_admin()
@@ -782,5 +801,80 @@ class ShutdownTest(Test):
         t.write('shutdown 0\n')
         self.expect('The server is shutting down in 0 minutes, initiated by admin', t)
         self.expect_EOF(t)
+
+class FtellTest(Test):
+    def test_ftell(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestABCD')
+        t3 = self.connect_as_guest('GuestEFGH')
+
+        t.write("+ch 0\n")
+
+        t.write('ftell\n')
+        self.expect('You were not forwarding a conversation.', t)
+
+        t.write('ftell doesnotexist\n')
+        self.expect('no player matching', t)
+
+        t.write('ftell admin\n')
+        self.expect('talking to yourself', t)
+
+        t.write('ftell guestabcd\n')
+        self.expect('admin(*)(0): I will be forwarding the conversation between *GuestABCD* and myself', t)
+
+        t.write('t guestabcd Hello there.\n')
+        self.expect('Fwd tell: admin told GuestABCD: Hello there.', t)
+
+        t2.write('t admin Hello yourself.\n')
+        self.expect('Fwd tell: GuestABCD told admin: Hello yourself.', t)
+
+        t.write('ftell\n')
+        self.expect('Stopping the forwarding of the conversation with GuestABCD.', t)
+        self.expect('admin(*)(0): I will no longer be forwarding the conversation between *GuestABCD* and myself.', t)
+
+        t.write('ftell guestabcd\n')
+        self.expect('admin(*)(0): I will be forwarding the conversation between *GuestABCD* and myself', t)
+        t.write('ftell guestefgh\n')
+        self.expect('admin(*)(0): I will no longer be forwarding the conversation between *GuestABCD* and myself.', t)
+        self.expect('admin(*)(0): I will be forwarding the conversation between *GuestEFGH* and myself', t)
+
+        t.write("-ch 0\n")
+        self.expect('[0] removed', t)
+
+        self.close(t)
+        self.close(t2)
+        self.close(t3)
+
+    @with_player('TestAdmin')
+    def test_ftell_logout(self):
+        t = self.connect_as_admin()
+        t.write('+ch 0\n')
+        t.write('asetadmin testadmin 100\n')
+        self.expect('Admin level of TestAdmin set', t)
+
+        t2 = self.connect_as('TestAdmin')
+        t3 = self.connect_as_guest('GuestABCD')
+
+        t2.write('+ch 0\n')
+        t2.write('ftell guestabcd\n')
+        self.expect('TestAdmin(0): I will be forwarding the conversation between *GuestABCD*', t)
+        self.expect('TestAdmin(0): I will be forwarding the conversation between *GuestABCD*', t2)
+        t2.write('quit\n')
+        self.expect('TestAdmin(0): I am logging out now - conversation forwarding stopped.', t)
+        self.expect_EOF(t2)
+
+        t2 = self.connect_as('TestAdmin')
+        t2.write('ftell guestabcd\n')
+        self.expect('TestAdmin(0): I will be forwarding the conversation between *GuestABCD* and myself', t)
+        t3.close()
+        self.expect('TestAdmin(0): *GuestABCD* has logged out - conversation forwarding stopped.', t)
+        self.expect('TestAdmin(0): *GuestABCD* has logged out - conversation forwarding stopped.', t2)
+        self.expect('GuestABCD, whose tells you were forwarding, has logged out.', t2)
+
+        t.write('-ch 0\n')
+        self.expect('[0] removed', t)
+
+        self.close(t2)
+        self.close(t)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -84,12 +84,18 @@ class TellCommand(Command, ToldMixin):
         elif u:
             if conn.user.name in u.censor and not conn.user.is_admin():
                 conn.write(_("%s is censoring you.\n") % u.name)
+                # TODO: notify admins they are censored
             elif conn.user.is_guest and not u.vars['tell']:
                 conn.write(_('''Player "%s" isn't listening to unregistered users' tells.\n''' % u.name))
             else:
                 u.write_('\n%s tells you: %s\n',
                     (conn.user.get_display_name(), args[1]))
                 self._told(u, conn)
+                if u.session.ftell == conn.user or conn.user.session.ftell == u:
+                    for adm in channel.chlist[0].online:
+                        if adm.hears_channels():
+                            adm.write(A_("Fwd tell: %s told %s: %s\n") % (conn.user.name, u.name, args[1]))
+
 
         return (u, ch)
 

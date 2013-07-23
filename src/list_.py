@@ -175,7 +175,7 @@ class IdlenotifyList(MyList):
             conn.write(_('%s removed from your idlenotify list.\n') % u.name)
 
     def show(self, conn):
-        notlist = conn.user.session.idlenotifying
+        notlist = conn.session.idlenotifying
         conn.write(ngettext('-- idlenotify list: %d name --\n',
             '-- idlenotify list: %d names --\n', len(notlist)) % len(notlist))
         conn.write('%s\n' % ' '.join([u.name for u in notlist]))
