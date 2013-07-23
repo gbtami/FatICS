@@ -408,6 +408,11 @@ class BanTest(Test):
         t.write('f\n')
         self.expect('Host:', t)
 
+        t.write('hideinfo\n')
+        self.expect('Private user information now not shown.', t)
+        t.write('hideinfo\n')
+        self.expect('Private user information now shown.', t)
+
         self.close(t)
 
 class FilterTest(Test):

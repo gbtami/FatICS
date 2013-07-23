@@ -85,6 +85,8 @@ class TestMaxguest(Test):
         t = self.connect_as_admin()
         t.write('asetmaxguest -1\n')
         self.expect('Usage:', t)
+        t.write('asetmaxguest 999\n')
+        self.expect('not changing', t)
         self.close(t)
 
     def test_maxguest(self):
@@ -100,6 +102,7 @@ class TestMaxguest(Test):
         t.write('asetmaxguest %d\n' % maxguest)
         m = self.expect_re(r'Previously (\d+) guest connections allowed', t)
         oldmaxguest = int(m.group(1))
+        assert(oldmaxguest > 0)
         self.expect('Allowed guest connections: %d' % maxguest, t)
 
         conns = []

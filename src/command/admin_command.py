@@ -27,6 +27,7 @@ import admin
 import speed_variant
 import list_
 import channel
+import var
 from reload import reload
 
 from db import db
@@ -131,8 +132,11 @@ class Asetmaxplayer(Command):
 class Asetmaxguest(Command):
     def run(self, args, conn):
         if args[0] is not None:
-            if args[0] < 0 or args[0] + config.admin_reserve > config.maxplayer:
+            if args[0] < 0:
                 raise BadCommandError
+            elif args[0] + config.admin_reserve > config.maxplayer:
+                conn.write(A_("maxguest + admin_reserve > maxplayer (%d + %d > %d); not changing\n") % (args[0], config.admin_reserve, config.maxplayer))
+                return
             conn.write(A_("Previously %d guest connections allowed....\n")
                 % config.maxguest)
             config.maxguest = args[0]
@@ -341,10 +345,10 @@ class Ftell(Command):
                     conn.session.ftell = u
                     u.session.ftell_admins.add(conn.user)
 
-@ics_command('hideinfo', 'd', admin.Level.admin)
+@ics_command('hideinfo', '', admin.Level.admin)
 class Hideinfo(Command):
     def run(self, args, conn):
-        var.vars['hideinfo'].set(conn.user, str(args[0]))
+        var.vars['hideinfo'].set(conn.user, None)
 
 @ics_command('shutdown', 'p', admin.Level.admin)
 class Shutdown(Command):
