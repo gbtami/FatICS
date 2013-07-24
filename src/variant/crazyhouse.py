@@ -382,6 +382,8 @@ class Position(object):
         self.history = PositionHistory()
         self.set_pos(fen)
         self.is_draw_nomaterial = False # never happens in zh
+        self.white_has_mating_material = True
+        self.black_has_mating_material = True
         self._check_material()
 
     set_pos_re = re.compile(r'''^([1-8rnbqkpRNBQKP/]+) ([wb]) ([kqKQ]+|-) ([a-h][36]|-) (\d+) (\d+)$''')
