@@ -82,9 +82,25 @@ class Ptell(Command, ToldMixin):
 @ics_command('bugwho', 'o')
 class Bugwho(Command):
     def run(self, args, conn):
-        if args[0] not in [None, 'g', 'p', 'u']:
-            raise BadCommandError
-        if args[0] is None or args[0] == 'g':
+        if args[0] is None:
+            g_ = True
+            p_ = True
+            u_ = True
+        else:
+            g_ = False
+            p_ = False
+            u_ = False
+            for c in args[0]:
+                if c == 'g':
+                    g_ = True
+                elif c == 'p':
+                    p_ = True
+                elif c == 'u':
+                    u_ = True
+                else:
+                    raise BadCommandError
+
+        if g_:
             # bughouse games
             conn.write(_('Bughouse games in progress\n'))
             count = 0
@@ -93,7 +109,7 @@ class Bugwho(Command):
                     count += 1
             conn.write(ngettext(' %d game displayed.\n',
                 ' %d games displayed.\n', count) % count)
-        if args[0] is None or args[0] == 'p':
+        if p_:
             conn.write(_('Partnerships not playing bughouse\n'))
             for p in partner.partners:
                 [p1, p2] = sorted(list(p), key=lambda p: p.name)
@@ -106,7 +122,7 @@ class Bugwho(Command):
             conn.write(ngettext(' %d partnership displayed.\n',
                 '  %d partnerships displayed.\n', count) % count)
 
-        if args[0] is None or args[0] == 'u':
+        if u_:
             conn.write(_('Unpartnered players with bugopen on\n'))
             ulist = sorted([u for u in online.online if u.vars['bugopen'] and
                 not u.session.partner], key=lambda u: u.name)

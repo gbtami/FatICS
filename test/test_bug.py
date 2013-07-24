@@ -37,6 +37,10 @@ class TestBugwho(Test):
         self.expect('Unpartnered players with bugopen on', t)
         self.expect_re(r'\d+ players? displayed \(of \d+\)\.', t)
 
+        t.write('bu gp\n')
+        self.expect('Bughouse games in progress', t)
+        self.expect('Partnerships not playing bughouse', t)
+
         self.close(t)
 
     def test_bugwho(self):
