@@ -31,6 +31,12 @@ class TestNotPlaying(Test):
         t.write('resign\n')
         self.expect('You are not playing a game.', t)
 
+        t.write('accept\n')
+        self.expect('There are no offers to accept.', t)
+
+        t.write('decline\n')
+        self.expect('There are no offers to decline.', t)
+
         self.close(t)
 
 class TestAbort(Test):
@@ -396,7 +402,7 @@ class TestDraw(Test):
         t2.write('resign\n')
         t2.write('accept\n')
 
-        self.expect('You have no pending offers', t2)
+        self.expect('There are no offers to accept.', t2)
 
         self.close(t)
         self.close(t2)

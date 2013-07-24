@@ -397,16 +397,21 @@ class BanTest(Test):
         self.expect('Private user information now not shown.', t)
         t.write('f\n')
         self.expect_not('Host:', t)
+        t.write('log\n')
+        self.expect_not(' from %s' % LOCAL_IP, t)
         self.close(t)
 
         # should be preseved across logouts
         t = self.connect_as_admin()
         t.write('f\n')
         self.expect_not('Host:', t)
+
         t.write('set hideinfo\n')
         self.expect('Private user information now shown.', t)
         t.write('f\n')
         self.expect('Host:', t)
+        t.write('log\n')
+        self.expect(' from %s' %  LOCAL_IP, t)
 
         t.write('hideinfo\n')
         self.expect('Private user information now not shown.', t)

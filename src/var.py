@@ -24,6 +24,7 @@ import trie
 import lang
 import formula
 import online
+import partner
 
 from config import config
 
@@ -64,6 +65,28 @@ def _set_gin_var(user, val):
     else:
         if user in online.online.gin_var:
             online.online.gin_var.remove(user)
+
+def _set_open_var(user, val):
+    pass
+
+def _set_bugopen_var(u, val):
+    if not val:
+        # end any partnerships and partnership requests
+        for offer in u.session.offers_sent[:]:
+            if offer.name == 'partnership request':
+                offer.b.write_('%s, who was offering a partnership with you, has become unavailable for bughouse.\n', u.name)
+                offer.withdraw(notify=False)
+                u.write_("Partnership offer to %s withdrawn.\n", offer.b.name)
+                offer.b.write_("Partnership offer from %s removed.\n", u.name)
+        for offer in u.session.offers_received[:]:
+            if offer.name == 'partnership request':
+                offer.a.write_('%s, whom you were offering a partnership with, has become unavailable for bughouse.\n', u.name)
+                offer.withdraw(notify=False)
+                u.write_("Partnership offer from %s removed.\n", offer.a.name)
+                offer.a.write_("Partnership offer to %s withdrawn.\n", u.name)
+        if u.session.partner:
+            u.session.partner.write_('Your partner has become unavailable for bughouse.\n')
+            partner.end_partnership(u, u.session.partner)
 
 class Var(object):
     """This class represents the form of a variable but does not hold
@@ -286,8 +309,8 @@ class VarList(object):
         BoolVar("ctell", True, N_("You will now hear channel tells from unregistered users.\n"), N_("You will not hear channel tells from unregistered users.\n")).persist().add_as_var()
         BoolVar("chanoff", False, N_("You will not hear channel tells.\n"), N_("You will now hear channel tells.\n")).persist().add_as_var()
 
-        BoolVar("open", True, N_("You are now open to receive match requests.\n"), N_("You are no longer open to receive match requests.\n")).persist().add_as_var()
-        BoolVar("bugopen", False, N_("You are now open for bughouse.\n"), N_("You are not open for bughouse.\n")).persist().add_as_var()
+        BoolVar("open", True, N_("You are now open to receive match requests.\n"), N_("You are no longer open to receive match requests.\n")).persist().add_as_var().set_hook(_set_open_var)
+        BoolVar("bugopen", False, N_("You are now open for bughouse.\n"), N_("You are not open for bughouse.\n")).persist().add_as_var().set_hook(_set_bugopen_var)
         BoolVar("silence", False, N_("You will now play games in silence.\n"), N_("You will not play games in silence.\n")).persist().add_as_var()
         BoolVar("bell", True, N_("You will now hear beeps.\n"), N_("You will not hear beeps.\n")).persist().add_as_var()
         BoolVar("autoflag", True, N_("Auto-flagging enabled.\n"), N_("Auto-flagging disabled.\n")).persist().add_as_var()

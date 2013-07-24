@@ -89,9 +89,21 @@ class TestPartner(Test):
 
         t.write('partner guestefgh\n')
         self.expect('Setting you open for bughouse.', t)
+        self.expect('offers to be your bughouse partner', t2)
 
         t.write('wi\n')
         self.expect('GuestABCD withdraws the partnership request.', t2)
+
+        t.write('partner guestefgh\n')
+        self.expect('offers to be your bughouse partner', t2)
+        t2.write('a\n')
+        self.expect('GuestEFGH agrees to be your partner', t)
+        # end partnership by setting bugopen 0
+        t2.write('set bugopen 0\n')
+        # On original fics, the order of the next two messages is reversed.
+        self.expect('You are not open for bughouse.', t2)
+        self.expect('You no longer have a bughouse partner.', t2)
+        #self.expect('GuestEFGH has ended partnership', t)
 
         t.write('set bugopen\n')
         self.expect('You are not open for bughouse.', t)
@@ -126,6 +138,13 @@ class TestPartner(Test):
         self.expect("GuestEFGH agrees to be your partner.", t)
         self.expect("You agree to be GuestABCD's partner.", t2)
 
+        t.write("ptell Hello 1\n")
+        self.expect("GuestABCD(U) (your partner) tells you: Hello 1", t2)
+        self.expect("(told GuestEFGH)", t)
+        t2.write("ptell Hello 2\n")
+        self.expect("GuestEFGH(U) (your partner) tells you: Hello 2", t)
+        self.expect("(told GuestABCD)", t2)
+
         t.write('bugwho p\n')
         self.expect('1 partnership displayed.', t)
 
@@ -146,7 +165,7 @@ class TestPartner(Test):
 
         t.write('partner\n')
         self.expect('You no longer have a bughouse partner.', t)
-        self.expect('GuestABCD has left the partnership.', t2)
+        self.expect('GuestABCD has ended partnership.', t2)
 
         t.write('bugwho p\n')
         self.expect('0 partnerships displayed.', t)
@@ -184,7 +203,7 @@ class TestPartner(Test):
         self.expect('GuestABCD withdraws the partnership request.', t2)
 
         t2.write('decl\n')
-        self.expect('You have no pending offers', t2)
+        self.expect('There are no offers to decline.', t2)
 
         self.close(t)
         self.close(t2)
@@ -223,6 +242,76 @@ class TestPartner(Test):
 
         self.close(t2)
 
+    def test_end_partnership_bugopen(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t2.write('set bugopen 1\n')
+        self.expect('You are now open for bughouse.', t2)
+
+        t.write('partner guestefgh\n')
+        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+
+        t2.write('a\n')
+        self.expect('agrees to be your partner', t)
+
+        t.write('set bugopen\n')
+        # On original fics, the order of the next two messages is reversed
+        self.expect('You are not open for bughouse.', t)
+        self.expect('You no longer have a bughouse partner.', t)
+        self.expect('Your partner has become unavailable for bughouse.', t2)
+        #self.expect('Your partner has ended partnership.', t2)
+        self.expect('You no longer have a bughouse partner.', t2)
+
+        self.close(t)
+        self.close(t2)
+
+    def test_partner_withdraw_bugopen(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t2.write('set bugopen 1\n')
+        self.expect('You are now open for bughouse.', t2)
+
+        t.write('partner guestefgh\n')
+        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+
+        t.write('set bugopen\n')
+        # On original fics, the order of the next two messages is reversed
+        self.expect('You are not open for bughouse.', t)
+        self.expect('Partnership offer to GuestEFGH withdrawn.', t)
+        self.expect('GuestABCD, who was offering a partnership with you, has become', t2)
+        self.expect('Partnership offer from GuestABCD removed.', t2)
+
+        t2.write('a\n')
+        self.expect('There are no offers to accept.', t2)
+
+        self.close(t)
+        self.close(t2)
+
+    def test_partner_decline_bugopen(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t2.write('set bugopen 1\n')
+        self.expect('You are now open for bughouse.', t2)
+
+        t.write('partner guestefgh\n')
+        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+
+        t2.write('set bugopen\n')
+        # On original fics, the order of the next two messages is reversed
+        self.expect('You are not open for bughouse.', t2)
+        self.expect('Partnership offer from GuestABCD removed.', t2)
+        self.expect('GuestEFGH, whom you were offering a partnership with, has become', t)
+        self.expect('Partnership offer to GuestEFGH withdrawn.', t)
+
+        t.write('a\n')
+        self.expect('There are no offers to accept.', t)
+
+        self.close(t)
+        self.close(t2)
+
     def test_partner_decline_other_partner(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_guest('GuestEFGH')
@@ -242,7 +331,7 @@ class TestPartner(Test):
         t3.write('a\n')
         self.expect('GuestEFGH, whom you were offering a partnership with, has accepted a partnership with GuestIJKL.', t)
         t.write('wi\n')
-        self.expect('You have no pending offers to other players.', t)
+        self.expect('There are no offers to withdraw.', t)
 
         self.close(t)
         self.close(t2)
@@ -267,7 +356,7 @@ class TestPartner(Test):
         t3.write('a\n')
         self.expect('GuestABCD, who was offering a partnership with you, has accepted a partnership with GuestIJKL.', t2)
         t2.write('a\n')
-        self.expect('You have no pending offers from other players.', t2)
+        self.expect('There are no offers to accept.', t2)
 
         self.close(t)
         self.close(t2)
@@ -302,6 +391,8 @@ class TestPartner(Test):
         self.expect("You can't be your own bughouse partner.", t)
         t.write('partner nosuchuser\n')
         self.expect('No player named "nosuchuser" is online.', t)
+        t.write('ptell test\n')
+        self.expect('You do not have a partner at present.', t)
         self.close(t)
 
     def test_partner_censor(self):

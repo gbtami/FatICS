@@ -26,6 +26,7 @@ import game
 
 from command_parser import BadCommandError
 from command import Command, ics_command
+from tell_command import ToldMixin
 
 @ics_command('partner', 'o')
 class Partner(Command):
@@ -35,7 +36,7 @@ class Partner(Command):
                 p = conn.user.session.partner
                 assert(p.is_online)
                 assert(p.session.partner == conn.user)
-                p.write_('\n%s has left the partnership.\n', conn.user.name)
+                p.write_('\n%s has ended partnership.\n', conn.user.name)
                 partner.end_partnership(conn.user, p)
             else:
                 conn.write(_('You do not have a bughouse partner.\n'))
@@ -68,6 +69,15 @@ class Partner(Command):
 
             partner.Partner(conn.user, u)
 
+@ics_command('ptell', 'S')
+class Ptell(Command, ToldMixin):
+    def run(self, args, conn):
+        if not conn.user.session.partner:
+            conn.write(_('You do not have a partner at present.\n'))
+            return
+        conn.user.session.partner.write_('\n%(name)s (your partner) tells you: %(msg)s\n',
+            {'name': conn.user.get_display_name(), 'msg': args[0]})
+        self._told(conn.user.session.partner, conn)
 
 @ics_command('bugwho', 'o')
 class Bugwho(Command):
