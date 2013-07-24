@@ -85,7 +85,7 @@ class TestMaxguest(Test):
         t = self.connect_as_admin()
         t.write('asetmaxguest -1\n')
         self.expect('Usage:', t)
-        t.write('asetmaxguest 999\n')
+        t.write('asetmaxguest 99999\n')
         self.expect('not changing', t)
         self.close(t)
 

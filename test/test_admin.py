@@ -887,4 +887,23 @@ class FtellTest(Test):
         self.close(t2)
         self.close(t)
 
+class ChkipTest(Test):
+    def test_chkip(self):
+        t = self.connect_as_admin()
+
+        t.write('chkip\n')
+        self.expect('Usage:', t)
+        t.write('chkip doesnotexist\n')
+        self.expect('no player', t)
+        t.write('chkip admin\n')
+        self.expect_re('admin +%s' % LOCAL_IP, t)
+        t.write('chkip %s\n' % LOCAL_IP)
+        self.expect_re('admin +%s' % LOCAL_IP, t)
+        t.write('chkip %s*\n' % LOCAL_IP[0:5])
+        self.expect_re('admin +%s' % LOCAL_IP, t)
+        t.write('chkip 123.123.123.123\n')
+        self.expect_not('admin', t)
+
+        self.close(t)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -374,5 +374,39 @@ class Shutdown(Command):
             reactor.shuttingDown.cancel()
         reactor.shuttingDown = reactor.callLater(mins * 60, reactor.stop)
 
+@ics_command('chkip', 'S', admin.Level.admin)
+class Chkip(Command):
+    def run(self, args, conn):
+        if not args[0]:
+            raise BadCommandError
+
+        if not args[0][0].isdigit():
+            u = user.find_by_prefix_for_user(args[0], conn)
+            if u:
+                ip_pat = u.session.conn.ip
+            else:
+                return
+        else:
+            ip_pat = args[0]
+
+        def compare_ip(ip, pat):
+            if len(pat) > len(ip):
+                return False
+            for i in range(1, len(pat)):
+                if pat[i] == '*':
+                    return True
+                elif pat[i] != ip[i]:
+                    return False
+            return True
+
+        #conn.write(A_("Matches the following player(s): \n\n"))
+        count = 0
+        for u in online.online:
+            if compare_ip(u.session.conn.ip, ip_pat):
+                conn.write('%-18s %s\n' % (u.name, u.session.conn.ip))
+                count += 1
+                if count > 10:
+                    break
+        conn.write(A_("Number of players matched: %d\n") % count)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
