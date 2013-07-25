@@ -71,6 +71,14 @@ class SpeedAndVariant(object):
         else:
             return '%s %s' % (self.speed.name, self.variant.name)
 
+    def legacy_str(self):
+        """ Unfortunately, some clients may not be able to handle
+        both the speed and variant """
+        if self.variant.name == 'chess':
+            return self.speed.name
+        else:
+            return self.variant.name
+
 def from_names(speed_name, variant_name):
     return SpeedAndVariant(speed_names[speed_name],
         variant_names[variant_name])

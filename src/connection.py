@@ -254,6 +254,12 @@ class Connection(basic.LineReceiver):
         else:
             self.transport.write(s)
 
+    def write_nowrap(self, s):
+        if self.buffer_output:
+            self.output_buffer += s
+        else:
+            self.transport.write(s, wrap=False)
+
     def unpause(self):
         """ Resume logging in after a pause due to an incorrect
         password. """

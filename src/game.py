@@ -311,7 +311,7 @@ class Game(object):
 
     def write_moves(self, conn):
         # don't translate since clients parse these messages
-        conn.write("\nMovelist for game %d:\n\n" % self.number)
+        conn.write_nowrap("\nMovelist for game %d:\n\n" % self.number)
 
         time_str = conn.user.format_datetime(self.when_started)
         #self.when_started.strftime("%a %b %e, %H:%M %Z %Y")
@@ -320,13 +320,13 @@ class Game(object):
         # places it usually uses (++++) or (----) instead.  This looks like
         # gratuitous inconsistency to me, so let's see if we can get
         # away with using the same notation everywhere.
-        conn.write("%s (%s) vs. %s (%s) --- %s\n" % (self.white_name,
+        conn.write_nowrap("%s (%s) vs. %s (%s) --- %s\n" % (self.white_name,
             self.white_rating, self.black_name, self.black_rating, time_str))
 
-        conn.write("%s %s match, initial time: %d minutes, increment: %d seconds.\n\n" %
-            (self.rated_str.capitalize(), self.speed_variant,
+        conn.write_nowrap("%s %s match, initial time: %d minutes, increment: %d seconds.\n\n" %
+            (self.rated_str.capitalize(), self.speed_variant.legacy_str(),
                 self.white_time, self.inc))
-        conn.write('Move  %-23s %s\n----  ---------------------   ---------------------\n' % (self.white_name, self.black_name))
+        conn.write_nowrap('Move  %-23s %s\n----  ---------------------   ---------------------\n' % (self.white_name, self.black_name))
         i = self.variant.pos.start_ply & ~1
         while i < self.variant.pos.ply:
             if i < self.variant.pos.start_ply:
@@ -336,16 +336,16 @@ class Game(object):
                 move_str = '%-7s (%s)' % (mv.to_san(),
                     time_format.hms(mv.time, conn.user))
             if i % 2 == 0:
-                conn.write('%3d.  %-23s ' % (int((i + 3) / 2),move_str))
+                conn.write_nowrap('%3d.  %-23s ' % (int((i + 3) / 2),move_str))
             else:
                 assert(len(move_str) <= 23)
-                conn.write('%s\n' % move_str)
+                conn.write_nowrap('%s\n' % move_str)
             i += 1
 
         if i & 1 != 0:
-            conn.write('\n')
+            conn.write_nowrap('\n')
 
-        conn.write('      {Still in progress} *\n\n')
+        conn.write_nowrap('      {Still in progress} *\n\n')
 
     def parse_move(self, s, conn):
         try:
