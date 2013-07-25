@@ -1389,7 +1389,7 @@ class Crazyhouse(BaseVariant):
         else:
             passed_str = ''
 
-        s = '<b1> game %d white [%s] black [%s]%s\n' % (self.game.number,
+        s = '\n<b1> game %d white [%s] black [%s]%s\n' % (self.game.number,
             holding_white, holding_black, passed_str)
         return s
 

@@ -39,9 +39,6 @@ from .test import *
 
 from twisted.internet import reactor
 
-#conn_count = 8000
-# For some reason the load test still hangs for a larger number of users.
-# It seems to be a problem with the twisted test, not the server.
 conn_count = 1000
 start_time = time.time()
 class TestProtocol(protocol.Protocol):
@@ -50,10 +47,17 @@ class TestProtocol(protocol.Protocol):
     def connectionMade(self):
         self.state = 'connectionMade'
         self.factory.conns.append(self)
+        self.factory.num_started += 1
+        if self.factory.num_started < conn_count and not self.factory.error:
+            # make another connection
+            reactor.connectTCP(host, int(port), self.factory, timeout=15)
         #self.i = len(self.factory.conns)
         #self.transport.setTcpNoDelay(True)
 
     def dataReceived(self, data):
+        if self.state == 'prompt':
+            # already done
+            return
         self.allData += data
         if 'login:' in data:
             self.state = 'login'
@@ -69,12 +73,15 @@ class TestProtocol(protocol.Protocol):
                 self.factory.tester.finished.callback(self)
         elif 'limit for guests' in data:
             print('ERROR: limit for guests reached')
+            self.state = 'error'
             self.transport.loseConnection()
             self.factory.error = 1
+        else:
+            self.state = 'some data received'
 
     def quit(self):
         if (self.state != 'prompt'):
-            print('ERROR: state %s' % self.state)
+            print('ERROR: state %s {%s}' % (self.state, self.allData))
             self.factory.error = 1
         #self.factory.tester.assert_(self.status == 'prompt')
         self.transport.write('quit\r\n')
@@ -88,8 +95,10 @@ class TestProtocol(protocol.Protocol):
 class TestLoad(Test):
     def test_load(self):
         t = self.connect_as_admin()
-        t.write('asetmaxplayer 2048\n')
-        t.write('asetmaxguest 2043\n')
+        t.write('asetmaxplayer 10005\n')
+        self.expect('Previous', t)
+        t.write('asetmaxguest 10000\n')
+        self.expect('Previous', t)
         self.close(t)
 
         self.finished = defer.Deferred()
@@ -97,35 +106,18 @@ class TestLoad(Test):
         fact.protocol = TestProtocol
         fact.tester = self
         fact.num_done = 0
+        fact.num_started = 0
         fact.error = 0
         fact.conns = []
         #fact.shut_down = self.shut_down
         self.factory = fact
 
+        # trying to start all connections at once seems to cause problems
         #for i in range(0, conn_count):
-        #    reactor.connectTCP(host, int(port), fact, timeout=15)
+        #    reactor.connectTCP(host, int(port), fact, timeout=30)
+        reactor.connectTCP(host, int(port), fact, timeout=15)
 
-        #reactor.callLater(15, self.print_status)
-        # for some reason the reactor hangs when starting too many
-        # connections at once, so stagger them
-        assert(conn_count % 50 == 0)
-        t = 0.0
-        for i in range(0, conn_count, 50):
-            reactor.callLater(t, self.startN, 50)
-            t += 1.0
-
-        '''# Let's go
-        if not profile:
-            reactor.run()
-        else:
-            cProfile.runctx('reactor.run()', globals(), locals())'''
-
-        #self.finished.addCallback(self.shut_down)
         return self.finished
-
-    def startN(self, n):
-        for i in range(0, n):
-            reactor.connectTCP(host, int(port), self.factory, timeout=15)
 
     def print_status(self):
         for c in self.factory.conns:

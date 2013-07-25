@@ -18,6 +18,7 @@
 
 import time
 import copy
+import traceback
 
 import var
 import game
@@ -91,8 +92,12 @@ class Session(object):
             partner.end_partnership(self.partner, self.user)
 
         if self.game:
-            self.game.leave(self.user)
-            assert(self.game == None)
+            try:
+                self.game.leave(self.user)
+                assert(self.game == None)
+            except:
+                print 'exception ending game due to logout'
+                traceback.print_exc()
         del self.offers_received[:]
         del self.offers_sent[:]
 
