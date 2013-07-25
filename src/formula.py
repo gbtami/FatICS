@@ -18,7 +18,7 @@
 #
 
 """
-This design follows "Simple Top-Down Pasing in Python" by Fredrik Lundh,
+This design follows "Simple Top-Down Parsing in Python" by Fredrik Lundh,
 whish uses an algorithm originally published by Vaughan Pratt.
 http://effbot.org/zone/simple-top-down-parsing.htm
 

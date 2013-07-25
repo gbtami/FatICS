@@ -243,6 +243,10 @@ class TestFollow(Test):
 
         self.close(t)
         self.expect('GuestABCD, whose games you were following, has logged out.', t2)
+
+        t2.write('var\n')
+        self.expect('Variable settings of', t2)
+        self.expect_not('Following:', t2)
         self.close(t2)
 
     def test_follow_bad(self):
@@ -259,6 +263,114 @@ class TestFollow(Test):
 
         self.close(t)
 
+class TestPfollow(Test):
+    def test_pfollow_basics(self):
+        t = self.connect_as_guest('GuestABCD')
+
+        t.write('pfollow\n')
+        self.expect("You are not following any player's partner's games.", t)
+        t.write('pfollow doesnotexist\n')
+        self.expect('No player', t)
+
+        t.write('pfollow GuestABCD\n')
+        self.expect("You will now be following GuestABCD's partner's games.", t)
+
+        t.write('pfollow GuestABCD\n')
+        self.expect("You are already following GuestABCD's partner's games.", t)
+
+        t.write('var\n')
+        self.expect("Following: GuestABCD's partner", t)
+
+        t.write('pfollow\n')
+        self.expect("You will not follow any player's partner's games.", t)
+
+        t.write('pfollow GuestABCD\n')
+        self.expect("You will now be following GuestABCD's partner's games.", t)
+
+        # follow with no arguments cancels pfollow
+        t.write('follow\n')
+        self.expect("You will not follow any player's games.", t)
+
+        t.write('pfollow GuestABCD\n')
+        self.expect("You will now be following GuestABCD's partner's games.", t)
+
+        t2 = self.connect_as_guest('GuestEFGH')
+        t.write("follow GuestEFGH\n")
+        self.expect("You will no longer be following GuestABCD's partner's games.", t)
+        self.expect("You will now be following GuestEFGH's games.", t)
+
+        t.write("pfollow\n")
+        self.expect("You are not following any player's partner's games.", t)
+
+        t.write("pfollow GuestABCD\n")
+        self.expect("You will no longer be following GuestEFGH's games.", t)
+        self.expect("You will now be following GuestABCD's partner's games.", t)
+        self.close(t2)
+
+        t.write('quit\n')
+        self.expect("GuestABCD, whose partner's games you were following, has logged out.", t)
+        t.close()
+
+    def test_pfollow_game(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+        t3 = self.connect_as_guest('GuestIJKL')
+        t4 = self.connect_as_guest('GuestMNOP')
+        t5 = self.connect_as_guest()
+        self.set_nowrap(t5)
+
+        t5.write('pfollow guestabc\n')
+        self.expect("You will now be following GuestABCD's partner's games.", t5)
+
+        t2.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t2)
+        t.write('part guestefgh\n')
+        self.expect('GuestABCD offers', t2)
+        t2.write('part guestabcd\n')
+        self.expect('GuestEFGH accepts', t)
+
+        t4.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t4)
+        t3.write('part guestmnop\n')
+        self.expect('GuestIJKL offers', t4)
+        t4.write('a\n')
+        self.expect('GuestMNOP accepts', t3)
+
+        # non-bug game should not be observed
+        t2.write('match guestmnop 1+0\n')
+        self.expect('Challenge:', t4)
+        t4.write('a\n')
+        self.expect('Creating:', t4)
+        self.expect_not('has started a game', t5)
+        t4.write('abort\n')
+        self.expect('aborted', t2)
+
+        # the order in which the linked games are created could
+        # matter, so choose randomly
+        if random.choice([True, False]):
+            t.write('match guestijkl bughouse 3+0 w\n')
+            self.expect('Challenge:', t3)
+            t3.write('a\n')
+        else:
+            t2.write('match guestmnop bughouse 3+0 b\n')
+            self.expect('Challenge:', t4)
+            t4.write('a\n')
+
+        self.expect('Creating: GuestABCD (++++) GuestIJKL', t)
+        self.expect('Creating: GuestABCD (++++) GuestIJKL', t3)
+        self.expect('Creating: GuestMNOP (++++) GuestEFGH', t2)
+        self.expect('Creating: GuestMNOP (++++) GuestEFGH', t4)
+
+        self.expect("GuestABCD's partner, GuestEFGH, whom you are following, has started a game with GuestMNOP.", t5)
+        self.expect('GuestMNOP (++++) GuestEFGH (++++) unrated blitz bughouse 3 0', t5)
+        t.write('abo\n')
+        self.expect('aborted', t5)
+
+        self.close(t)
+        self.close(t2)
+        self.close(t3)
+        self.close(t4)
+        self.close(t5)
 
 class TestAllobservers(Test):
     def test_allobservers(self):

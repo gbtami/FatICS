@@ -49,6 +49,7 @@ class Follow(Command):
                 assert(uf.is_online)
                 uf.session.followed_by.remove(conn.user)
                 conn.user.session.following = None
+                # no need to change conn.user.session.pfollow
                 conn.write(_("You will not follow any player's games.\n"))
         else:
             u2 = user.find_by_prefix_for_user(args[0], conn,
@@ -58,16 +59,19 @@ class Follow(Command):
                     conn.write(_("You can't follow your own games.\n"))
                     return
                 if conn.user.session.following:
-                    if u2 == conn.user.session.following:
+                    if u2 == conn.user.session.following and not conn.user.session.pfollow:
                         conn.write(_("You are already following %s's games.\n")
                             % u2.name)
                         return
-                    conn.user.write(_("You will no longer be following %s's games.\n") % conn.user.session.following.name)
+                    if conn.user.session.pfollow:
+                        conn.user.write(_("You will no longer be following %s's partner's games.\n") % conn.user.session.following.name)
+                    else:
+                        conn.user.write(_("You will no longer be following %s's games.\n") % conn.user.session.following.name)
                     conn.user.session.following.session.followed_by.remove(conn.user)
-                    conn.user.session.following = None
                 conn.write(_("You will now be following %s's games.\n")
                     % u2.name)
                 conn.user.session.following = u2
+                conn.user.session.pfollow = False
                 u2.session.followed_by.add(conn.user)
 
                 # If there is a game in progress and we are not already
@@ -99,6 +103,47 @@ class Allobservers(Command):
                 '  %(count)d game displayed (of %(total)d in progress).\n',
                 '  %(count)d games displayed (of %(total)d in progress).\n',
                     count) % {'count': count, 'total': len(game.games)})
+
+@ics_command('pfollow', 'o')
+class Pfollow(Command):
+    def run(self, args, conn):
+        if args[0] is None:
+            uf = conn.user.session.following
+            if not uf or not conn.user.session.pfollow:
+                conn.write(_("You are not following any player's partner's games.\n"))
+            else:
+                assert(uf.is_online)
+
+                uf.session.followed_by.remove(conn.user)
+                conn.user.session.following = None
+                # no need to change conn.user.session.pfollow
+                conn.write(_("You will not follow any player's partner's games.\n"))
+        else:
+            u2 = user.find_by_prefix_for_user(args[0], conn,
+                online_only=True)
+            if u2:
+                if conn.user.session.following:
+                    if u2 == conn.user.session.following and conn.user.session.pfollow:
+                        conn.write(_("You are already following %s's partner's games.\n")
+                            % u2.name)
+                        return
+                    if conn.user.session.pfollow:
+                        conn.user.write(_("You will no longer be following %s's partner's games.\n") % conn.user.session.following.name)
+                    else:
+                        conn.user.write(_("You will no longer be following %s's games.\n") % conn.user.session.following.name)
+                    conn.user.session.following.session.followed_by.remove(conn.user)
+                conn.write(_("You will now be following %s's partner's games.\n")
+                    % u2.name)
+                conn.user.session.following = u2
+                conn.user.session.pfollow = True
+                u2.session.followed_by.add(conn.user)
+
+                # If there is a game in progress and we are not already
+                # observing it, start observing it.
+                g = u2.session.game
+                if (g and g.variant.name == 'bughouse' and
+                    g.bug_link not in conn.user.session.observed):
+                    g.bug_link.observe(conn.user)
 
 @ics_command('unobserve', 'n')
 class Unobserve(Command):

@@ -115,7 +115,10 @@ class Variables(Command):
             if  u.session.partner:
                 conn.write(_('Bughouse partner: %s\n') % u.session.partner.name)
             if u.session.following:
-                conn.write(_('Following: %s\n') % u.session.following)
+                if u.session.pfollow:
+                    conn.write(_("Following: %s's partner\n") % u.session.following)
+                else:
+                    conn.write(_("Following: %s\n") % u.session.following)
 
         for i in range(1, 10):
             fname = 'f' + str(i)

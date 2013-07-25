@@ -103,7 +103,12 @@ class Session(object):
 
         if self.followed_by:
             for p in self.followed_by.copy():
-                p.write_('\n%s, whose games you were following, has logged out.\n', self.user.name)
+                assert(p.session.following == self.user)
+                if p.session.pfollow:
+                    p.write_("\n%s, whose partner's games you were following, has logged out.\n", self.user.name)
+                else:
+                    p.write_("\n%s, whose games you were following, has logged out.\n", self.user.name)
+                p.session.following = None
             self.followed_by = set()
 
         # unobserve games

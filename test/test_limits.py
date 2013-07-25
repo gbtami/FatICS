@@ -32,7 +32,7 @@ class TestMaxplayer(Test):
         return ''.join(name)
 
     def test_maxplayer(self):
-        maxplayer = 50
+        maxplayer = 25
         admin_reserve = 5
         names = []
         passwds = []
@@ -45,6 +45,8 @@ class TestMaxplayer(Test):
         user_count = int(m.group(1)) - 1
 
         t.write('asetmaxplayer %d\n' % maxplayer)
+        m = self.expect_re('Previously (\d+) total connections allowed', t)
+        oldmaxplayer = int(m.group(1))
         self.expect('Total allowed connections: %d' % maxplayer, t)
 
         for i in range(0, maxplayer - user_count - admin_reserve):
@@ -77,6 +79,9 @@ class TestMaxplayer(Test):
             self.close(t2)
             t.write('remplayer %s\n' % name)
             self.expect('removed', t)
+
+        t.write('asetmaxplayer %d\n' % oldmaxplayer)
+        self.expect('Total allowed connections: %d' % oldmaxplayer, t)
 
         self.close(t)
 

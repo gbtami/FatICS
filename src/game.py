@@ -510,12 +510,26 @@ class PlayedGame(Game):
 
         gnotified = set()
         for p in self.players:
-            for uf in p.session.followed_by:
-                uf.write_('\n%(uname)s, whom you are following, has started a game with %(oppname)s.\n',
-                    {'uname': p, 'oppname': self.get_opp(p)})
-                self.observe(uf)
-
             gnotified |= p.gnotified
+
+            # notify followers
+            for uf in p.session.followed_by:
+                if uf.session.pfollow:
+                    # will be handled when the linked game is created
+                    pass
+                else:
+                    uf.write_('\n%(uname)s, whom you are following, has started a game with %(oppname)s.\n',
+                        {'uname': p, 'oppname': self.get_opp(p)})
+                    self.observe(uf)
+
+            if self.variant.name == 'bughouse':
+                # notify pfollowers of this game
+                part = p.session.partner
+                for uf in part.session.followed_by:
+                    if uf.session.pfollow:
+                        uf.write_("\n%(uname)s's partner, %(pname)s, whom you are following, has started a game with %(oppname)s.\n",
+                            {'uname': part, 'pname': p, 'oppname': self.get_opp(p)})
+                        self.observe(uf)
 
         # don't notify players of this game themselves
         gnotified -= set([p.name for p in self.players])

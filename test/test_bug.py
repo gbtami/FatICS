@@ -63,7 +63,7 @@ class TestBugwho(Test):
         self.expect('You are now open for bughouse.', t4)
 
         t.write('part guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner; type "partner GuestABCD"', t2)
         t2.write('a\n')
         self.expect('GuestEFGH accepts', t)
 
@@ -134,7 +134,7 @@ class TestPartner(Test):
 
         t.write("partner guestefgh\n")
         self.expect("Making a partnership offer to GuestEFGH.", t)
-        self.expect("GuestABCD offers to be your bughouse partner.", t2)
+        self.expect("GuestABCD offers to be your bughouse partner", t2)
 
         t.write("partner guestefgh\n")
         self.expect("You are already offering to be GuestEFGH's partner.", t)
@@ -189,7 +189,7 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t2)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
         t2.write('decl\n')
         self.expect('Declining the partnership request from GuestABCD.', t2)
         self.expect('GuestEFGH declines your partnership request.', t)
@@ -205,7 +205,7 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t2)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
         t.write('wi\n')
         self.expect('Withdrawing your partnership request to GuestEFGH.', t)
         self.expect('GuestABCD withdraws the partnership request.', t2)
@@ -224,7 +224,7 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t2)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
 
         t2.write('quit\n')
         self.expect('Partnership offer from GuestABCD removed.', t2)
@@ -241,7 +241,7 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t2)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
 
         t.write('quit\n')
         self.expect('Partnership offer to GuestEFGH withdrawn.', t)
@@ -258,7 +258,7 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t2)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
 
         t2.write('a\n')
         self.expect('agrees to be your partner', t)
@@ -282,7 +282,7 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t2)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
 
         t.write('set bugopen\n')
         # On original fics, the order of the next two messages is reversed
@@ -305,7 +305,7 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t2)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
 
         t2.write('set bugopen\n')
         # On original fics, the order of the next two messages is reversed
@@ -332,9 +332,9 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t3)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
         t2.write('part guestijkl\n')
-        self.expect('GuestEFGH offers to be your bughouse partner.', t3)
+        self.expect('GuestEFGH offers to be your bughouse partner', t3)
 
         t3.write('a\n')
         self.expect('GuestEFGH, whom you were offering a partnership with, has accepted a partnership with GuestIJKL.', t)
@@ -357,9 +357,9 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t3)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
         t.write('part guestijkl\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t3)
+        self.expect('GuestABCD offers to be your bughouse partner', t3)
 
         t3.write('a\n')
         self.expect('GuestABCD, who was offering a partnership with you, has accepted a partnership with GuestIJKL.', t2)
@@ -378,7 +378,7 @@ class TestPartner(Test):
         self.expect('You are now open for bughouse.', t2)
 
         t.write('partner guestefgh\n')
-        self.expect('GuestABCD offers to be your bughouse partner.', t2)
+        self.expect('GuestABCD offers to be your bughouse partner', t2)
         t2.write('partner guestabcd\n')
         self.expect('Accepting the partnership request from GuestABCD.', t2)
         self.expect('GuestEFGH accepts your partnership request.', t)

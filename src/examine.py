@@ -67,7 +67,8 @@ class ExaminedGame(Game):
             self.result_reason = hist_game['result_reason']
 
         for uf in user.session.followed_by:
-            uf.write_('\n%s, whom you are following, has started examining a game.\n', user)
+            if not uf.session.pfollow:
+                uf.write_('\n%s, whom you are following, has started examining a game.\n', user)
             self.observe(uf)
 
         self.send_boards()
