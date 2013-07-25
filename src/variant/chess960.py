@@ -1107,8 +1107,11 @@ class Position(object):
         if m:
             to = str_to_sq(m.group(5))
             if m.group(4):
+                # capture
                 if self.board[to] == '-':
                     raise IllegalMoveError('capture on blank square')
+                if piece_is_white(self.board[to]) == self.wtm:
+                    raise IllegalMoveError('capture own piece')
             else:
                 if self.board[to] != '-':
                     raise IllegalMoveError('missing "x" to indicate capture')

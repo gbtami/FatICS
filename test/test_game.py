@@ -195,6 +195,14 @@ class TestGame(Test):
         # the style12 string should be re-sent (eboard depends on this)
         self.expect('<12> ', t2)
 
+        t2.write('d5\n')
+        self.expect('<12> ', t)
+
+        # capture own piece
+        t.write('Qxd2\n')
+        self.expect('Illegal move (Qxd2).', t)
+
+        t.write('abort\n')
         t2.write('abort\n')
         self.expect('aborted', t)
 

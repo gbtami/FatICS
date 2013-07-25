@@ -1130,8 +1130,11 @@ class Position(object):
         if m:
             to = str_to_sq(m.group(5))
             if m.group(4):
+                # capture
                 if self.board[to] == '-':
                     raise IllegalMoveError('capture on blank square')
+                if piece_is_white(self.board[to]) == self.wtm:
+                    raise IllegalMoveError('capture own piece')
             else:
                 if self.board[to] != '-':
                     raise IllegalMoveError('missing "x" to indicate capture')
@@ -1418,7 +1421,7 @@ class Bughouse(BaseVariant):
         else:
             passed_str = ''
 
-        s = '<b1> game %d white [%s] black [%s]%s\n' % (self.game.number,
+        s = '\n<b1> game %d white [%s] black [%s]%s\n' % (self.game.number,
             holding_white, holding_black, passed_str)
         return s
 
