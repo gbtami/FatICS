@@ -1353,6 +1353,23 @@ class Crazyhouse(BaseVariant):
         mv.to_san()
         self.pos.make_move(mv)
         self.pos.detect_check()
+        if mv.is_capture:
+            pc = mv.undo.holding_pc
+            # print <b1> line to notify clients of captures
+            (holding_white, holding_black) = self.pos.get_holding_str()
+            if pc.isupper():
+                machine_str = self.get_b1('W%s' % pc)
+                nonmachine_str = "Game %d: %s received %s -> [%s]\n" % (self.game.number, self.game.get_side_user(WHITE), pc, holding_white)
+            else:
+                machine_str = self.get_b1('B%s' % pc.upper())
+                nonmachine_str = "Game %d: %s received %s -> [%s]\n" % (self.game.number, self.game.get_side_user(BLACK), pc.upper(), holding_black)
+
+            for p in self.game.observers | self.game.players:
+                if p.vars['style'] == 12:
+                    p.write_nowrap(machine_str)
+                else:
+                    p.write_nowrap(nonmachine_str)
+
         mv.add_san_decorator()
 
     def get_turn(self):

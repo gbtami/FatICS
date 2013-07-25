@@ -41,6 +41,10 @@ class TestBugwho(Test):
         self.expect('Bughouse games in progress', t)
         self.expect('Partnerships not playing bughouse', t)
 
+        t.write('bugwho\n')
+        self.expect('Bughouse games in progress', t)
+        self.expect('Partnerships not playing bughouse', t)
+        self.expect('Unpartnered players with bugopen on', t)
         self.close(t)
 
     def test_bugwho(self):

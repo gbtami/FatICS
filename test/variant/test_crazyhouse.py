@@ -23,7 +23,7 @@ from pgn import Pgn
 class TestCrazyhouse(Test):
     def test_crazyhouse(self):
         moves = ['e4', 'e6', 'Nc3', 'd6', 'd4', 'Nf6', 'Nf3', 'Nc6', 'Bg5', 'Be7', 'Bd3', 'h6', 'Bxf6', 'Bxf6', 'N@h5', 'B@g4', 'Nxf6+', 'Qxf6', 'B@h4', 'Qg6', 'e5', 'Bxf3', 'Bxg6', 'fxg6', 'Qxf3', 'B@e7', 'Q@f7+', 'Kd7', 'd5', 'Nxe5', 'Qxe6+', 'Kd8', 'Qxe7#']
-        self._assert_game_is_legal(moves, 'admin checkmated} 1-0')
+        self._assert_game_is_legal(moves, 'GuestEFGH checkmated} 1-0')
 
     def test_crazyhouse_draw(self):
         # Credit for this test game: http://www.tonyjh.com/chess/zh_notes.html
@@ -36,11 +36,11 @@ class TestCrazyhouse(Test):
 
     def test_crazyhouse_style12(self):
         t = self.connect_as_guest('GuestABCD')
-        t2 = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestEFGH')
         t.write('set style 12\n')
         t2.write('set style 12\n')
 
-        t.write('match admin white 3 0 zh\n')
+        t.write('match GuestEFGH white 3 0 zh\n')
         self.expect('Issuing:', t)
         self.expect('Challenge:', t2)
         t2.write('accept\n')
@@ -49,41 +49,102 @@ class TestCrazyhouse(Test):
 
         # original FICS gives 39 for the material value instead of 24,
         # since it uses the material values from normal chess
-        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD admin 1 3 0 24 24 180 180 1 none (0:00) none 0 0 0', t)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD GuestEFGH 1 3 0 24 24 180 180 1 none (0:00) none 0 0 0', t)
         self.expect('<b1> game 1 white [] black []', t)
-        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD admin -1 3 0 24 24 180 180 1 none (0:00) none 1 0 0', t2)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD GuestEFGH -1 3 0 24 24 180 180 1 none (0:00) none 1 0 0', t2)
         self.expect('<b1> game 1 white [] black []', t2)
 
         t.write('e4\n')
-        self.expect('<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestABCD admin -1 3 0 24 24 180 180 1 P/e2-e4 (0:00) e4 0 0 0', t)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestABCD GuestEFGH -1 3 0 24 24 180 180 1 P/e2-e4 (0:00) e4 0 0 0', t)
         self.expect('<b1> game 1 white [] black []', t)
-        self.expect('<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestABCD admin 1 3 0 24 24 180 180 1 P/e2-e4 (0:00) e4 1 0 0', t2)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestABCD GuestEFGH 1 3 0 24 24 180 180 1 P/e2-e4 (0:00) e4 1 0 0', t2)
         self.expect('<b1> game 1 white [] black []', t2)
 
         t2.write('d5\n')
-        self.expect('<12> rnbqkbnr ppp-pppp -------- ---p---- ----P--- -------- PPPP-PPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD admin 1 3 0 24 24 180 180 2 P/d7-d5 (0:00) d5 0 1 0', t)
+        self.expect('<12> rnbqkbnr ppp-pppp -------- ---p---- ----P--- -------- PPPP-PPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD GuestEFGH 1 3 0 24 24 180 180 2 P/d7-d5 (0:00) d5 0 1 0', t)
         self.expect('<b1> game 1 white [] black []', t)
-        self.expect('<12> rnbqkbnr ppp-pppp -------- ---p---- ----P--- -------- PPPP-PPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD admin -1 3 0 24 24 180 180 2 P/d7-d5 (0:00) d5 1 1 0', t2)
+        self.expect('<12> rnbqkbnr ppp-pppp -------- ---p---- ----P--- -------- PPPP-PPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD GuestEFGH -1 3 0 24 24 180 180 2 P/d7-d5 (0:00) d5 1 1 0', t2)
         self.expect('<b1> game 1 white [] black []', t2)
 
         t.write('exd5\n')
         self.expect('<b1> game 1 white [P] black [] <- WP', t)
-        self.expect('<12> rnbqkbnr ppp-pppp -------- ---P---- -------- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestABCD admin -1 3 0 25 23 180 180 2 P/e4-d5 (0:00) exd5 0 1 0', t)
+        self.expect('<12> rnbqkbnr ppp-pppp -------- ---P---- -------- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestABCD GuestEFGH -1 3 0 25 23 180 180 2 P/e4-d5 (0:00) exd5 0 1 0', t)
         self.expect('<b1> game 1 white [P] black []', t)
         self.expect('<b1> game 1 white [P] black [] <- WP', t2)
-        self.expect('<12> rnbqkbnr ppp-pppp -------- ---P---- -------- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestABCD admin 1 3 0 25 23 180 180 2 P/e4-d5 (0:00) exd5 1 1 0', t2)
+        self.expect('<12> rnbqkbnr ppp-pppp -------- ---P---- -------- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestABCD GuestEFGH 1 3 0 25 23 180 180 2 P/e4-d5 (0:00) exd5 1 1 0', t2)
         self.expect('<b1> game 1 white [P] black []', t2)
+
+        t2.write('Qxd5\n')
+        self.expect('<b1> game 1 white [P] black [P] <- BP', t)
+        self.expect('<12> ', t)
+        self.expect('<b1> game 1 white [P] black [P]', t)
+        self.expect('<b1> game 1 white [P] black [P] <- BP', t2)
+        self.expect('<12> ', t2)
+        self.expect('<b1> game 1 white [P] black [P]', t2)
+
+        t.write('ref\n')
+        self.expect('<12> ', t)
+        self.expect('<b1> game 1 white [P] black [P]', t)
+
+        self.close(t)
+        self.close(t2)
+
+    def test_crazyhouse_style1(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+        t.write('set style 1\n')
+        t2.write('set style 1\n')
+
+        t.write('match GuestEFGH white 3 0 zh\n')
+        self.expect('Issuing:', t)
+        self.expect('Challenge:', t2)
+        t2.write('accept\n')
+        self.expect('blitz crazyhouse', t)
+        self.expect('blitz crazyhouse', t2)
+
+        self.expect('Black holding: []', t)
+        self.expect('White holding: []', t)
+        self.expect('White holding: []', t2)
+        self.expect('Black holding: []', t2)
+
+        t.write('e4\n')
+        self.expect('Black holding: []', t)
+        self.expect('White holding: []', t)
+        self.expect('White holding: []', t2)
+        self.expect('Black holding: []', t2)
+
+        t2.write('d5\n')
+        self.expect('Black holding: []', t)
+        self.expect('White holding: []', t)
+        self.expect('White holding: []', t2)
+        self.expect('Black holding: []', t2)
+
+        t.write('exd5\n')
+        self.expect('Game 1: GuestABCD received P -> [P]', t)
+        self.expect('Black holding: []', t)
+        self.expect('White holding: [P]', t)
+        self.expect('Game 1: GuestABCD received P -> [P]', t2)
+        self.expect('White holding: [P]', t2)
+        self.expect('Black holding: []', t2)
+
+        t2.write('Qxd5\n')
+        self.expect('Game 1: GuestEFGH received P -> [P]', t)
+        self.expect('Black holding: [P]', t)
+        self.expect('White holding: [P]', t)
+        self.expect('Game 1: GuestEFGH received P -> [P]', t2)
+        self.expect('White holding: [P]', t2)
+        self.expect('Black holding: [P]', t2)
 
         self.close(t)
         self.close(t2)
 
     def _assert_game_is_legal(self, moves, result=None):
         t = self.connect_as_guest('GuestABCD')
-        t2 = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestEFGH')
         t.write('set style 12\n')
         t2.write('set style 12\n')
 
-        t.write('match admin white 1 0 crazyhouse\n')
+        t.write('match GuestEFGH white 1 0 crazyhouse\n')
         self.expect('Issuing:', t)
         self.expect('Challenge:', t2)
         t2.write('accept\n')

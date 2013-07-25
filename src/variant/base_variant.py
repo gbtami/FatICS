@@ -185,14 +185,7 @@ class BaseVariant(object):
             clock_is_ticking, last_move_lag)
 
         if self.name in ['crazyhouse', 'bughouse']:
-            # print additional <b1> lines
-            # print an extra line for captures
-            if last_mv and last_mv.is_capture:
-                if last_mv.undo.holding_pc.isupper():
-                    s = self.get_b1('W%s' % last_mv.undo.holding_pc) + s
-                else:
-                    s = self.get_b1('B%s' % last_mv.undo.holding_pc.upper()) + s
-
+            # print <b1> lines
             s += self.get_b1()
 
         return s

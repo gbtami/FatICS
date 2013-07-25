@@ -94,8 +94,8 @@ def notify_pin(user, arrived):
             pin_var_str = '\n[%s has disconnected.]\n' % user.name
         for u in online.pin_var:
             if u.is_admin() and arrived:
-                u.write(admin_pin_var_str)
+                u.session.conn.write(admin_pin_var_str)
             else:
-                u.write(pin_var_str)
+                u.session.conn.write(pin_var_str)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
