@@ -17,26 +17,55 @@
 #
 
 import re
+import time
 
 import game
+
+offers = {}
+def _find_free_slot():
+    """ Find the next available offer number. """
+    i = 1
+    while True:
+        if i not in offers:
+            return i
+        i += 1
 
 class Offer(object):
     """represents an offer from one player to another"""
     def __init__(self, name):
         self.name = name
         self.game = None
+        self.number = _find_free_slot()
+        offers[self.number] = self
 
     def _register(self):
         """ Store the offer as being made for both users. """
         self.a.session.offers_sent.append(self)
         self.b.session.offers_received.append(self)
 
+    def _remove(self):
+        """ Called when an offer is no longer open, so that
+        the offer number is freed and clients with the pendinfo
+        ivariable set are notified. """
+        for p in [self.a, self.b]:
+            if p.session.ivars['pendinfo']:
+                p.write_nowrap('\n<pr> %d\n' % self.number)
+        del offers[self.number]
+
+    def pendinfo(self, type_, param):
+        if self.a.session.ivars['pendinfo']:
+            self.a.write_nowrap('\n<pt> %d w=%s t=%s p=%s\n' % (self.number,
+                    self.b.name, type_, param))
+        if self.b.session.ivars['pendinfo']:
+            self.b.write_nowrap('\n<pf> %d w=%s t=%s p=%s\n' % (self.number,
+                    self.a.name, type_, param))
+
     def accept(self):
         """player b accepts"""
         self.a.session.offers_sent.remove(self)
         self.b.session.offers_received.remove(self)
 
-        self.b.write_("Accepting the %(offer)s from %(name)s.\n", {
+        self.b.write(_("Accepting the %(offer)s from %(name)s.\n") % {
             'offer': self.name, 'name': self.a.name})
         self.a.write_("\n%(name)s accepts your %(offer)s.\n", {
             'name': self.b.name, 'offer': self.name})
@@ -44,6 +73,7 @@ class Offer(object):
             for p in self.game.observers:
                 p.write_("\nGame %(num)d: %(name)s accepts the %(offer)s.\n", {
                     'num': self.game.number, 'name': self.b.name, 'offer': self.name})
+        self._remove()
 
     def decline(self, notify=True):
         """player b declines"""
@@ -58,6 +88,7 @@ class Offer(object):
                         {'num': self.game.number, 'pname': self.b.name, 'offer': self.name})
         self.a.session.offers_sent.remove(self)
         self.b.session.offers_received.remove(self)
+        self._remove()
 
     def withdraw(self, notify=True):
         """player a withdraws the offer"""
@@ -72,6 +103,7 @@ class Offer(object):
                         {'num': self.game.number, 'pname': self.a.name, 'offer': self.name})
         self.a.session.offers_sent.remove(self)
         self.b.session.offers_received.remove(self)
+        self._remove()
 
     def withdraw_logout(self):
         """ Player a withdraws the offer by logging out. """
@@ -107,6 +139,7 @@ class Abort(Offer):
                 p.write_('\n%(name)s requests to abort game %(num)d.\n', {
                     'name': user.name, 'num': game.number})
             self._register()
+            self.pendinfo('abort', '#')
 
     def decline(self, notify=True):
         Offer.decline(self, notify)
@@ -147,6 +180,7 @@ class Adjourn(Offer):
             for p in game.observers:
                 p.write_('\n%s requests to adjourn game %d.\n', (user.name, game.number))
             self._register()
+            self.pendinfo('adjourn', '#')
 
     def decline(self, notify=True):
         Offer.decline(self, notify)
@@ -191,6 +225,7 @@ class Draw(Offer):
                 return
 
             game.pending_offers.append(self)
+            # original FICS sends "Draw request sent."
             user.write_('Offering a draw to %s.\n', (self.b.name,))
             self.b.write_('\n%s offers you a draw.\n', (user.name,))
             for p in self.game.observers:
@@ -198,6 +233,7 @@ class Draw(Offer):
                     (game.number, user.name))
 
             self._register()
+            self.pendinfo('draw', '#')
 
     def accept(self):
         Offer.accept(self)

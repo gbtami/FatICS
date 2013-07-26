@@ -37,6 +37,18 @@ class TestNotPlaying(Test):
         t.write('decline\n')
         self.expect('There are no offers to decline.', t)
 
+        t.write('withdraw\n')
+        self.expect('There are no offers to withdraw.', t)
+
+        t.write('accept 99\n')
+        self.expect('There is no offer 99 to accept.', t)
+
+        t.write('decline 99\n')
+        self.expect('There is no offer 99 to decline.', t)
+
+        t.write('withdraw 99\n')
+        self.expect('There is no offer 99 to withdraw.', t)
+
         self.close(t)
 
 class TestAbort(Test):
@@ -442,6 +454,73 @@ class TestDraw(Test):
         self.close(t)
         self.close(t2)
         self.close(t3)
+
+class TestPendinfo(Test):
+    def test_pendinfo(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t.write('iset pendinfo 1\n')
+        t2.write('iset pendinfo 1\n')
+
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
+        t.write('match guestefgh 1 0 w\n')
+        self.expect('Issuing:', t)
+        m = self.expect_re('<pt> (\d+) w=GuestEFGH t=match p=GuestABCD .* \[white\] GuestEFGH .* unrated lightning 1 0', t)
+        num = int(m.group(1))
+        self.expect('Challenge:', t2)
+        self.expect('<pf> %d w=GuestABCD t=match p=GuestABCD (++++) [white] GuestEFGH (++++) unrated lightning 1 0' % num, t2)
+
+        t.write('accept %d\n' % num)
+        self.expect('There is no offer', t)
+        t2.write('accept %d\n' % num)
+        self.expect('Accepting the match offer', t2)
+        self.expect('<pr> %d\r\n' % num, t2)
+        self.expect('Creating:', t2)
+        self.expect('accepts your match offer', t)
+        self.expect('<pr> %d\r\n' % num, t)
+        self.expect('Creating:', t)
+
+        t.write('draw\n')
+        self.expect('Offering a draw', t)
+        m = self.expect_re('<pt> (\d+) w=GuestEFGH t=draw p=#', t)
+        num = int(m.group(1))
+        self.expect('GuestABCD offers you a draw.', t2)
+        self.expect('<pf> %d w=GuestABCD t=draw p=#' % num, t2)
+
+        t2.write('decl %d\n' % num)
+        self.expect('declines', t)
+        self.expect('\n<pr> %d\r\n' % num, t)
+        self.expect('Declining', t2)
+        self.expect('\n<pr> %d\r\n' % num, t2)
+
+        t.write('e4\n')
+        self.expect('<12> ', t)
+        self.expect('<12> ', t2)
+        t2.write('c5\n')
+        self.expect('<12> ', t)
+        self.expect('<12> ', t2)
+
+        t2.write('abo\n')
+        self.expect('Requesting to abort', t2)
+        m = self.expect_re('<pt> (\d+) w=GuestABCD t=abort p=#', t2)
+        num = int(m.group(1))
+        self.expect('GuestEFGH requests', t)
+        self.expect('<pf> %d w=GuestEFGH t=abort p=#' % num, t)
+
+        t2.write('withdraw %d\n' % num)
+        self.expect('Withdrawing', t2)
+        self.expect('<pr> %d\r\n' % num, t2)
+        self.expect('GuestEFGH withdraws', t)
+        self.expect('<pr> %d\r\n' % num, t)
+
+        t.write('abo\n')
+        t2.write('abo\n')
+
+        self.close(t)
+        self.close(t2)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
 

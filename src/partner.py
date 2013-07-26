@@ -46,6 +46,7 @@ class Partner(Offer):
         a.write(_('Making a partnership offer to %s.\n') % b.name)
         b.write_('\n%s offers to be your bughouse partner; type "partner %s" to accept.\n', (a.name,a.name))
         self._register()
+        self.pendinfo('partner', '#')
 
     def accept(self):
         Offer.accept(self)

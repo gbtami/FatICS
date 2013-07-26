@@ -449,6 +449,7 @@ class Challenge(Offer, MatchStringParser):
         if b.has_title('computer'):
             a.write_('--** %s is a computer **--\n', (b.name,))
         b.write_('You can "accept", "decline", or propose different parameters.\n')
+        self.pendinfo('match', challenge_str)
 
     def _parse_args(self, args, a, b):
         """ Parse the arguments, including parsing specific to match
