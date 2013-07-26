@@ -74,18 +74,18 @@ def _set_bugopen_var(u, val):
         # end any partnerships and partnership requests
         for offer in u.session.offers_sent[:]:
             if offer.name == 'partnership request':
-                offer.b.write_('%s, who was offering a partnership with you, has become unavailable for bughouse.\n', u.name)
+                offer.b.write_('\n%s, who was offering a partnership with you, has become unavailable for bughouse.\n', u.name)
                 offer.withdraw(notify=False)
                 u.write_("Partnership offer to %s withdrawn.\n", offer.b.name)
-                offer.b.write_("Partnership offer from %s removed.\n", u.name)
+                offer.b.write_("\nPartnership offer from %s removed.\n", u.name)
         for offer in u.session.offers_received[:]:
             if offer.name == 'partnership request':
-                offer.a.write_('%s, whom you were offering a partnership with, has become unavailable for bughouse.\n', u.name)
+                offer.a.write_('\n%s, whom you were offering a partnership with, has become unavailable for bughouse.\n', u.name)
                 offer.withdraw(notify=False)
                 u.write_("Partnership offer from %s removed.\n", offer.a.name)
-                offer.a.write_("Partnership offer to %s withdrawn.\n", u.name)
+                offer.a.write_("\nPartnership offer to %s withdrawn.\n", u.name)
         if u.session.partner:
-            u.session.partner.write_('Your partner has become unavailable for bughouse.\n')
+            u.session.partner.write_('\nYour partner has become unavailable for bughouse.\n')
             partner.end_partnership(u, u.session.partner)
 
 class Var(object):

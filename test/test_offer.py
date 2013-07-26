@@ -283,7 +283,7 @@ class TestDraw(Test):
 
         t.write('draw\n')
         self.expect('Offering a draw', t)
-        self.expect('GuestABCD offers a draw', t2)
+        self.expect('GuestABCD offers you a draw', t2)
 
         t2.write('draw\n')
         self.expect('admin accepts your draw offer', t)
@@ -305,7 +305,7 @@ class TestDraw(Test):
 
         t.write('draw\n')
         self.expect('Offering a draw', t)
-        self.expect('GuestABCD offers a draw', t2)
+        self.expect('GuestABCD offers you a draw', t2)
 
         t2.write('accept\n')
         self.expect('admin accepts your draw offer', t)
@@ -326,7 +326,7 @@ class TestDraw(Test):
         self.expect('Creating: ', t2)
 
         t.write('draw\n')
-        self.expect('GuestABCD offers a draw', t2)
+        self.expect('GuestABCD offers you a draw', t2)
         t2.write('decl\n')
 
         self.expect('Declining the draw offer', t2)
@@ -352,14 +352,14 @@ class TestDraw(Test):
         t2.write('e5\n')
         self.expect('P/e7-e5', t2)
         t2.write('draw\n')
-        self.expect('admin offers a draw', t)
+        self.expect('admin offers you a draw', t)
 
         t.write('f4\n')
         self.expect('Declining the draw offer from admin', t)
         self.expect('GuestABCD declines your draw offer', t2)
 
         t.write('draw\n')
-        self.expect('GuestABCD offers a draw', t2)
+        self.expect('GuestABCD offers you a draw', t2)
         t2.write('exf4\n')
         self.expect('Declining the draw offer from GuestABCD', t2)
         self.expect('admin declines your draw offer', t)
@@ -378,7 +378,7 @@ class TestDraw(Test):
         self.expect('Creating: ', t2)
 
         t.write('draw\n')
-        self.expect('GuestABCD offers a draw', t2)
+        self.expect('GuestABCD offers you a draw', t2)
         t.write('withdraw\n')
 
         self.expect('You cannot withdraw a draw offer', t)
@@ -397,7 +397,7 @@ class TestDraw(Test):
         self.expect('Creating: ', t2)
 
         t.write('draw\n')
-        self.expect('GuestABCD offers a draw', t2)
+        self.expect('GuestABCD offers you a draw', t2)
 
         t2.write('resign\n')
         t2.write('accept\n')
@@ -423,17 +423,17 @@ class TestDraw(Test):
         self.expect('Game 1: TestPlayer (----) admin (----) rated lightning 1 0', t3)
 
         t2.write('draw\n')
-        self.expect('admin offers a draw.', t)
-        self.expect('admin offers a draw.', t3)
+        self.expect('admin offers you a draw.', t)
+        self.expect('Game 1: admin offers a draw.', t3)
         t.write('e4\n')
         self.expect('TestPlayer declines your draw offer.', t2)
-        self.expect('TestPlayer declines the draw offer.', t3)
+        self.expect('Game 1: TestPlayer declines the draw offer.', t3)
 
         t.write('draw\n')
-        self.expect('TestPlayer offers a draw.', t3)
+        self.expect('Game 1: TestPlayer offers a draw.', t3)
         t2.write('draw\n')
         self.expect('admin accepts your draw offer.', t)
-        self.expect('admin accepts the draw offer.', t3)
+        self.expect('\nGame 1: admin accepts the draw offer.', t3)
         self.expect('drawn by agreement} 1/2-1/2', t3)
 
         t2.write('asetrating admin lightning chess 0 0 0 0 0 0\n')

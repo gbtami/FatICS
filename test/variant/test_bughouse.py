@@ -526,7 +526,7 @@ class TestBughouseKibitz(Test):
         self.expect('Creating:', t4)
 
         t3.write('draw\n')
-        self.expect('GuestIJKL offers a draw.', t)
+        self.expect('GuestIJKL offers you a draw.', t)
         t.write('draw\n')
         self.expect('drawn by agreement} 1/2-1/2', t)
         self.expect('drawn by agreement} 1/2-1/2', t3)
@@ -969,7 +969,7 @@ class TestBughouseRules(Test):
         self.expect('<12> ', t4)
 
         t2.write('draw\n')
-        self.expect('GuestEFGH offers a draw.', t4)
+        self.expect('GuestEFGH offers you a draw.', t4)
         t4.write('acc\n')
         self.expect("Partners' game drawn} 1/2-1/2", t)
         self.expect("Partners' game drawn} 1/2-1/2", t3)

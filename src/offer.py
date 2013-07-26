@@ -36,40 +36,40 @@ class Offer(object):
         self.a.session.offers_sent.remove(self)
         self.b.session.offers_received.remove(self)
 
-        self.b.write(_("Accepting the %(offer)s from %(name)s.\n") % {
+        self.b.write_("Accepting the %(offer)s from %(name)s.\n", {
             'offer': self.name, 'name': self.a.name})
-        self.a.write(_("%(name)s accepts your %(offer)s.\n") % {
+        self.a.write_("\n%(name)s accepts your %(offer)s.\n", {
             'name': self.b.name, 'offer': self.name})
         if self.game:
             for p in self.game.observers:
-                p.write(_("%(name)s accepts the %(offer)s.\n") % {
-                    'name': self.b.name, 'offer': self.name})
+                p.write_("\nGame %(num)d: %(name)s accepts the %(offer)s.\n", {
+                    'num': self.game.number, 'name': self.b.name, 'offer': self.name})
 
     def decline(self, notify=True):
         """player b declines"""
         if notify:
             self.b.write(_("Declining the %(offer)s from %(name)s.\n") %
                 {'offer': self.name, 'name': self.a.name})
-            self.a.write(_("%(name)s declines your %(offer)s.\n") %
+            self.a.write_("\n%(name)s declines your %(offer)s.\n",
                 {'name': self.b.name, 'offer': self.name})
             if self.game:
                 for p in self.game.observers:
-                    p.write(_("%(name)s declines the %(offer)s.\n") % {
-                        'name': self.b.name, 'offer': self.name})
+                    p.write_("\nGame %(num)d: %(pname)s declines the %(offer)s.\n",
+                        {'num': self.game.number, 'pname': self.b.name, 'offer': self.name})
         self.a.session.offers_sent.remove(self)
         self.b.session.offers_received.remove(self)
 
     def withdraw(self, notify=True):
         """player a withdraws the offer"""
         if notify:
-            self.a.write(_("Withdrawing your %s to %s.\n") % (self.name,
-                self.b.name))
-            self.b.write(_("%s withdraws the %s.\n") % (self.a.name,
-                self.name))
+            self.a.write(_("Withdrawing your %(offer)s to %(pname)s.\n") %
+                {'offer': self.name, 'pname': self.b.name})
+            self.b.write_("\n%(pname)s withdraws the %(offer)s.\n",
+                {'pname' : self.a.name, 'offer': self.name})
             if self.game:
                 for p in self.game.observers:
-                    p.write(_("%(name)s withdraws the %(offer)s.\n") % {
-                        'name': self.a.name, 'offer': self.name})
+                    p.write_("\nGame %(num)d: %(pname)s withdraws the %(offer)s.\n",
+                        {'num': self.game.number, 'pname': self.a.name, 'offer': self.name})
         self.a.session.offers_sent.remove(self)
         self.b.session.offers_received.remove(self)
 
@@ -101,10 +101,10 @@ class Abort(Offer):
         else:
             game.pending_offers.append(self)
             user.write_('Requesting to abort game %d.\n', (game.number,))
-            self.b.write_('%(name)s requests to abort game %(num)d.\n', {
+            self.b.write_('\n%(name)s requests to abort game %(num)d.\n', {
                 'name': user.name, 'num': game.number})
             for p in game.observers:
-                p.write_('%(name)s requests to abort game %(num)d.\n', {
+                p.write_('\n%(name)s requests to abort game %(num)d.\n', {
                     'name': user.name, 'num': game.number})
             self._register()
 
@@ -143,9 +143,9 @@ class Adjourn(Offer):
         else:
             game.pending_offers.append(self)
             user.write_('Requesting to adjourn game %d.\n', (game.number,))
-            self.b.write_('%s requests to adjourn game %d.\n', (user.name, game.number))
+            self.b.write_('\n%s requests to adjourn game %d.\n', (user.name, game.number))
             for p in game.observers:
-                p.write_('%s requests to adjourn game %d.\n', (user.name, game.number))
+                p.write_('\n%s requests to adjourn game %d.\n', (user.name, game.number))
             self._register()
 
     def decline(self, notify=True):
@@ -192,9 +192,10 @@ class Draw(Offer):
 
             game.pending_offers.append(self)
             user.write_('Offering a draw to %s.\n', (self.b.name,))
-            self.b.write_('%s offers a draw.\n', (user.name,))
+            self.b.write_('\n%s offers you a draw.\n', (user.name,))
             for p in self.game.observers:
-                p.write_('%s offers a draw.\n', (user.name,))
+                p.write_('\nGame %d: %s offers a draw.\n',
+                    (game.number, user.name))
 
             self._register()
 

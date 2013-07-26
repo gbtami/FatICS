@@ -44,12 +44,12 @@ class Partner(Offer):
         self.a = a
         self.b = b
         a.write(_('Making a partnership offer to %s.\n') % b.name)
-        b.write_('%s offers to be your bughouse partner; type "partner %s" to accept.\n', (a.name,a.name))
+        b.write_('\n%s offers to be your bughouse partner; type "partner %s" to accept.\n', (a.name,a.name))
         self._register()
 
     def accept(self):
         Offer.accept(self)
-        self.a.write_("%s agrees to be your partner.\n", (self.b.name,))
+        self.a.write_("\n%s agrees to be your partner.\n", (self.b.name,))
         self.b.write_("You agree to be %s's partner.\n", (self.a.name,))
         self.a.session.partner = self.b
         self.b.session.partner = self.a
@@ -58,30 +58,30 @@ class Partner(Offer):
         # end any pending partnership offers
         for offer in self.a.session.offers_sent[:]:
             if offer.name == 'partnership request':
-                offer.b.write_('%(aname)s, who was offering a partnership with you, has accepted a partnership with %(bname)s.\n', {'aname': self.a.name, 'bname': self.b.name})
+                offer.b.write_('\n%(aname)s, who was offering a partnership with you, has accepted a partnership with %(bname)s.\n', {'aname': self.a.name, 'bname': self.b.name})
                 offer.withdraw(notify=False)
         for offer in self.b.session.offers_sent[:]:
             if offer.name == 'partnership request':
-                offer.b.write_('%(aname)s, who was offering a partnership with you, has accepted a partnership with %(bname)s.\n', {'aname': self.b.name, 'bname': self.a.name})
+                offer.b.write_('\n%(aname)s, who was offering a partnership with you, has accepted a partnership with %(bname)s.\n', {'aname': self.b.name, 'bname': self.a.name})
                 offer.withdraw(notify=False)
         for offer in self.a.session.offers_received[:]:
             if offer.name == 'partnership request':
-                offer.a.write_('%(aname)s, whom you were offering a partnership with, has accepted a partnership with %(bname)s.\n', {'aname': self.a.name, 'bname': self.b.name})
+                offer.a.write_('\n%(aname)s, whom you were offering a partnership with, has accepted a partnership with %(bname)s.\n', {'aname': self.a.name, 'bname': self.b.name})
                 offer.withdraw(notify=False)
         for offer in self.b.session.offers_received[:]:
             if offer.name == 'partnership request':
-                offer.a.write_('%(aname)s, whom you were offering a partnership with, has accepted a partnership with %(bname)s.\n', {'aname': self.b.name, 'bname': self.a.name})
+                offer.a.write_('\n%(aname)s, whom you were offering a partnership with, has accepted a partnership with %(bname)s.\n', {'aname': self.b.name, 'bname': self.a.name})
                 offer.withdraw(notify=False)
 
     def withdraw_logout(self):
         Offer.withdraw_logout(self)
         self.a.write_('Partnership offer to %s withdrawn.\n', (self.b.name,))
-        self.b.write_('%s, who was offering a partnership with you, has departed.\n',
+        self.b.write_('\n%s, who was offering a partnership with you, has departed.\n',
             (self.a.name,))
 
     def decline_logout(self):
         Offer.decline_logout(self)
-        self.a.write_('%s, whom you were offering a partnership with, has departed.\n', (self.b.name,))
+        self.a.write_('\n%s, whom you were offering a partnership with, has departed.\n', (self.b.name,))
         self.b.write_('Partnership offer from %s removed.\n', (self.a.name,))
 
 def end_partnership(p1, p2):
