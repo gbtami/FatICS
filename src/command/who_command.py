@@ -46,7 +46,6 @@ class Showadmins(Command):
         conn.write(ngettext('\n%d admin logged in.\n',
             '\n%d admins logged in.\n', len(admins)) % len(admins))
 
-# "showsr" and "showtm", added by ~ilknight 8-5-2011
 @ics_command('showsrs', '')
 class Showsrs(Command):
     def run(self, args, conn):

@@ -66,8 +66,20 @@ def _set_gin_var(user, val):
         if user in online.online.gin_var:
             online.online.gin_var.remove(user)
 
-def _set_open_var(user, val):
-    pass
+def _set_open_var(u, val):
+    for offer in u.session.offers_sent[:]:
+        if offer.name == 'match offer':
+            offer.withdraw_open()
+    for offer in u.session.offers_received[:]:
+        if offer.name == 'match offer':
+            offer.decline_open()
+    if u.session.partner:
+        if val:
+            # original FICS doesn't seem to notify in this case, but
+            # it seems logical to do so
+            u.session.partner.write_('\nYour partner has become available for matches.\n')
+        else:
+            u.session.partner.write_('\nYour partner has become unavailable for matches.\n')
 
 def _set_bugopen_var(u, val):
     if not val:
@@ -309,7 +321,7 @@ class VarList(object):
         BoolVar("ctell", True, N_("You will now hear channel tells from unregistered users.\n"), N_("You will not hear channel tells from unregistered users.\n")).persist().add_as_var()
         BoolVar("chanoff", False, N_("You will not hear channel tells.\n"), N_("You will now hear channel tells.\n")).persist().add_as_var()
 
-        BoolVar("open", True, N_("You are now open to receive match requests.\n"), N_("You are no longer open to receive match requests.\n")).persist().add_as_var().set_hook(_set_open_var)
+        BoolVar("open", True, N_("You are now receiving match requests.\n"), N_("You are no longer receiving match requests.\n")).persist().add_as_var().set_hook(_set_open_var)
         BoolVar("bugopen", False, N_("You are now open for bughouse.\n"), N_("You are not open for bughouse.\n")).persist().add_as_var().set_hook(_set_bugopen_var)
         BoolVar("silence", False, N_("You will now play games in silence.\n"), N_("You will not play games in silence.\n")).persist().add_as_var()
         BoolVar("bell", True, N_("You will now hear beeps.\n"), N_("You will not hear beeps.\n")).persist().add_as_var()

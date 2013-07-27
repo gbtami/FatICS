@@ -576,6 +576,9 @@ class Challenge(Offer, MatchStringParser):
             chal2 = copy.copy(self)
             chal2.a = self.a.session.partner
             chal2.b = self.b.session.partner
+            chal2.b.write_("\nYour partner accepts the challenge of %s.\n", (self.a.name,))
+            chal2.a.write_("\n%s accepts your partner's challenge.\n", (self.b.name))
+
             chal2.side = g.get_user_side(self.b)
             g2 = game.PlayedGame(chal2)
             g2.bug_link = g
@@ -585,20 +588,76 @@ class Challenge(Offer, MatchStringParser):
 
     def withdraw_logout(self):
         Offer.withdraw_logout(self)
-        self.a.write_('Challenge to %s withdrawn.\n',
+        self.a.write(_('Challenge to %s withdrawn.\n') %
             (self.b.name,))
-        self.b.write_('%s, who was challenging you, has departed.\n',
+        self.b.write_('\n%s, who was challenging you, has departed.\n',
             (self.a.name,))
         self.b.write_('Challenge from %s removed.\n',
             (self.a.name,))
+        if self.variant_name == 'bughouse':
+            assert(self.b.session.partner)
+            self.b.session.partner.write_('\n%s, who was challenging your partner, has departed.\n',
+                (self.a.name,))
+
+    def decline(self, notify=True):
+        Offer.decline(self, notify)
+        if self.variant_name == 'bughouse':
+            assert(self.a.session.partner)
+            assert(self.b.session.partner)
+            self.a.session.partner.write_('\n%s declines the match offer from your partner.\n',
+                (self.b.name,))
+            self.b.session.partner.write_('\nYour partner declines the match offer from %s.\n',
+                (self.a.name,))
 
     def decline_logout(self):
         Offer.decline_logout(self)
-        self.b.write_('Challenge from %s removed.\n',
+        self.b.write(_('Challenge from %s removed.\n') %
             (self.a.name,))
-        self.a.write_('%s, whom you were challenging, has departed.\n',
+        self.a.write_('\n%s, whom you were challenging, has departed.\n',
             (self.b.name,))
         self.a.write_('Challenge to %s withdrawn.\n',
             (self.b.name,))
+        if self.variant_name == 'bughouse':
+            assert(self.a.session.partner)
+            self.a.session.partner.write_('\n%s, whom your partner was challenging, has departed.\n',
+                (self.b.name,))
+
+    def withdraw_open(self):
+        """ Withdraw this offer due to the sender no longer being open. """
+        Offer.withdraw(self, notify=False)
+        self.a.write_('Challenge to %s withdrawn.\n',
+            (self.b.name,))
+        self.b.write_('\n%s, who was challenging you, has become unavailable for matches.\n',
+            (self.a.name,))
+        self.b.write_('Challenge from %s removed.\n',
+            (self.a.name,))
+        if self.variant_name == 'bughouse':
+            self.b.session.partner.write_('\n%s, who was challenging your partner, has become unavailable for matches.\n',
+                (self.a.name,))
+
+    def decline_open(self):
+        """ Decline this offer due to the receiver no longer being open. """
+        Offer.decline(self, notify=False)
+        self.b.write(_('Challenge from %s removed.\n') %
+            (self.a.name,))
+        self.a.write_('\n%s, whom you were challenging, has become unavailable for matches.\n',
+            (self.b.name,))
+        self.a.write_('Challenge to %s withdrawn.\n',
+            (self.b.name,))
+        if self.variant_name == 'bughouse':
+            assert(self.a.session.partner)
+            self.a.session.partner.write_('\n%s, whom your partner was challenging, has become unavailable for matches.\n',
+                (self.b.name,))
+
+    def decline_partner(self):
+        """ Decline this offer due to the partnership ending. """
+        assert(self.variant_name == 'bughouse')
+        self.decline(notify=False)
+
+    def withdraw_partner(self):
+        """ Withdraw this offer due to the partnership ending. """
+        assert(self.variant_name == 'bughouse')
+        self.withdraw(notify=False)
+
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

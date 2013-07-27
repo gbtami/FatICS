@@ -40,9 +40,9 @@ class TestMatch(Test):
         self.expect('admin is not open to match requests', t)
 
         t2.write('set open 1\n')
-        self.expect('now open', t2)
+        self.expect('now receiving', t2)
         t.write('match admin\n')
-        self.expect('now open to receive match requests', t)
+        self.expect('now receiving match requests', t)
         self.expect('Issuing: ', t)
         self.expect('Challenge: ', t2)
 
@@ -70,6 +70,35 @@ class TestMatch(Test):
         # conflicting ratedness
         t.write('match admin rated unrated\n')
         self.expect('Usage: ', t)
+
+        self.close(t)
+        self.close(t2)
+
+    def test_open(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t.write('match guestefgh\n')
+        self.expect('Challenge:', t2)
+
+        t.write('open\n')
+        # on original FICS, the order of the next two messages is reversed
+        self.expect('You are no longer receiving match requests.', t)
+        self.expect('Challenge to GuestEFGH withdrawn.', t)
+        self.expect('GuestABCD, who was challenging you, has become unavailable for matches.', t2)
+        self.expect('Challenge from GuestABCD removed.', t2)
+
+        t.write('open\n')
+        self.expect('now receiving', t)
+        t.write('match guestefgh\n')
+        self.expect('Challenge:', t2)
+
+        t2.write('set open 0\n')
+        # on original FICS, the order of the next two messages is reversed
+        self.expect('You are no longer receiving match requests.', t2)
+        self.expect('Challenge from GuestABCD removed.', t2)
+        self.expect('GuestEFGH, whom you were challenging, has become unavailable for matches.', t)
+        self.expect('Challenge to GuestEFGH withdrawn.', t)
 
         self.close(t)
         self.close(t2)

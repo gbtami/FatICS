@@ -52,11 +52,11 @@ class TestBughouseMatch(Test):
         self.expect('GuestMNOP accepts', t3)
 
         t2.write('set open\n')
-        self.expect('You are no longer open to receive match requests.', t2)
+        self.expect('You are no longer receiving match requests.', t2)
         t.write('match guestijkl bughouse 3+0\n')
         self.expect('Your partner is not available to play right now.', t)
         t2.write('set open\n')
-        self.expect('You are now open to receive match requests.', t2)
+        self.expect('You are now receiving match requests.', t2)
 
         t4.write('ex\n')
         self.expect('Starting a game in examine (scratch) mode', t4)
@@ -77,9 +77,47 @@ class TestBughouseMatch(Test):
         self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t4)
 
         self.close(t)
+        self.expect('Your partner, GuestABCD, has departed.', t2)
+        self.expect('GuestABCD, who was challenging you, has departed.\r\nChallenge from GuestABCD removed.', t3)
+        self.expect('GuestABCD, who was challenging your partner, has departed.', t4)
+
         self.close(t2)
         self.close(t3)
         self.close(t4)
+
+    def test_match_decline(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+        t3 = self.connect_as_guest('GuestIJKL')
+        t4 = self.connect_as_guest('GuestMNOP')
+
+        self.set_nowrap(t)
+        self.set_nowrap(t2)
+        self.set_nowrap(t3)
+        self.set_nowrap(t4)
+
+        t2.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t2)
+        t.write('part guestefgh\n')
+        self.expect('GuestABCD offers', t2)
+        t2.write('part guestabcd\n')
+        self.expect('GuestEFGH accepts', t)
+
+        t4.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t4)
+        t3.write('part guestmnop\n')
+        self.expect('GuestIJKL offers', t4)
+        t4.write('a\n')
+        self.expect('GuestMNOP accepts', t3)
+
+        t.write('match guestijkl bughouse 3+0\n')
+        self.expect('Issuing: ', t)
+        self.expect('Your bughouse partner issues: ', t2)
+        t3.write('dec\n')
+        self.expect('Declining', t3)
+        self.expect('GuestIJKL declines your match offer.', t)
+        self.expect('GuestIJKL declines the match offer from your partner.', t2)
+        self.expect('Your partner declines the match offer from GuestABCD.', t4)
 
     def test_match_partner_decline_by_playing(self):
         t = self.connect_as_guest('GuestABCD')
@@ -420,6 +458,10 @@ class TestBughouseKibitz(Test):
         self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t4)
 
         t3.write('a\n')
+        self.expect('GuestIJKL accepts your match offer.', t)
+        self.expect("GuestIJKL accepts your partner's challenge.", t2)
+        self.expect('Your partner accepts the challenge of GuestABCD.', t4)
+
         self.expect('Creating:', t)
         self.expect('Creating:', t2)
         self.expect('Creating:', t3)

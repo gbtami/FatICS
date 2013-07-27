@@ -52,6 +52,15 @@ class Partner(Offer):
         Offer.accept(self)
         self.a.write_("\n%s agrees to be your partner.\n", (self.b.name,))
         self.b.write_("You agree to be %s's partner.\n", (self.a.name,))
+
+        # end any existing partnerships
+        if self.a.session.partner:
+            self.a.session.partner.write_("\nYour partner has accepted a partnership with %s.", (self.b,))
+            end_partnership(self.a, self.a.session.partner)
+        if self.b.session.partner:
+            self.b.session.partner.write_("\nYour partner has accepted a partnership with %s.", (self.a,))
+            end_partnership(self.b, self.b.session.partner)
+
         self.a.session.partner = self.b
         self.b.session.partner = self.a
         partners.append(set([self.a, self.b]))
@@ -86,9 +95,42 @@ class Partner(Offer):
         self.b.write_('Partnership offer from %s removed.\n', (self.a.name,))
 
 def end_partnership(p1, p2):
+    """ P1 ends the partnership with P2. """
+    # TODO: don't assume "ended partnership", but also handle
+    # becoming unavailable for matches, departing, and starting games
     assert(p1.session.partner == p2)
     assert(p2.session.partner == p1)
     partners.remove(set([p1, p2]))
+    #p2.write_('\n%s has ended partnership.\n', p1.name)
+    p2.write_('\nYour partner has ended partnership.\n')
+    for o in p1.session.offers_sent[:]:
+        if o.name == 'match offer' and o.variant_name == 'bughouse':
+            o.b.write_("\n%s, who was challenging you, has ended partnership.\nChallenge from %s removed.\n", (p1.name,p1.name))
+            o.withdraw_partner()
+            o.b.session.partner.write_("\n%s's partner has ended partnership.\n'", (p2.name))
+            o.b.session.partner.write_("\nPartner's challenge from %s removed.\n'", (p1.name))
+            p2.write_("Partner's challenge to %s withdrawn.\n", (o.b.name,))
+    for o in p1.session.offers_received[:]:
+        if o.name == 'match offer' and o.variant_name == 'bughouse':
+            p1.write(_("Challenge from %s removed.\n"), o.a.name)
+            o.a.write_("\n%s, whom you were challenging, has ended partnership.\nChallenge to %s withdrawn.\n", (p1.name, p1.name))
+            o.a.session.partner.write_("\n%s, whom your partner was challenging, has ended partnership.\nPartner's challenge to %s removed.\n", (p1.name, p1.name))
+            p2.write_("\nPartner's challenge from %s removed.\n", (o.a.name,))
+            o.decline_partner()
+    for o in p2.session.offers_sent[:]:
+        if o.name == 'match offer' and o.variant_name == 'bughouse':
+            p1.write(_("Partner's challenge to %s withdrawn.\n") % o.b.name)
+            p2.write_("\nChallenge to %s withdrawn.\n", (o.b.name,))
+            o.b.write_("%s's partner has ended partnership.\nChallenge from %s removed.\n", (p2.name, p2.name))
+            o.b.session.partner.write_("%s, whose partner challenged your partner, has ended partnership.\nPartner's challenge from %s removed.\n", (p1.name, p2.name))
+            o.withdraw_partner()
+    for o in p2.session.offers_received[:]:
+        if o.name == 'match offer' and o.variant_name == 'bughouse':
+            p1.write(_("\nPartner's challenge from %s removed.\n") % o.a.name)
+            p2.write_("\nChallenge from %s removed.\n", (o.a.name,))
+            o.a.write_("%s's partner has ended partnership.\nChallenge to %s withdrawn.\n", (p2.name, p2.name))
+            o.a.session.partner.write_("\n%s, whose partner your partner was challenging, has ended partnership.\nPartner's challenge to %s withdrawn.\n", (p1.name, p2.name))
+            o.decline_partner()
     p1.session.partner = None
     p2.session.partner = None
     p1.write_('You no longer have a bughouse partner.\n')

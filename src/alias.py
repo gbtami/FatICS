@@ -171,6 +171,13 @@ class Alias(object):
             'mates': 'ptell $1 mates $o! $@',
             # not in "help system_alias"
             'unfollow': 'follow',
+            # showtm is now a command
+            # added by wmahan to replace commands
+            'open': 'set open',
+            'op': 'set open',
+            'flip': 'set flip',
+            'bell': 'set bell',
+            'simopen': 'set simopen',
     }
 
     # If this ever needs optimization, punctuation could be separated

@@ -89,7 +89,7 @@ class Session(object):
             #    partner.name)
             self.partner.write_('\nYour partner, %s, has departed.\n',
                 self.user.name)
-            partner.end_partnership(self.partner, self.user)
+            partner.end_partnership(self.user, self.partner)
 
         if self.game:
             try:

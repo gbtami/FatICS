@@ -115,9 +115,9 @@ class TestVars(Test):
         self.expect("Your messages will not be mailed to you.", t)
 
         t.write("set open 0\n")
-        self.expect("no longer open to receive match requests", t)
+        self.expect("no longer receiving match requests", t)
         t.write("set open 1\n")
-        self.expect("are now open to receive match requests", t)
+        self.expect("are now receiving match requests", t)
         t.write("set open 2\n")
         self.expect('Bad value given for variable "open"', t)
 
