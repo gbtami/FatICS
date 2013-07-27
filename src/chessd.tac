@@ -24,7 +24,7 @@ import os
 import sys
 from twisted.application import service, internet
 from twisted.internet.protocol import ServerFactory
-from twisted.internet import task, reactor
+from twisted.internet import task, reactor, ssl
 
 try:
     from txsockjs.factory import SockJSFactory
@@ -87,6 +87,19 @@ if SockJSFactory:
     service = internet.TCPServer(8080, SockJSFactory(IcsFactory(8080)))
     service.setServiceParent(application)
     #reactor.listenTCP(8080, SockJSFactory(IcsFactory(8080)))
+
+# ssl
+try:
+    keyAndCert = open('keys/fatics.pem')
+except IOError:
+    # no ssl
+    pass
+else:
+    cert = ssl.PrivateCertificate.loadPEM(keyAndCert.read())
+    ssl_port = config.ssl_port
+    service = internet.SSLServer(ssl_port, IcsFactory(ssl_port),
+        cert.options())
+    service.setServiceParent(application)
 
 lc = task.LoopingCall(timer.heartbeat)
 lc.start(timer.heartbeat_timeout)
