@@ -33,11 +33,7 @@ class DB(object):
             read_default_file="~/.my.cnf")
         cursor = self.db.cursor()
         cursor = self.query(cursor, """SET time_zone='+00:00'""")
-        # Increase the default connection timeout
-        # used by the server.
-        # Update: this may not be necessary now that we automatically
-        # reconnect on timeouts.
-        #cursor = self.query(cursor, """SET wait_timeout=604800""") # 1 week
+        self.db.set_character_set('utf8')
         cursor.close()
 
     def query(self, cursor, *args):

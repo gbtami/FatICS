@@ -39,7 +39,7 @@ class Accept(Command):
                 o = offer.offers[args[0]]
             except KeyError:
                 o = None
-            if not o or o.b != conn.user:
+            if not o or o not in conn.user.session.offers_received:
                 conn.write(_('There is no offer %d to accept.\n') % args[0])
             else:
                 o.accept()
@@ -63,7 +63,7 @@ class Decline(Command):
                 o = offer.offers[args[0]]
             except KeyError:
                 o = None
-            if not o or o.b != conn.user:
+            if not o or o not in conn.user.session.offers_received:
                 conn.write(_('There is no offer %d to decline.\n') % args[0])
             else:
                 o.decline()
@@ -87,7 +87,7 @@ class Withdraw(Command):
                 o = offer.offers[args[0]]
             except KeyError:
                 o = None
-            if not o or o.a != conn.user:
+            if not o or o not in conn.user.session.offers_sent:
                 conn.write(_('There is no offer %d to withdraw.\n') % args[0])
             else:
                 o.withdraw()

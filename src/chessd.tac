@@ -16,8 +16,6 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import copy
-
 """
 a twisted application for chessd
 """
@@ -27,6 +25,11 @@ import sys
 from twisted.application import service, internet
 from twisted.internet.protocol import ServerFactory
 from twisted.internet import task, reactor
+
+try:
+    from txsockjs.factory import SockJSFactory
+except ImportError:
+    SockJSFactory = None
 
 sys.path.insert(0, 'src/')
 
@@ -68,17 +71,22 @@ def getService(port):
     """
     return internet.TCPServer(port, IcsFactory(port))
 
+ports = [config.port, config.zipseal_port, config.compatibility_port]
+if os.geteuid() == 0:
+    # alternate port, for those with firewall issues
+    ports.append(23)
+
 application = service.Application("chessd")
 
-service = getService(config.port)
-service.setServiceParent(application)
-service = getService(config.zipseal_port)
-service.setServiceParent(application)
-service = getService(config.compatibility_port)
-service.setServiceParent(application)
-if os.geteuid() == 0:
-    service = getService(23)
+for port in ports:
+    service = getService(port)
     service.setServiceParent(application)
+
+# for WebSocket communication using sockjs
+if SockJSFactory:
+    service = internet.TCPServer(8080, SockJSFactory(IcsFactory(8080)))
+    service.setServiceParent(application)
+    #reactor.listenTCP(8080, SockJSFactory(IcsFactory(8080)))
 
 lc = task.LoopingCall(timer.heartbeat)
 lc.start(timer.heartbeat_timeout)

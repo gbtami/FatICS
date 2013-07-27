@@ -40,6 +40,7 @@ nic_file = 'data/nic999.idx'
 def main():
     db = MySQLdb.connect(host='localhost', db='chess',
         read_default_file="~/.my.cnf")
+    db.set_character_set('utf8')
     cursor = db.cursor()
 
     f = open(epd_file, 'r')
