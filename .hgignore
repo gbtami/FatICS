@@ -9,6 +9,7 @@ syntax: glob
 *.mo
 *.po
 .git
+.svn
 data/*.pgn
 _trial_temp
 

@@ -17,7 +17,6 @@
 #
 
 import re
-#import curses.ascii
 
 class AliasError(Exception):
     pass
@@ -104,7 +103,7 @@ class Alias(object):
             'sping': 'ping $1',
             'stats': 'statistics $@',
             't': 'tell $@',
-            'td': 'xtell SuperTD $@',
+            'td': 'xtell mamer $@',
             'vars': 'variables $@',
             'w': 'who $@',
             'worst': 'rank 0 $1',
