@@ -573,6 +573,7 @@ class Challenge(Offer, MatchStringParser):
 
         g = game.PlayedGame(self)
         if self.variant_name == 'bughouse':
+            # this should probably be in another module
             chal2 = copy.copy(self)
             chal2.a = self.a.session.partner
             chal2.b = self.b.session.partner
@@ -585,6 +586,14 @@ class Challenge(Offer, MatchStringParser):
             g.bug_link = g2
             g2.variant.pos.bug_link = g.variant.pos
             g.variant.pos.bug_link = g2.variant.pos
+            # start clocks immediately for bug
+            g.clock.start(WHITE)
+            g2.clock.start(WHITE)
+            g.send_boards()
+            g2.send_boards()
+            for p in [g.get_side_user(WHITE), g2.get_side_user(WHITE)]:
+                if p.has_timeseal():
+                    p.session.ping(for_move=True)
 
     def withdraw_logout(self):
         Offer.withdraw_logout(self)

@@ -551,10 +551,11 @@ class PlayedGame(Game):
         for u in online.gin_var:
             u.write_nowrap(create_str_2)
 
-        #p = self.get_user_to_move()
-        #if p.has_timeseal():
-        #    p.session.ping(for_move=True)
-        self.send_boards()
+        # currently we do not send pings at the start of the game
+
+        # for bughouse, the boards will be sent when the clocks are started
+        if self.variant.name != 'bughouse':
+            self.send_boards()
 
     def _resume(self, adj, a, b):
         """ Resume an adjourned game. """
@@ -709,13 +710,16 @@ class PlayedGame(Game):
 
     def next_move(self, mv, conn):
         # decline all offers to the player who just moved
+        # This declines non-game offers like partnership offers,
+        # but who cares?
         u = self.get_user_to_move()
         offers = [o for o in self.pending_offers if o.a == u]
         for o in offers:
             o.decline()
 
         time = 0.0
-        if self.is_active and self.variant.pos.ply > 1:
+        if self.is_active and (self.variant.pos.ply > 1
+            or self.variant.name == 'bughouse'):
             moved_side = opp(self.variant.get_turn())
             if self.clock.is_ticking:
                 if conn.user.has_timeseal():
@@ -895,9 +899,10 @@ class PlayedGame(Game):
     def leave(self, user):
         side = self.get_user_side(user)
         opp = self.get_opp(user)
-        opp.write_('\nYour opponent has lost contact or quit.\n')
+        opp.write_('\nYour opponent, %s, has lost contact or quit.\n', (user.name,))
         if (user.is_guest or user.has_title('abuser') or
-                (user.vars['noescape'] and opp.vars['noescape'])):
+                (user.vars['noescape'] and opp.vars['noescape'])
+                or not self.variant.can_adjourn):
             res = '0-1' if side == WHITE else '1-0'
             self.result('%s forfeits by disconnection' % user.name, res)
         elif opp.is_guest or self.variant.pos.ply < 10:

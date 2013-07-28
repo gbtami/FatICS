@@ -82,12 +82,6 @@ for port in ports:
     service = getService(port)
     service.setServiceParent(application)
 
-# for WebSocket communication using sockjs
-if SockJSFactory:
-    service = internet.TCPServer(8080, SockJSFactory(IcsFactory(8080)))
-    service.setServiceParent(application)
-    #reactor.listenTCP(8080, SockJSFactory(IcsFactory(8080)))
-
 # ssl
 try:
     keyAndCert = open('keys/fatics.pem')
@@ -100,6 +94,12 @@ else:
     service = internet.SSLServer(ssl_port, IcsFactory(ssl_port),
         cert.options())
     service.setServiceParent(application)
+
+# for WebSocket communication using sockjs
+if SockJSFactory:
+    service = internet.TCPServer(8080, SockJSFactory(IcsFactory(8080)))
+    service.setServiceParent(application)
+    #reactor.listenTCP(8080, SockJSFactory(IcsFactory(8080)))
 
 lc = task.LoopingCall(timer.heartbeat)
 lc.start(timer.heartbeat_timeout)

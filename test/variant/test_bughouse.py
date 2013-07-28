@@ -424,6 +424,58 @@ class TestBughouseKibitz(Test):
         self.close(t3)
         self.close(t4)
 
+class TestResults(Test):
+    def test_adjourn(self):
+        # adjourning is not implemented yet, so expect a disconnection
+        # by forfeit for now
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+        t3 = self.connect_as_guest('GuestIJKL')
+        t4 = self.connect_as_guest('GuestMNOP')
+
+        self.set_nowrap(t)
+        self.set_nowrap(t2)
+        self.set_nowrap(t3)
+        self.set_nowrap(t4)
+
+        t2.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t2)
+        t.write('part guestefgh\n')
+        self.expect('GuestABCD offers', t2)
+        t2.write('part guestabcd\n')
+        self.expect('GuestEFGH accepts', t)
+
+        t4.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t4)
+        t3.write('part guestmnop\n')
+        self.expect('GuestIJKL offers', t4)
+        t4.write('a\n')
+        self.expect('GuestMNOP accepts', t3)
+
+        t.write('match guestijkl bughouse 3+0\n')
+        self.expect('Issuing: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t)
+        self.expect('Your bughouse partner issues: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t2)
+        self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t2)
+        self.expect('Challenge: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t3)
+        self.expect('Your bughouse partner was challenged: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t4)
+        self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t4)
+
+        t3.write('match guestabcd bughouse 3+0\n') # intercept
+        self.expect('Creating:', t)
+        self.expect('Creating:', t2)
+        self.expect('Creating:', t3)
+        self.expect('Creating:', t4)
+
+        t4.close()
+        self.expect("GuestABCD's partner won", t)
+        self.expect("GuestABCD's partner won", t3)
+        self.expect('Your opponent, GuestMNOP, has lost contact or quit.', t2)
+        self.expect('GuestMNOP forfeits by disconnection}', t2)
+
+        self.close(t)
+        self.close(t2)
+        self.close(t3)
+
     def test_win_white(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_guest('GuestEFGH')

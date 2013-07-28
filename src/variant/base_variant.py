@@ -26,6 +26,7 @@ class IllegalMoveError(Exception):
 
 class BaseVariant(object):
     """ Methods common to all variants. """
+    can_adjourn = True
     def to_style1(self, user):
         """ A human-readable board. """
         if self.game.gtype == PLAYED and user == self.game.black:

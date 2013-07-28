@@ -582,7 +582,7 @@ class TestGames(Test):
         self.close(t2)
 
 class TestDisconnect(Test):
-    def test_forfeit_disconnection_quit(self):
+    def test_forfeit_disconnection_disconnect(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
@@ -593,6 +593,7 @@ class TestDisconnect(Test):
         self.expect('Creating: ', t2)
 
         t.close()
+        self.expect('Your opponent, GuestABCD, has lost contact or quit.', t2)
         self.expect('{Game 1 (GuestABCD vs. admin) GuestABCD forfeits by disconnection} 0-1', t2)
 
         t2.write('aclearhist admin\n')

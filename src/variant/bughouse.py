@@ -1351,6 +1351,8 @@ class Position(object):
 
 
 class Bughouse(BaseVariant):
+    can_adjourn = False
+
     def __init__(self, game):
         self.game = game
         self.pos = copy.deepcopy(initial_pos)
