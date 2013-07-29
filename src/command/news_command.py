@@ -93,11 +93,21 @@ class Cnewsi(Command):
 @ics_command('cnewsp', 'd', admin.Level.admin)
 class Cnewsp(Command):
     def run(self, args, conn):
-        pass
+        try:
+            db.set_news_poster(args[0], conn.user)
+        except AssertionError:
+            conn.write(A_('News item %d not found or not changed.\n') % args[0])
+        else:
+            conn.write(A_('News item %d updated.\n') % args[0])
 
 @ics_command('cnewst', 'dS', admin.Level.admin)
 class Cnewst(Command):
     def run(self, args, conn):
-        pass
+        try:
+            db.set_news_title(args[0], args[1])
+        except AssertionError:
+            conn.write(A_('News item %d not found or not changed.\n') % args[0])
+        else:
+            conn.write(A_('News item %d updated.\n') % args[0])
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

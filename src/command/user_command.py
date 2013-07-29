@@ -101,7 +101,8 @@ class Finger(Command):
                     conn.write(_('Zipseal:     Off\n'))
 
             notes = u.notes
-            if len(notes) > 0:
+            if notes and (u.is_guest or not u.is_notebanned
+                or conn.user.is_admin()):
                 conn.write('\n')
                 prev_max = 0
                 for (num, txt) in sorted(notes.iteritems()):

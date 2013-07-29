@@ -338,9 +338,11 @@ class RegUser(BaseUser):
         self.last_logout = u['user_last_logout']
         self.admin_level = u['user_admin_level']
         self.is_banned = u['user_banned']
+        self.is_notebanned = u['user_notebanned']
         self.is_ratedbanned = u['user_ratedbanned']
         self.is_playbanned = u['user_playbanned']
         self.is_muzzled = u['user_muzzled']
+        self.is_cmuzzled = u['user_cmuzzled']
         self.is_muted = u['user_muted']
         self.is_guest = False
         self.channels = db.user_get_channels(self.id)
@@ -632,9 +634,19 @@ class RegUser(BaseUser):
         self.is_muzzled = val
         db.user_set_muzzled(self.id, 1 if val else 0)
 
+    def set_cmuzzled(self, val):
+        """ Cmuzzle or un-cmuzzle the user (affects c-shouts). """
+        self.is_cmuzzled = val
+        db.user_set_cmuzzled(self.id, 1 if val else 0)
+
     def set_muted(self, val):
         BaseUser.set_muted(self, val)
         db.user_set_muted(self.id, 1 if val else 0)
+
+    def set_notebanned(self, val):
+        """ Add or remove this user from the noteban list. """
+        self.is_notebanned = val
+        db.user_set_notebanned(self.id, 1 if val else 0)
 
     def set_ratedbanned(self, val):
         """ Add or remove this user from the ratedban list. """

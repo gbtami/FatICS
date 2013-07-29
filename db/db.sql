@@ -20,7 +20,9 @@ CREATE TABLE `user` (
   `user_last_logout` timestamp NULL DEFAULT NULL,
   `user_banned` BOOLEAN NOT NULL DEFAULT 0,
   `user_muzzled` BOOLEAN NOT NULL DEFAULT 0,
+  `user_cmuzzled` BOOLEAN NOT NULL DEFAULT 0,
   `user_muted` BOOLEAN NOT NULL DEFAULT 0,
+  `user_notebanned` BOOLEAN NOT NULL DEFAULT 0,
   `user_ratedbanned` BOOLEAN NOT NULL DEFAULT 0,
   `user_playbanned` BOOLEAN NOT NULL DEFAULT 0,
 

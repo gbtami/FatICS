@@ -55,7 +55,8 @@ class DB(object):
         cursor = self.query(cursor, """SELECT
                 user_id,user_name,user_passwd,user_last_logout,
                 user_admin_level, user_email,user_real_name,user_banned,
-                user_muzzled,user_muted,user_ratedbanned,user_playbanned
+                user_muzzled,user_cmuzzled,user_muted,user_notebanned,
+                user_ratedbanned,user_playbanned
             FROM user WHERE user_name=%s""", (name,))
         row = cursor.fetchone()
         cursor.close()
@@ -140,8 +141,8 @@ class DB(object):
         cursor = self.db.cursor(cursors.DictCursor)
         cursor = self.query(cursor, """SELECT user_id,user_name,user_passwd,
                 user_last_logout,user_admin_level,user_email,user_real_name,
-                user_banned,user_muzzled,user_muted,user_ratedbanned,
-                user_playbanned
+                user_banned,user_muzzled,user_cmuzzled,user_muted,
+                user_notebanned,user_ratedbanned,user_playbanned
             FROM user WHERE user_name LIKE %s""" + " LIMIT %s" % limit,
                 (prefix + '%',))
         rows = cursor.fetchall()
@@ -258,12 +259,42 @@ class DB(object):
         cursor.close()
         return ret
 
+    def user_set_cmuzzled(self, uid, val):
+        cursor = self.db.cursor()
+        assert(val in [0, 1])
+        cursor = self.query(cursor, """UPDATE user
+            SET user_cmuzzled=%s WHERE user_id=%s""", (val,uid))
+        cursor.close()
+
+    def get_cmuzzled_user_names(self):
+        cursor = self.db.cursor()
+        cursor = self.query(cursor, """SELECT user_name FROM user
+            WHERE user_cmuzzled=1 LIMIT 500""")
+        ret = [r[0] for r in cursor.fetchall()]
+        cursor.close()
+        return ret
+
     def user_set_muted(self, uid, val):
         cursor = self.db.cursor()
         assert(val in [0, 1])
         cursor = self.query(cursor, """UPDATE user
             SET user_muted=%s WHERE user_id=%s""", (val,uid))
         cursor.close()
+
+    def user_set_notebanned(self, uid, val):
+        cursor = self.db.cursor()
+        assert(val in [0, 1])
+        cursor = self.query(cursor, """UPDATE user
+            SET user_notebanned=%s WHERE user_id=%s""", (val,uid))
+        cursor.close()
+
+    def get_notebanned_user_names(self):
+        cursor = self.db.cursor()
+        cursor = self.query(cursor, """SELECT user_name FROM user
+            WHERE user_notebanned=1 LIMIT 500""")
+        ret = [r[0] for r in cursor.fetchall()]
+        cursor.close()
+        return ret
 
     def user_set_ratedbanned(self, uid, val):
         cursor = self.db.cursor()
@@ -358,7 +389,8 @@ class DB(object):
         cursor = self.query(cursor, """
             SELECT user_name AS admin_name,when_added,txt FROM user_comment
                 LEFT JOIN user ON (user.user_id=user_comment.admin_id)
-                WHERE user_comment.user_id=%s""", (user_id,))
+                WHERE user_comment.user_id=%s
+                ORDER BY when_added DESC""", (user_id,))
         rows = cursor.fetchall()
         cursor.close()
         return rows
@@ -903,6 +935,26 @@ class DB(object):
                 raise DeleteError
             cursor = self.query(cursor, """DELETE FROM news_line
                 WHERE news_id=%s AND num=%s""", (news_id,num))
+            assert(cursor.rowcount == 1)
+        finally:
+            cursor.close()
+
+    def set_news_poster(self, news_id, u):
+        """ Set the poster of a news item. """
+        try:
+            cursor = self.db.cursor()
+            cursor = self.query(cursor, """UPDATE news_index SET news_poster=%s WHERE news_id=%s""",
+                (u.name,news_id))
+            assert(cursor.rowcount == 1)
+        finally:
+            cursor.close()
+
+    def set_news_title(self, news_id, title):
+        """ Set the title of a news item. """
+        try:
+            cursor = self.db.cursor()
+            cursor = self.query(cursor, """UPDATE news_index SET news_title=%s WHERE news_id=%s""",
+                (title,news_id))
             assert(cursor.rowcount == 1)
         finally:
             cursor.close()

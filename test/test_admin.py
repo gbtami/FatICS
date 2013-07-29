@@ -19,6 +19,8 @@
 
 from test import *
 
+import time
+
 class CommandTest(Test):
     def test_addplayer_and_remplayer(self):
         t = self.connect_as_admin()
@@ -310,8 +312,12 @@ class CommentTest(Test):
 
         t.write('addcomment testplay This is a test comment.\n')
         self.expect('Comment added for TestPlayer.', t)
+        time.sleep(1)
+        t.write('addcomment testplayer Comment #2\n')
+        self.expect('Comment added for TestPlayer.', t)
 
         t.write('showcomment testplayer\n')
+        self.expect_re('admin at .*: Comment #2.', t)
         self.expect_re('admin at .*: This is a test comment.', t)
 
         self.close(t)
@@ -372,9 +378,9 @@ class BanTest(Test):
         self.expect('TestPlayer is not on the ban list.', t)
 
         t2.write('+ban admin\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"ban" does not match any list name', t2)
         t2.write('=ban\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"ban" does not match any list name', t2)
 
         self.close(t)
         self.close(t2)
@@ -495,8 +501,6 @@ class MuzzleTest(Test):
         self.expect('TestPlayer is already on the muzzle list.', t)
         t2.write('shout test\n')
         self.expect('You are muzzled.', t2)
-        t2.write('cshout test\n')
-        self.expect('You are muzzled.', t2)
         t2.write('it test\n')
         self.expect('You are muzzled.', t2)
         t2.close()
@@ -520,10 +524,15 @@ class MuzzleTest(Test):
         t.write('-muzzle testplayer\n')
         self.expect('TestPlayer is not on the muzzle list.', t)
 
+        t.write('showcomment testplayer\n')
+        # the order of the comments is undefined since
+        # they were added less than 1 second apart
+        self.expect('Removed from the muzzle list.', t)
+
         t2.write('+muzzle admin\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"muzzle" does not match any list name', t2)
         t2.write('=muzzle\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"muzzle" does not match any list name', t2)
 
         self.close(t)
         self.close(t2)
@@ -537,6 +546,63 @@ class MuzzleTest(Test):
         self.expect('Admins cannot be muzzled.', t)
         t.write('+muzzle guestabcd\n')
         self.expect('Only registered players can be muzzled.', t)
+        self.close(t)
+        self.close(t2)
+
+class CmuzzleTest(Test):
+    @with_player('TestPlayer')
+    def test_cmuzzle(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as('TestPlayer')
+
+        t.write('+cmuzzle testplayer\n')
+        self.expect('TestPlayer added to the cmuzzle list.', t)
+        self.expect('admin has added you to the cmuzzle list.', t2)
+        t.write('+cmuzzle testplayer\n')
+        self.expect('TestPlayer is already on the cmuzzle list.', t)
+        t2.write('cshout test\n')
+        self.expect('You are c-muzzled.', t2)
+        t2.close()
+
+        t.write('=cmuzzle\n')
+        self.expect('-- cmuzzle list: 1 name --\r\nTestPlayer\r\n', t)
+
+        t.write('showcomment testplayer\n')
+        self.expect_re('admin at .*: C-muzzled', t)
+
+        t2 = self.connect_as('TestPlayer')
+        t2.write('cshout test\n')
+        self.expect('You are c-muzzled.', t2)
+        t.write('-cmuzzle testplayer\n')
+        self.expect('TestPlayer removed from the cmuzzle list.', t)
+        self.expect('admin has removed you from the cmuzzle list.', t2)
+        t2.write('cshout test\n')
+        self.expect('TestPlayer c-shouts: test', t)
+        self.expect('TestPlayer c-shouts: test', t2)
+
+        t.write('-cmuzzle testplayer\n')
+        self.expect('TestPlayer is not on the cmuzzle list.', t)
+
+        t.write('showcomment testplayer\n')
+        self.expect('Removed from the cmuzzle list.', t)
+
+        t2.write('+cmuzzle admin\n')
+        self.expect('"cmuzzle" does not match any list name', t2)
+
+        self.close(t)
+        self.close(t2)
+
+    def test_cmuzzle_bad(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestABCD')
+        t.write('+cmuzzle nosuchplayer\n')
+        self.expect('no player matching the name "nosuchplayer"', t)
+        t.write('+cmuzzle admin\n')
+        self.expect('Admins cannot be c-muzzled.', t)
+        t.write('+cmuzzle guestabcd\n')
+        self.expect('Only registered players can be c-muzzled.', t)
+        t.write('-cmuzzle guestabcd\n')
+        self.expect('Only registered players can be c-muzzled.', t)
         self.close(t)
         self.close(t2)
 
@@ -582,9 +648,9 @@ class MuteTest(Test):
         self.expect('TestPlayer is not on the mute list.', t)
 
         t2.write('+mute admin\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"mute" does not match any list name', t2)
         t2.write('=mute\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"mute" does not match any list name', t2)
 
         self.close(t)
         self.close(t2)
@@ -655,7 +721,7 @@ class TestPlayban(Test):
         t.write('-playban guestabcd\n')
         self.expect('GuestABCD is not on the playban list.', t)
         t2.write('=playban\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"playban" does not match any list name', t2)
         t2.write('match admin 1+0\n')
         self.expect('Issuing:', t2)
 
@@ -698,7 +764,7 @@ class TestPlayban(Test):
         t.write('-playban TestPlayer\n')
         self.expect('TestPlayer is not on the playban list.', t)
         t2.write('=ratedban\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"ratedban" does not match any list name', t2)
         t2.write('see 3+0\n')
         self.expect_re(r'Your seek has been posted with index (\d+)\.', t2)
 
@@ -754,7 +820,10 @@ class TestRatedban(Test):
         t.write('-ratedban TestPlayer\n')
         self.expect('TestPlayer is not on the ratedban list.', t)
         t2.write('=ratedban\n')
-        self.expect("You don't have permission to do that.", t2)
+        self.expect('"ratedban" does not match any list name', t2)
+
+        t.write('showcomment TestPlayer\n')
+        self.expect('Removed from the ratedbanned list.', t)
 
         self.close(t)
         self.close(t2)
@@ -769,6 +838,66 @@ class TestRatedban(Test):
         t2 = self.connect_as_guest('GuestABCD')
         t.write('+ratedban guestabcd\n')
         self.expect('Only registered players can be ratedbanned.', t)
+        self.close(t2)
+
+        self.close(t)
+
+class TestNoteban(Test):
+    @with_player('TestPlayer')
+    def test_noteban(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as('TestPlayer')
+
+        t2.write('set 1 Some abusive note\n')
+        self.expect("Note 1 set: Some abusive note", t2)
+
+        t.write('+noteban testplayer\n')
+        self.expect('TestPlayer added to the noteban list.', t)
+        self.expect('admin has added you to the noteban list.', t2)
+        t.write('+noteban testplayer\n')
+        self.expect('TestPlayer is already on the noteban list.', t)
+        self.close(t2)
+
+        t.write('=noteban\n')
+        self.expect('-- noteban list: 1 name --\r\nTestPlayer', t)
+
+        t2 = self.connect_as('TestPlayer')
+        t3 = self.connect_as_guest()
+        t3.write('f TestPlayer!\n')
+        self.expect_not('1: Some abusive note', t3)
+
+        # can still read own notes
+        t2.write('f TestPlayer!\n')
+        self.expect_not('1: Some abusive note', t2)
+
+        t.write('-noteban TestPlayer\n')
+        self.expect('TestPlayer removed from the noteban list.', t)
+        self.expect('admin has removed you from the noteban list.', t2)
+        t.write('-noteban TestPlayer\n')
+        self.expect('TestPlayer is not on the noteban list.', t)
+        t2.write('=noteban\n')
+        self.expect('"noteban" does not match any list name', t2)
+
+        t3.write('f TestPlayer!\n')
+        self.expect('1: Some abusive note', t3)
+
+        t.write('showcomment TestPlayer\n')
+        self.expect('Removed from the noteban list.', t)
+
+        self.close(t)
+        self.close(t2)
+        self.close(t3)
+
+    def test_noteban_bad(self):
+        t = self.connect_as_admin()
+        t.write('+noteban nosuchplayer\n')
+        self.expect('no player matching the name "nosuchplayer"', t)
+        t.write('+noteban admin\n')
+        self.expect('Admins cannot be notebanned.', t)
+
+        t2 = self.connect_as_guest('GuestABCD')
+        t.write('+noteban guestabcd\n')
+        self.expect('Only registered players can be notebanned.', t)
         self.close(t2)
 
         self.close(t)

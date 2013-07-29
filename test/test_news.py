@@ -33,6 +33,7 @@ class TestNews(Test):
 
         self.close(t)
 
+    @with_player('TestAdmin')
     def test_news(self):
         t = self.connect_as_admin()
         t.write("news\n")
@@ -50,6 +51,26 @@ class TestNews(Test):
 
         t.write('cnewsd %d\n' % news_id)
         self.expect('News item %d not found or already has no lines.' % news_id, t)
+
+        t.write('asetadmin testadmin 100\n')
+        self.expect('Admin level of TestAdmin set', t)
+        t2 = self.connect_as('testadmin')
+
+        t2.write('cnewsp %d\n' % news_id)
+        self.expect('News item %d updated.' % news_id, t2)
+        t2.write('cnewsp %d\n' % news_id)
+        self.expect('News item %d not found or not changed' % news_id, t2)
+        self.close(t2)
+
+        t.write('cnewsp -1\n')
+        self.expect('News item -1 not found', t)
+        t.write('cnewst %d This is a new title.\n' % news_id)
+        self.expect('News item %d updated.' % news_id, t)
+        t.write('cnewst -1 foobar\n')
+        self.expect('News item -1 not found', t)
+
+        t.write('news\n')
+        self.expect('This is a new title', t)
 
         t.write('cnewse -1\n')
         self.expect('News item -1 not found', t)

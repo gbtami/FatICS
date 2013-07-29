@@ -28,7 +28,7 @@ class TestNotify(Test):
         self.expect('Only registered players', t)
 
         t2 = self.connect_as_admin()
-        t2.write('+not guestabcd\n')
+        t2.write('+notify guestabcd\n')
         self.expect('You cannot add an unregistered', t2)
 
         self.close(t)
@@ -36,11 +36,11 @@ class TestNotify(Test):
 
     def test_bad_notify(self):
         t = self.connect_as_admin()
-        t.write('+not testplayer\n')
+        t.write('+notify testplayer\n')
         self.expect('There is no player matching the name "testplayer"', t)
         t.write('-notify testplayer\n')
         self.expect('There is no player matching the name "testplayer"', t)
-        t.write('+not admin\n')
+        t.write('+noti admin\n')
         self.expect("notify yourself.", t)
         self.close(t)
 
@@ -48,17 +48,17 @@ class TestNotify(Test):
     def test_notify_user(self):
         t = self.connect_as_admin()
 
-        t.write('=not\n')
+        t.write('=noti\n')
         self.expect('notify list: 0 names', t)
 
         t.write('+notify testplayer\n')
         self.expect("TestPlayer added to your notify list", t)
 
-        t.write('=not\n')
+        t.write('=noti\n')
         self.expect('notify list: 1 name', t)
         self.expect('TestPlayer', t)
 
-        t.write('+not testplayer\n')
+        t.write('+noti testplayer\n')
         self.expect("TestPlayer is already on your notify list", t)
 
         t2 = self.connect_as('testplayer')
@@ -76,7 +76,7 @@ class TestNotify(Test):
         t.write('-NOTIFY testplayer\n')
         self.expect('TestPlayer removed from your notify list', t)
 
-        t.write('-not testplayer\n')
+        t.write('-noti testplayer\n')
         self.expect('TestPlayer is not on your notify list', t)
 
         t2 = self.connect_as('testplayer')
@@ -112,7 +112,7 @@ class TestNotify(Test):
         t2.write('testplayer\n%s\n' % tpasswd)
         self.expect('The following players were notified of your arrival: admin', t2)
 
-        t.write('-not testplayer\n')
+        t.write('-noti testplayer\n')
         self.expect('TestPlayer removed from your notify list', t)
 
         self.close(t2)
@@ -141,7 +141,7 @@ class TestNotify(Test):
         self.close(t2)
 
         t = self.connect_as_admin()
-        t.write('-not testplayer\n')
+        t.write('-noti testplayer\n')
         self.expect('TestPlayer removed from your notify list', t)
         self.close(t)
 

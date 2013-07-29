@@ -70,8 +70,9 @@ class It(Command):
 class Cshout(Command):
     @requires_registration
     def run(self, args, conn):
-        if conn.user.is_muzzled:
-            conn.write(_('You are muzzled.\n'))
+        # XXX maybe muzzled players shouldn't be allowed to c-shout?
+        if conn.user.is_cmuzzled:
+            conn.write(_('You are c-muzzled.\n'))
             return
         if conn.user.is_muted:
             conn.write(_('You are muted.\n'))

@@ -24,8 +24,12 @@ from command import *
 @ics_command('addlist', 'ww',  admin.Level.user)
 class Addlist(Command):
     def run(self, args, conn):
+        if conn.user.is_admin():
+            ulists = list_.admin_lists
+        else:
+            ulists = list_.lists
         try:
-            ls = list_.lists.get(args[0])
+            ls = ulists.get(args[0])
         except KeyError:
             conn.write(_('''\"%s\" does not match any list name.\n''' % args[0]))
         except trie.NeedMore as e:
@@ -44,8 +48,12 @@ class Showlist(Command):
                 conn.write('%s\n' % c.name)
             return
 
+        if conn.user.is_admin():
+            ulists = list_.admin_lists
+        else:
+            ulists = list_.lists
         try:
-            ls = list_.lists.get(args[0])
+            ls = ulists.get(args[0])
         except KeyError:
             conn.write(_('''\"%s\" does not match any list name.\n''' % args[0]))
         except trie.NeedMore as e:
@@ -59,8 +67,12 @@ class Showlist(Command):
 @ics_command('sublist', 'ww', admin.Level.user)
 class Sublist(Command):
     def run(self, args, conn):
+        if conn.user.is_admin():
+            ulists = list_.admin_lists
+        else:
+            ulists = list_.lists
         try:
-            ls = list_.lists.get(args[0])
+            ls = ulists.get(args[0])
         except KeyError:
             conn.write(_('''\"%s\" does not match any list name.\n''' % args[0]))
         except trie.NeedMore as e:

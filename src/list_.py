@@ -43,9 +43,12 @@ class ListError(Exception):
 class MyList(object):
     """ A list as operated on by addlist, sublist, and showlist.  Subclasses
     should implement add, sub, and show methods. """
-    def __init__(self, name):
+    def __init__(self, name, is_public=True):
         self.name = name
-        lists[name.lower()] = self
+        self.is_public = is_public
+        admin_lists[name.lower()] = self
+        if is_public:
+            lists[name.lower()] = self
 
     def _require_admin(self, user):
         if not user.is_admin():
@@ -69,7 +72,7 @@ class SystemUserList(MyList):
                 {'aname': conn.user.name, 'lname': self.name})
 
     def show(self, conn):
-        if not self.public:
+        if not self.is_public:
             self._require_admin(conn.user)
         names = self._get_names()
         conn.write(ngettext('-- %s list: %d name --\n',
@@ -79,10 +82,9 @@ class SystemUserList(MyList):
 class TitleList(SystemUserList):
     """ A player title, like GM or WFM """
     def __init__(self, params):
-        MyList.__init__(self, params['title_name'])
+        MyList.__init__(self, params['title_name'], params['title_public'])
         self.id = params['title_id']
         self.descr = params['title_descr']
-        self.public = params['title_public']
 
     def add(self, item, conn):
         self._require_admin(conn.user)
@@ -303,8 +305,7 @@ class NoplayList(MyList):
 
 class BanList(SystemUserList):
     def __init__(self, name):
-        super(BanList, self).__init__(name)
-        self.public = False
+        super(BanList, self).__init__(name, is_public=False)
 
     def add(self, item, conn):
         self._require_admin(conn.user)
@@ -339,8 +340,7 @@ class BanList(SystemUserList):
 
 class MuzzleList(SystemUserList):
     def __init__(self, name):
-        super(MuzzleList, self).__init__(name)
-        self.public = False
+        super(MuzzleList, self).__init__(name, is_public=False)
 
     def add(self, item, conn):
         self._require_admin(conn.user)
@@ -365,16 +365,48 @@ class MuzzleList(SystemUserList):
             if not u.is_muzzled:
                 raise ListError(_('%s is not on the muzzle list.\n') % u.name)
             u.set_muzzled(False)
-            db.add_comment(conn.user.id, u.id, 'Unmuzzled.')
+            db.add_comment(conn.user.id, u.id, 'Removed from the muzzle list.')
             self._notify_removed(conn, u)
 
     def _get_names(self):
         return db.get_muzzled_user_names()
 
+class CmuzzleList(SystemUserList):
+    def __init__(self, name):
+        super(CmuzzleList, self).__init__(name, is_public=False)
+
+    def add(self, item, conn):
+        self._require_admin(conn.user)
+        u = user.find_by_prefix_for_user(item, conn)
+        if u:
+            if u.is_guest:
+                raise ListError(A_('Only registered players can be c-muzzled.\n'))
+            if u.is_admin():
+                raise ListError(A_('Admins cannot be c-muzzled.\n'))
+            if u.is_cmuzzled:
+                raise ListError(_('%s is already on the cmuzzle list.\n') % u.name)
+            u.set_cmuzzled(True)
+            db.add_comment(conn.user.id, u.id, 'C-muzzled.')
+            self._notify_added(conn, u)
+
+    def sub(self, item, conn):
+        self._require_admin(conn.user)
+        u = user.find_by_prefix_for_user(item, conn)
+        if u:
+            if u.is_guest:
+                raise ListError(A_('Only registered players can be c-muzzled.\n'))
+            if not u.is_cmuzzled:
+                raise ListError(_('%s is not on the cmuzzle list.\n') % u.name)
+            u.set_cmuzzled(False)
+            db.add_comment(conn.user.id, u.id, 'Removed from the cmuzzle list.')
+            self._notify_removed(conn, u)
+
+    def _get_names(self):
+        return db.get_cmuzzled_user_names()
+
 class MuteList(SystemUserList):
     def __init__(self, name):
-        super(MuteList, self).__init__(name)
-        self.public = False
+        super(MuteList, self).__init__(name, is_public=False)
 
     def add(self, item, conn):
         self._require_admin(conn.user)
@@ -422,10 +454,42 @@ class FilterList(MyList):
             '-- filter list: %d IPs --\n', len(filterlist)) % len(filterlist))
         conn.write('%s\n' % ' '.join(filterlist))
 
+class NotebanList(SystemUserList):
+    def __init__(self, name):
+        super(NotebanList, self).__init__(name, is_public=False)
+
+    def add(self, item, conn):
+        self._require_admin(conn.user)
+        u = user.find_by_prefix_for_user(item, conn)
+        if u:
+            if u.is_guest:
+                raise ListError(A_('Only registered players can be notebanned.\n'))
+            if u.is_admin():
+                raise ListError(A_('Admins cannot be notebanned.\n'))
+            if u.is_notebanned:
+                raise ListError(_('%s is already on the noteban list.\n') % u.name)
+            u.set_notebanned(True)
+            db.add_comment(conn.user.id, u.id, 'Notebanned.')
+            self._notify_added(conn, u)
+
+    def sub(self, item, conn):
+        self._require_admin(conn.user)
+        u = user.find_by_prefix_for_user(item, conn)
+        if u:
+            if u.is_guest:
+                raise ListError(A_('Only registered players can be notebanned.\n'))
+            if not u.is_notebanned:
+                raise ListError(_('%s is not on the noteban list.\n') % u.name)
+            u.set_notebanned(False)
+            db.add_comment(conn.user.id, u.id, 'Removed from the noteban list.')
+            self._notify_removed(conn, u)
+
+    def _get_names(self):
+        return db.get_notebanned_user_names()
+
 class RatedbanList(SystemUserList):
     def __init__(self, name):
-        super(RatedbanList, self).__init__(name)
-        self.public = False
+        super(RatedbanList, self).__init__(name, is_public=False)
 
     def add(self, item, conn):
         self._require_admin(conn.user)
@@ -458,8 +522,7 @@ class RatedbanList(SystemUserList):
 
 class PlaybanList(SystemUserList):
     def __init__(self, name):
-        super(PlaybanList, self).__init__(name)
-        self.public = False
+        super(PlaybanList, self).__init__(name, is_public=False)
 
     def add(self, item, conn):
         self._require_admin(conn.user)
@@ -502,6 +565,8 @@ def _init_lists():
     BanList("ban")
     FilterList("filter")
     MuzzleList("muzzle")
+    CmuzzleList("cmuzzle")
+    NotebanList("noteban")
     MuteList("mute")
     RatedbanList("ratedban")
     PlaybanList("playban")
@@ -513,11 +578,12 @@ try:
     lists
 except NameError:
     lists = trie.Trie()
+    admin_lists = trie.Trie()
     _init_lists()
 
-# TODO:
-# removedcom muzzle, cmuzzle, c1muzzle, c24muzzle, c46muzzle, c49muzzle,
-# c50muzzle, c51muzzle,
-# gnotify, remote
+# Not implemented:
+# removedcom, c1muzzle, c24muzzle, c46muzzle, c49muzzle,
+# c50muzzle, c51muzzle, remote
+# TODO: chmuzzle
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

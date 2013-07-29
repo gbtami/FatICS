@@ -104,7 +104,7 @@ class TestAbuser(Test):
     def test_show_abusers(self):
         t = self.connect_as_guest()
         t.write('=abuser\n')
-        self.expect("You don't have permission", t)
+        self.expect('"abuser" does not match any list', t)
         self.close(t)
 
     @with_player('TestPlayer')
