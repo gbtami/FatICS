@@ -22,6 +22,7 @@ class Config(object):
     zipseal_port = 5001
     compatibility_port = 5000
     ssl_port = 5004
+    websocket_port = 8080
 
     db_host = "localhost"
     db_db = "chess"

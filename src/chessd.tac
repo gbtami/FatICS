@@ -63,6 +63,7 @@ class IcsFactory(ServerFactory):
         conn = telnet.TelnetTransport(connection.Connection)
         conn.factory = self
         conn.compatibility = self.port == config.compatibility_port
+        conn.send_IAC = self.port != config.websocket_port
         return conn
 
 def getService(port):
@@ -97,9 +98,9 @@ else:
 
 # for WebSocket communication using sockjs
 if SockJSFactory:
-    service = internet.TCPServer(8080, SockJSFactory(IcsFactory(8080)))
+    service = internet.TCPServer(config.websocket_port, SockJSFactory(IcsFactory(config.websocket_port)))
     service.setServiceParent(application)
-    #reactor.listenTCP(8080, SockJSFactory(IcsFactory(8080)))
+    #reactor.listenTCP(config.websocket_port, SockJSFactory(IcsFactory(config.websocket_port)))
 
 lc = task.LoopingCall(timer.heartbeat)
 lc.start(timer.heartbeat_timeout)

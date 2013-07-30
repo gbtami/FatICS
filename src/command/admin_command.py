@@ -277,6 +277,11 @@ class Pose(Command):
                 # XXX set u2.session.timeseal_last_timestamp?
                 command_parser.parser.parse(args[1], u2.session.conn)
 
+@ics_command('asetv', 'www', admin.Level.admin)
+class Asetv(Command):
+    def run(self, args, conn):
+        pass
+
 @ics_command('remplayer', 'w', admin.Level.admin)
 class Remplayer(Command):
     def run(self, args, conn):

@@ -63,6 +63,7 @@ class TelnetTransport(protocol.Protocol):
     protocol = None
     disconnecting = False
     encoder = None
+    send_IAC = True
     _wrapper = None
 
     def __init__(self, protocolFactory=None, *a, **kw):
@@ -85,23 +86,27 @@ class TelnetTransport(protocol.Protocol):
         self.transport.write(bytes)
 
     def do(self, option):
-        self._write(IAC + DO + option)
+        if self.send_IAC:
+            self._write(IAC + DO + option)
 
     def dont(self, option):
-        self._write(IAC + DONT + option)
+        if self.send_IAC:
+            self._write(IAC + DONT + option)
 
     def will(self, option):
-        self._write(IAC + WILL + option)
+        if self.send_IAC:
+            self._write(IAC + WILL + option)
 
     def wont(self, option):
-        self._write(IAC + WONT + option)
+        if self.send_IAC:
+            self._write(IAC + WONT + option)
 
     def dataReceived(self, data):
         appDataBuffer = []
 
         for b in data:
             if self.state == 'data':
-                if b == IAC:
+                if self.send_IAC and b == IAC:
                     self.state = 'escaped'
                 elif b == '\r':
                     self.state = 'newline'
