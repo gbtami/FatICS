@@ -55,6 +55,9 @@ class CommandParser(object):
             # no exact code for this situation
             return block_codes.BLKCMD_ERROR_BADCOMMAND
 
+        # for testing unicode cleanliness
+        #s = s.decode('utf-8')
+
         # previously the prefix '$' was used to not expand aliases
         # and '$$' was used to not update the idle time.  But these
         # options should really be orthogonal, so I made '$$' alone
@@ -80,7 +83,7 @@ class CommandParser(object):
         # I think that's unnecessary, and prefer to patch Jin to not
         # do that.
         if conn.session.game:
-            if conn.session.game.parse_move(s, conn):
+            if conn.session.game.parse_move(s.encode('ascii'), conn):
                 return block_codes.BLKCMD_GAME_MOVE
 
         if s.startswith('$'):

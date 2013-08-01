@@ -377,7 +377,7 @@ def check_formula(chal_, s, num=0):
     if s is None:
         # no formula
         return 1
-    assert(type(s) == str)
+    assert(isinstance(s, basestring))
     global token, nextt, chal, f_num
     chal = chal_
     try:

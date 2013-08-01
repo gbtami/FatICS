@@ -65,7 +65,7 @@ class TellCommand(Command, ToldMixin):
             if not ch:
                 conn.write(_('No previous channel.\n'))
         else:
-            if type(args[0]) != str:
+            if type(args[0]) in [int, long]:
                 try:
                     ch = channel.chlist[args[0]]
                 except KeyError:

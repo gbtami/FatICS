@@ -22,6 +22,9 @@ legal_chars_re = re.compile('''^[\x20-\xfd]*$''')
 def check_user_utf8(s):
     ret =  legal_chars_re.match(s)
     if ret:
+        if type(s) == unicode:
+            # already unicode
+            return ret
         try:
             unicode(s, 'utf-8')
         except UnicodeDecodeError:

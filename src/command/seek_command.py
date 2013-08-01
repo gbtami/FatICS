@@ -113,7 +113,7 @@ class Play(Command):
             return
 
         ad = None
-        if type(args[0]) == str:
+        if isinstance(args[0], basestring):
             u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
             if u:
                 if not u.session.seeks:

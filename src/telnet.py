@@ -217,8 +217,10 @@ class TelnetTransport(protocol.Protocol):
             data = utf8.utf8_to_ascii(data)
             data = data.replace('\n', '\n\r')
         else:
-            # escape telnet IAC
-            data = data.replace('''\xff''', '''\xff\xff''')
+            # According to the telnet protocol, we are supposed
+            # to escape telnet IAC characters, but we should never
+            # send those anyway.
+            assert('\xff' not in data)
             data = data.replace('\n', '\r\n')
         return data
 
@@ -240,11 +242,16 @@ class TelnetTransport(protocol.Protocol):
             # we have to split the text into lines before
             # wrapping
             # relevant: http://bugs.python.org/issue1859
-            udata = data.decode('utf-8')
+            if type(data) == unicode:
+                udata = data
+            else:
+                udata = data.decode('utf-8')
             wrapped_lines = [self._wrapper.fill(line)
                 for line in udata.splitlines(True)]
             udata = ''.join(wrapped_lines)
             data = udata.encode('utf-8')
+        if type(data) == unicode:
+            data = data.encode('utf-8')
         data = self._escape(data)
         self._write(data)
 
