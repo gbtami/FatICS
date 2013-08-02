@@ -49,6 +49,10 @@ class Channel(object):
     def tell(self, msg, user):
         #if user.is_chmuzzled:
         #    user.write(_('You are muzzled in all channels.\n'))
+        if (self.id == 1 and not user.is_guest and user.is_newbie()
+            and user.vars['interface']):
+            # show interface string in ch 1 for newbies
+            msg = '[%s] %s' % (user.vars['interface'], msg)
         msg = '\n%s(%d): %s\n' % (user.get_display_name(), self.id, msg)
         is_guest = user.is_guest
         count = 0

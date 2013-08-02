@@ -145,6 +145,15 @@ class TestChannel(Test):
         self.close(t)
         self.close(t2)
 
+    @with_player('SomeNewbie')
+    def test_ch1_newbie(self):
+        t = self.connect_as('SomeNewbie')
+        t.write('set interface Some interface v1.0\n')
+        self.expect('interface set', t)
+        t.write('t 1 My question is....\n')
+        self.expect('SomeNewbie(1): [Some interface v1.0] My question is....', t)
+        self.close(t)
+
 class TestChannelOwnership(Test):
     def test_channel_owner(self):
         t = self.connect_as_admin()

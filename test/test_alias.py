@@ -20,21 +20,6 @@ from test import *
 
 import time
 
-class TestAlias(Test):
-    def test_alias(self):
-        t = self.connect_as_admin()
-        t.write('t admin test 1\n')
-        self.expect('admin(*) tells you: test 1', t)
-
-        t.write('.test 2\n')
-        self.expect('admin(*) tells you: test 2', t)
-
-        # case-insensitivity
-        t.write("I is testing\n")
-        self.expect("admin(*) is testing", t)
-
-        self.close(t)
-
 class TestSystemAlias(Test):
     def test_system(self):
         t = self.connect_as_admin()
@@ -50,6 +35,20 @@ class TestSystemAlias(Test):
 
         t.write('! Test shout\n')
         self.expect('shouts: Test shout', t)
+
+        self.close(t)
+
+    def test_shout_tell(self):
+        t = self.connect_as_admin()
+        t.write('t admin test 1\n')
+        self.expect('admin(*) tells you: test 1', t)
+
+        t.write('.test 2\n')
+        self.expect('admin(*) tells you: test 2', t)
+
+        # case-insensitivity
+        t.write("I is testing\n")
+        self.expect("admin(*) is testing", t)
 
         self.close(t)
 

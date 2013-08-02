@@ -120,7 +120,7 @@ class Finger(Command):
                     conn.write(_('Total time online: %s\n') % time_format.hms_words(total, round_secs=True))
                     since = time.strftime("%a %b %e, %H:%M %Z %Y", time.gmtime(first))
                     # should be equivalent: since = u.first_login.replace(tzinfo=pytz.utc).astimezone(conn.user.tz).strftime('%a %b %e, %H:%M %Z %Y')
-                    conn.write(_('%% of life online:  %0.1f (since %s)\n\n') % (perc, since))
+                    conn.write(_('%% of life online:  %3.1f (since %s)\n\n') % (perc, since))
 
             if u.is_online:
                 if u.session.use_zipseal:

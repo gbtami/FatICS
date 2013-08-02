@@ -177,6 +177,10 @@ class BaseUser(object):
     def is_admin(self):
         return self.admin_level >= admin.Level.admin
 
+    def is_newbie(self):
+        # 10 hours
+        return self.get_total_time_online() < 36000
+
     def add_notification(self, user):
         self.notifiers.add(user.name)
         if user.is_online:
