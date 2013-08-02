@@ -19,6 +19,7 @@
 
 import time
 import pytz
+import calendar # for timegm
 
 import admin
 import rating
@@ -47,9 +48,30 @@ class Finger(Command):
     def run(self, args, conn):
         if args[0] is not None:
             u = user.find_by_prefix_for_user(args[0], conn, min_len=2)
+            flags = args[1:]
         else:
             u = conn.user
+            flags = []
         if u:
+            show_notes = True
+            show_ratings = True
+            show_comments = False
+            show_admin_info = (conn.user.is_admin() and
+                not conn.user.vars['hideinfo'])
+            for f in flags:
+                if f is None:
+                    continue
+                elif f[0] == '/':
+                    # XXX TODO
+                    pass
+                elif f == 'r':
+                    show_notes = False
+                elif f == 'n':
+                    show_ratings = False
+                elif f == 'c' and conn.user.is_admin():
+                    show_comments = True
+                else:
+                    raise BadCommandError
             conn.write(_('Finger of %s:\n\n') % u.get_display_name())
 
             if u.is_online:
@@ -78,16 +100,27 @@ class Finger(Command):
 
             #if u.is_guest:
             #    conn.write(_('%s is NOT a registered player.\n') % u.name)
-            if not u.is_guest:
+            if show_ratings and not u.is_guest:
                 rating.show_ratings(u, conn)
             if u.admin_level > admin.Level.user:
                 conn.write(A_('Admin level: %s\n') % admin.level.to_str(u.admin_level))
-            if conn.user.is_admin() and not conn.user.vars['hideinfo']:
+            if show_admin_info:
                 if not u.is_guest:
-                    conn.write(A_('Email:       %s\n') % u.email)
                     conn.write(A_('Real name:   %s\n') % u.real_name)
                 if u.is_online:
                     conn.write(A_('Host:        %s\n') % u.session.conn.ip)
+
+            if u == conn.user or show_admin_info:
+                if not u.is_guest:
+                    conn.write(_('Email:       %s\n\n') % u.email)
+                    total = u.get_total_time_online()
+                    first = calendar.timegm(u.first_login.timetuple()) + (
+                        1e-6 * u.first_login.microsecond)
+                    perc = round(100 * total / (time.time() - first), 1)
+                    conn.write(_('Total time online: %s\n') % time_format.hms_words(total, round_secs=True))
+                    since = time.strftime("%a %b %e, %H:%M %Z %Y", time.gmtime(first))
+                    # should be equivalent: since = u.first_login.replace(tzinfo=pytz.utc).astimezone(conn.user.tz).strftime('%a %b %e, %H:%M %Z %Y')
+                    conn.write(_('%% of life online:  %0.1f (since %s)\n\n') % (perc, since))
 
             if u.is_online:
                 if u.session.use_zipseal:
@@ -100,9 +133,13 @@ class Finger(Command):
                 else:
                     conn.write(_('Zipseal:     Off\n'))
 
-            notes = u.notes
-            if notes and (u.is_guest or not u.is_notebanned
-                or conn.user.is_admin()):
+            notes = u.notes if show_notes else []
+            if (not u.is_guest and u.is_notebanned and u != conn.user and
+                not conn.user.is_admin()):
+                # hide notes
+                # XXX should hideinfo apply here?
+                notes = []
+            if notes:
                 conn.write('\n')
                 prev_max = 0
                 for (num, txt) in sorted(notes.iteritems()):
@@ -116,6 +153,10 @@ class Finger(Command):
                     conn.write(_("%2d: %s\n") % (num, txt))
                     prev_max = num
                 conn.write('\n')
+
+            if show_comments:
+                # XXX TODO
+                pass
 
 @ics_command('ping', 'o')
 class Ping(Command):

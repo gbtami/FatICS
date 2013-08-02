@@ -868,7 +868,7 @@ class TestNoteban(Test):
 
         # can still read own notes
         t2.write('f TestPlayer!\n')
-        self.expect_not('1: Some abusive note', t2)
+        self.expect('1: Some abusive note', t2)
 
         t.write('-noteban TestPlayer\n')
         self.expect('TestPlayer removed from the noteban list.', t)

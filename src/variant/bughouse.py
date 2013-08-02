@@ -1002,7 +1002,7 @@ class Position(object):
         fr = str_to_sq(m.group(1).lower())
         to = str_to_sq(m.group(2).lower())
         prom = m.group(3)
-        if prom == None:
+        if prom is None:
             mv = Move(self, fr, to)
             if mv.pc == 'K' and fr == E1:
                 if to == G1:

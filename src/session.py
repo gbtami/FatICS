@@ -94,7 +94,7 @@ class Session(object):
         if self.game:
             try:
                 self.game.leave(self.user)
-                assert(self.game == None)
+                assert(self.game is  None)
             except:
                 print 'exception ending game due to logout'
                 traceback.print_exc()

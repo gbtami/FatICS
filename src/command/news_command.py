@@ -19,7 +19,7 @@
 import admin
 
 from command import ics_command, Command
-from db import db, DeleteError
+from db import db, DeleteError, UpdateError
 
 @ics_command('news', 'p', admin.Level.user)
 class News(Command):
@@ -95,7 +95,7 @@ class Cnewsp(Command):
     def run(self, args, conn):
         try:
             db.set_news_poster(args[0], conn.user)
-        except AssertionError:
+        except UpdateError:
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])
@@ -105,7 +105,7 @@ class Cnewst(Command):
     def run(self, args, conn):
         try:
             db.set_news_title(args[0], args[1])
-        except AssertionError:
+        except UpdateError:
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])

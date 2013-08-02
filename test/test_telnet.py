@@ -36,7 +36,7 @@ class TelnetTest(Test):
         self._last_cmd = None
         t.set_option_negotiation_callback(self._option_callback)
         self.expect('login: ', t)
-        self.assert_(self._last_cmd == None)
+        self.assert_(self._last_cmd is None)
         t.write('admin\n')
         self.expect_re('password:.*', t)
         self.assert_(self._last_cmd == telnetlib.WILL + telnetlib.ECHO)

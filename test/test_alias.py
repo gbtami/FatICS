@@ -134,15 +134,18 @@ class TestUserAlias(Test):
 
         self.close(t)
 
-    def test_nounidle(self):
+    def test_unidle(self):
         t = self.connect_as_guest()
         time.sleep(2)
         t.write('fi\n')
         self.expect('Idle: 0 seconds', t)
         time.sleep(2)
         t.write('$fi\n')
-        m = self.expect_re(r'Idle: (\d) seconds', t)
-        self.assert_(m.group(1) > 1)
+        self.expect('Idle: 0 seconds', t)
+        time.sleep(2)
+        t.write('$$fi\n')
+        m = self.expect_re(r'Idle: (\d) second', t)
+        self.assert_(int(m.group(1)) > 1)
         self.close(t)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

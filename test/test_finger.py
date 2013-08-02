@@ -24,8 +24,8 @@ class FingerTest(Test):
         t.write('finger\n')
         self.expect('Finger of admin(*):', t)
         self.expect('On for:', t)
-        self.expect('Email:', t)
         self.expect('Host:', t)
+        self.expect('Email:', t)
 
         # finger with trailing space
         t.write('finger \r\n')
@@ -113,6 +113,39 @@ class FingerTest(Test):
         self.expect('(playing game 1: GuestABCD vs. admin)\r\n', t)
         t2.write('finger admin\n')
         self.expect('(playing game 1: GuestABCD vs. admin)\r\n', t2)
+
+        self.close(t)
+        self.close(t2)
+
+    @with_player('TestPlayer')
+    def test_finger_registered(self):
+        t = self.connect_as('TestPlayer')
+        t.write('f\n')
+        self.expect('Finger of TestPlayer:', t)
+        self.expect('Email: ', t)
+        self.expect('Total time online:', t)
+        self.expect('% of life online: ', t)
+        self.expect('(since ', t)
+
+        t2 = self.connect_as_guest()
+        t2.write('f testplayer\n')
+        self.expect('Finger of TestPlayer:', t2)
+        self.expect_not('Email:', t2)
+
+        t.write('set 1 some note\n')
+        self.expect('Note 1 set', t)
+
+        t2.write('f testplayer\n')
+        self.expect('has not played any rated games', t2)
+        self.expect('1: some note', t2)
+        t2.write('f testplayer n\n')
+        self.expect_not('has not played any rated games', t2)
+        t2.write('f testplayer n\n')
+        self.expect('1: some note', t2)
+        t2.write('f testplayer r\n')
+        self.expect('has not played any rated games', t2)
+        t2.write('f testplayer r\n')
+        self.expect_not('1: some note', t2)
 
         self.close(t)
         self.close(t2)

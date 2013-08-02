@@ -335,6 +335,7 @@ class RegUser(BaseUser):
         self.passwd_hash = u['user_passwd']
         self.email = u['user_email']
         self.real_name = u['user_real_name']
+        self.first_login = u['user_first_login']
         self.last_logout = u['user_last_logout']
         self.admin_level = u['user_admin_level']
         self.is_banned = u['user_banned']
@@ -344,10 +345,15 @@ class RegUser(BaseUser):
         self.is_muzzled = u['user_muzzled']
         self.is_cmuzzled = u['user_cmuzzled']
         self.is_muted = u['user_muted']
+        self._total_time_online = u['user_total_time_online']
         self.is_guest = False
         self.channels = db.user_get_channels(self.id)
         self.vars = db.user_get_vars(self.id,
             var.varlist.get_persistent_var_names())
+
+        if not self.first_login:
+            db.user_set_first_login(self.id)
+            self.first_login = db.user_get_first_login(self.id)
 
         self.vars['formula'] = None
         for num in range(1, 10):
@@ -458,6 +464,8 @@ class RegUser(BaseUser):
     def log_off(self):
         notify.notify_users(self, arrived=False)
         BaseUser.log_off(self)
+        db.user_add_to_total_time_online(self.id,
+            int(self.session.get_online_time()))
         db.user_set_last_logout(self.id)
 
     def get_log(self):
@@ -656,6 +664,12 @@ class RegUser(BaseUser):
     def set_playbanned(self, val):
         BaseUser.set_playbanned(self, val)
         db.user_set_playbanned(self.id, 1 if val else 0)
+
+    def get_total_time_online(self):
+        tot = self._total_time_online
+        if self.is_online:
+            tot += self.session.get_online_time()
+        return tot
 
 class GuestUser(BaseUser):
     def __init__(self, name):

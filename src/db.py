@@ -23,6 +23,8 @@ class DuplicateKeyError(Exception):
     pass
 class DeleteError(Exception):
     pass
+class UpdateError(Exception):
+    pass
 
 class DB(object):
     def __init__(self):
@@ -53,10 +55,10 @@ class DB(object):
     def user_get(self, name):
         cursor = self.db.cursor(cursors.DictCursor)
         cursor = self.query(cursor, """SELECT
-                user_id,user_name,user_passwd,user_last_logout,
+                user_id,user_name,user_passwd,user_first_login,user_last_logout,
                 user_admin_level, user_email,user_real_name,user_banned,
                 user_muzzled,user_cmuzzled,user_muted,user_notebanned,
-                user_ratedbanned,user_playbanned
+                user_ratedbanned,user_playbanned,user_total_time_online
             FROM user WHERE user_name=%s""", (name,))
         row = cursor.fetchone()
         cursor.close()
@@ -140,9 +142,11 @@ class DB(object):
     def user_get_matching(self, prefix, limit=8):
         cursor = self.db.cursor(cursors.DictCursor)
         cursor = self.query(cursor, """SELECT user_id,user_name,user_passwd,
-                user_last_logout,user_admin_level,user_email,user_real_name,
+                user_first_login,user_last_logout,user_admin_level,
+                user_email,user_real_name,
                 user_banned,user_muzzled,user_cmuzzled,user_muted,
-                user_notebanned,user_ratedbanned,user_playbanned
+                user_notebanned,user_ratedbanned,user_playbanned,
+                user_total_time_online
             FROM user WHERE user_name LIKE %s""" + " LIMIT %s" % limit,
                 (prefix + '%',))
         rows = cursor.fetchall()
@@ -171,10 +175,32 @@ class DB(object):
             SET user_admin_level=%s WHERE user_id=%s""", (str(level), uid))
         cursor.close()
 
+    def user_set_first_login(self, uid):
+        cursor = self.db.cursor()
+        cursor = self.query(cursor, """UPDATE user
+            SET user_first_login=NOW() WHERE user_id=%s""", (uid,))
+        cursor.close()
+
+    def user_get_first_login(self, uid):
+        cursor = self.db.cursor()
+        cursor = self.query(cursor, """SELECT user_first_login
+            FROM user WHERE user_id=%s""", (uid,))
+        ret = cursor.fetchone()[0]
+        cursor.close()
+        return ret
+
     def user_set_last_logout(self, uid):
         cursor = self.db.cursor()
         cursor = self.query(cursor, """UPDATE user
             SET user_last_logout=NOW() WHERE user_id=%s""", (uid,))
+        cursor.close()
+
+    def user_add_to_total_time_online(self, uid, secs):
+        """ Expects secs to be an integer. """
+        assert(secs >= 0)
+        cursor = self.db.cursor()
+        cursor = self.query(cursor, """UPDATE user
+            SET user_total_time_online=user_total_time_online+%s WHERE user_id=%s""", (secs,uid))
         cursor.close()
 
     def user_log(self, user_name, login, ip):
@@ -935,7 +961,8 @@ class DB(object):
                 raise DeleteError
             cursor = self.query(cursor, """DELETE FROM news_line
                 WHERE news_id=%s AND num=%s""", (news_id,num))
-            assert(cursor.rowcount == 1)
+            if cursor.rowcount != 1:
+                raise DeleteError
         finally:
             cursor.close()
 
@@ -945,7 +972,8 @@ class DB(object):
             cursor = self.db.cursor()
             cursor = self.query(cursor, """UPDATE news_index SET news_poster=%s WHERE news_id=%s""",
                 (u.name,news_id))
-            assert(cursor.rowcount == 1)
+            if cursor.rowcount != 1:
+                raise UpdateError
         finally:
             cursor.close()
 
@@ -955,7 +983,8 @@ class DB(object):
             cursor = self.db.cursor()
             cursor = self.query(cursor, """UPDATE news_index SET news_title=%s WHERE news_id=%s""",
                 (title,news_id))
-            assert(cursor.rowcount == 1)
+            if cursor.rowcount != 1:
+                raise UpdateError
         finally:
             cursor.close()
 

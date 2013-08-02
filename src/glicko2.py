@@ -67,6 +67,8 @@ class Player:
     def get_current_rd(self):
         """ Calculates the player's current rating deviation. """
         # number of 1-minute rating periods passed since the last rd update
+        # XXX this seems to vary with the time zone
+        # should probably use calendar.timegm rather than timemktime
         t = (time.mktime(datetime.datetime.utcnow().timetuple())
             - time.mktime(self.ltime.timetuple())) / 60.0
         ret = math.sqrt(math.pow(self._rd, 2) + t * math.pow(self.vol, 2))
