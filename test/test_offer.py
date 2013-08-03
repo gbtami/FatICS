@@ -73,7 +73,8 @@ class TestAbort(Test):
         t = self.connect_as_guest()
         t2 = self.connect_as_admin()
 
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
@@ -94,7 +95,8 @@ class TestAbort(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
@@ -125,8 +127,8 @@ class TestAbort(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
@@ -159,7 +161,8 @@ class TestAbort(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
@@ -186,8 +189,8 @@ class TestAbort(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
         t2.write('accept\n')
@@ -217,7 +220,8 @@ class TestAbort(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
@@ -246,7 +250,8 @@ class TestAbort(Test):
         t2 = self.connect_as_admin()
         t3 = self.connect_as_guest()
 
-        t.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1+0\n')
         self.expect('Challenge:', t2)
@@ -351,7 +356,8 @@ class TestDraw(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
