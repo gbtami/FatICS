@@ -62,10 +62,6 @@ class Connection(basic.LineReceiver):
     def connectionMade(self):
         lang.langs['en'].install(names=['ngettext'])
         self.session = Session(self)
-        if self.transport.getHost().port in [config.zipseal_port, config.websocket_port]:
-            self.session.use_zipseal = True
-            self.transport.encoder = timeseal.compress_zipseal
-            self.session.check_for_timeseal = False
         self.factory.connections.append(self)
         self.write(db.get_server_message('welcome'))
         self.login()
@@ -136,11 +132,22 @@ class Connection(basic.LineReceiver):
         if self.session.check_for_timeseal:
             self.session.check_for_timeseal = False
             (t, dec) = timeseal.decode_timeseal(line)
-            if t != 0:
-                if not timeseal.check_hello(dec, self.session):
+            if t > 0:
+                if timeseal.check_hello(dec, self):
+                    return
+                else:
                     self.write("unknown timeseal version\n")
                     self.loseConnection('timeseal error')
-            # no timeseal; continue
+            else:
+                (t, dec) = timeseal.decode_zipseal(line)
+                if t > 0:
+                    if timeseal.check_hello_zipseal(dec, self):
+                        if self.transport.compatibility:
+                            self.loseConnection('Sorry, you cannot use zipseal with the compatibility port.')
+                        return
+                    else:
+                        self.write("unknown zipseal version\n")
+                        self.loseConnection('zipseal error')
 
         m = self.ivar_pat.match(line)
         if m:

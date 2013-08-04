@@ -106,7 +106,8 @@ class TestZipseal(Test):
 
     def test_zipseal_error(self):
         t = telnetlib.Telnet(host, zipseal_port, 120)
-        t.write('\n')
+        t.write('ZIPSEAL|1|0|openseal|Running on an operating system|\x181b566d\n')
+        t.write('\n') # invalid line
         self.expect_EOF(t)
         t.close()
 

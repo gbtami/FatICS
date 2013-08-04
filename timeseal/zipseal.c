@@ -28,12 +28,12 @@
 #include <unistd.h>
 #include <zlib.h>
 #include <assert.h>
+#include <sys/utsname.h>
+
 
 #include "chuffman.h"
 
 #define BSIZE 2048
-
-//char hello[]="zipseal|zipseal|Running on an operating system|";
 
 /*
  * Despite the name (left over from openseal), this doesn't do any
@@ -132,6 +132,25 @@ void getfromfics(int fd, char *buff, int *rd)
         }
 }
 
+static int send_hello(int fd) {
+        int major = 1;
+        int minor = 0;
+        struct utsname buf;
+        int n;
+        char hello[256];
+
+        uname(&buf);
+        snprintf(hello, sizeof(hello),
+                "ZIPSEAL|%d|%d|%s|%s %s %s %s %s|", major, minor,
+                getlogin(), buf.sysname, buf.nodename, buf.release,
+                buf.version, buf.machine);
+
+        n=crypt(hello,strlen(hello));
+        mywrite(fd,hello,n);
+        return 0;
+}
+
+
 int main(int argc, char **argv)
 {
         char *hostname;
@@ -150,13 +169,16 @@ int main(int argc, char **argv)
                 return 1;
         }
 
+#ifdef COMPRESS
         ch.for_encode = 0;
         if (!CHuffmanInit(&ch)) {
                 fprintf(stderr, "initialization error\n");
                 exit(1);
         }
+#endif
 
         fd=makeconn(hostname,port);
+        send_hello(fd);
         for(;;) {
                 fd_set fds;
                 FD_ZERO(&fds);
@@ -204,7 +226,7 @@ int main(int argc, char **argv)
                         }
                         rd += n;
 
-#if 0
+#ifdef COMPRESS
                         ch.inBuf = buf;
                         ch.inLen = rd;
                         ch.outBuf = dec_buf + dec_rd;

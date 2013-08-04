@@ -72,7 +72,7 @@ def getService(port):
     """
     return internet.TCPServer(port, IcsFactory(port))
 
-ports = [config.port, config.zipseal_port, config.compatibility_port]
+ports = [config.port, config.compatibility_port]
 if os.geteuid() == 0:
     # alternate port, for those with firewall issues
     ports.append(23)

@@ -18,8 +18,7 @@
 #
 
 class Config(object):
-    port = 5003
-    zipseal_port = 5001
+    port = 5001
     compatibility_port = 5000
     ssl_port = 5004
     websocket_port = 8080

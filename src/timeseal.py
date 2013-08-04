@@ -42,7 +42,7 @@ class Timeseal(object):
         dec = self.timeseal.stdout.readline()
         m = self._timeseal_pat.match(dec)
         if not m:
-            print('timeseal failed to match: {{%r}}' % dec)
+            #print('timeseal failed to match: {{%r}}' % dec)
             return (-1, None)
         return (int(m.group(1), 10), m.group(2))
 
@@ -53,7 +53,7 @@ class Timeseal(object):
         dec = self.zipseal_decoder.stdout.readline()
         m = self._zipseal_pat.match(dec)
         if not m or int(m.group(1), 16) == 0:
-            print('zipseal failed to match: {{%r}}' % dec)
+            #print('zipseal failed to match: {{%r}}' % dec)
             return (-1, None)
         return (int(m.group(1), 16), m.group(2))
 
@@ -73,8 +73,9 @@ class Timeseal(object):
 
     _timeseal_1_re = re.compile('TIMESTAMP\|(.+?)\|(.+?)\|')
     _timeseal_2_re = re.compile('TIMESEAL2\|(.+?)\|(.+?)\|')
-    def check_hello(self, line, session):
+    def check_hello(self, line, conn):
         """ Decodes the introductory hello string. Returns True on success. """
+        session = conn.session
         m = self._timeseal_1_re.match(line)
         if m:
             session.use_timeseal = True
@@ -90,8 +91,18 @@ class Timeseal(object):
             session.timeseal_acc = m.group(1)
             session.timeseal_system = m.group(2)
             return True
+        return False
 
-        # we currently don't detect zipseal here, but that might change
+    _zipseal_re = re.compile('ZIPSEAL\|(\d+)\|(\d+)\|(.+?)\|(.+?)\|')
+    def check_hello_zipseal(self, line, conn):
+        m = self._zipseal_re.match(line)
+        if m and m.group(1) == '1' and m.group(2) == '0':
+            conn.session.use_zipseal = True
+            conn.session.timeseal_acc = m.group(3)
+            conn.session.timeseal_system = m.group(4)
+            conn.transport.encoder = self.compress_zipseal
+            return True
+
         return False
 
     def print_stats(self):

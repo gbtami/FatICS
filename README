@@ -84,10 +84,10 @@ After the server is started, you can use these commands:
   "./chessd stop"    -- shut down the server
 
 If all goes according to plan, when you start the server it will be ready
-for you to log in on port 5000 (port 5001 for zipseal).  By default the
-schema creates one player named "admin" with the password "admin";
-obviously it's a good idea to log in and change the password (using the
-"password" command) if you are testing on a machine with ports open to
-the Internet.
+for you to log in on port 5000 (port 5001 for international characters).
+By default the schema creates one player named "admin" with the password
+"admin"; obviously it's a good idea to log in and change the password
+(using the "password" command) if you are testing on a machine with ports
+open to the Internet.
 
 For information about running the tests, see README.tests
