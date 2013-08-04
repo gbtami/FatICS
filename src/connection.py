@@ -89,7 +89,7 @@ class Connection(basic.LineReceiver):
         self.write(db.get_server_message('login'))
         if self.transport.compatibility:
             # the string "freechess.org" must appear somewhere in this message;
-            # otherwise, Babs will refuse to connect
+            # otherwise, Babas will refuse to connect
             self.write('You are connected to the backwards-compatibility port for old FICS clients.\nYou will not be able to use zipseal or international characters.\nThis server is not endorsed by freechess.org.\n\n')
         self.write("login: ")
 
@@ -137,19 +137,9 @@ class Connection(basic.LineReceiver):
             self.session.check_for_timeseal = False
             (t, dec) = timeseal.decode_timeseal(line)
             if t != 0:
-                if dec[0:10] == 'TIMESTAMP|':
-                    self.session.use_timeseal = True
-                    self.session.timeseal_version = 1
-                    return
-                elif dec[0:10] == 'TIMESEAL2|':
-                    self.session.use_timeseal = True
-                    self.session.timeseal_version = 2
-                    return
-                else:
+                if not timeseal.check_hello(dec, self.session):
                     self.write("unknown timeseal version\n")
                     self.loseConnection('timeseal error')
-                # we don't detect zipseal here, because we use
-                # the port number to detect it
             # no timeseal; continue
 
         m = self.ivar_pat.match(line)

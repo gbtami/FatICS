@@ -50,6 +50,8 @@ class TestTimeseal(Test):
         process.send('finger\n')
         process.expect_exact('Finger of admin')
         process.expect_exact('Timeseal 1:  On')
+        process.expect_exact('Acc:         openseal')
+        process.expect_exact('System:      Running on an operating system')
 
         t.write('set style 12\n')
         process.send('set style 12\n')

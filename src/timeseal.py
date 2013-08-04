@@ -71,6 +71,29 @@ class Timeseal(object):
             self.zipseal_out += len(ret)
         return ret
 
+    _timeseal_1_re = re.compile('TIMESTAMP\|(.+?)\|(.+?)\|')
+    _timeseal_2_re = re.compile('TIMESEAL2\|(.+?)\|(.+?)\|')
+    def check_hello(self, line, session):
+        """ Decodes the introductory hello string. Returns True on success. """
+        m = self._timeseal_1_re.match(line)
+        if m:
+            session.use_timeseal = True
+            session.timeseal_version = 1
+            session.timeseal_acc = m.group(1)
+            session.timeseal_system = m.group(2)
+            return True
+
+        m = self._timeseal_2_re.match(line)
+        if m:
+            session.use_timeseal = True
+            session.timeseal_version = 2
+            session.timeseal_acc = m.group(1)
+            session.timeseal_system = m.group(2)
+            return True
+
+        # we currently don't detect zipseal here, but that might change
+        return False
+
     def print_stats(self):
         return
         if self.zipseal_in > 0:

@@ -132,6 +132,10 @@ class Finger(Command):
                         conn.write(_('Timeseal 2:  On\n'))
                 else:
                     conn.write(_('Zipseal:     Off\n'))
+                if show_admin_info and u.session.use_timeseal:
+                    conn.write(A_('Acc:         %s\n') % u.session.timeseal_acc)
+                    conn.write(A_('System:      %s\n') % u.session.timeseal_system)
+
 
             notes = u.notes if show_notes else []
             if (not u.is_guest and u.is_notebanned and u != conn.user and
