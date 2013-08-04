@@ -192,6 +192,7 @@ class TelnetTransport(protocol.Protocol):
         pass
 
     def connectionMade(self):
+        self.transport.setTcpKeepAlive(True)
         if self.protocolFactory is not None:
             self.protocol = self.protocolFactory(*self.protocolArgs, **self.protocolKwArgs)
             try:
