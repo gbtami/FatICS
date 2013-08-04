@@ -47,6 +47,8 @@ class Timeseal(object):
         return (int(m.group(1), 10), m.group(2))
 
     def decode_zipseal(self, line):
+        if not isinstance(line, str):
+            line = line.encode('utf-8')
         self.zipseal_decoder.stdin.write(line + '\n')
         dec = self.zipseal_decoder.stdout.readline()
         m = self._zipseal_pat.match(dec)

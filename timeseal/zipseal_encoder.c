@@ -17,6 +17,7 @@ int encode(struct CHuffman *ch, char *inBuf, int inBytes)
         char outBuf[BSIZE];
         int i;
 
+#if 0
         ch->inBuf = inBuf;
         ch->inLen = inBytes;
         ch->outBuf = outBuf;
@@ -27,6 +28,12 @@ int encode(struct CHuffman *ch, char *inBuf, int inBytes)
         for (i = 0; i < ch->outIndex; i++) {
                 printf("%c", outBuf[i]);
         }
+#else
+        printf("%04x", inBytes);
+        for (i = 0; i < inBytes; i++) {
+                printf("%c", inBuf[i]);
+        }
+#endif
         return 0;
 }
 

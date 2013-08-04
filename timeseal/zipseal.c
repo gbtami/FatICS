@@ -204,6 +204,7 @@ int main(int argc, char **argv)
                         }
                         rd += n;
 
+#if 0
                         ch.inBuf = buf;
                         ch.inLen = rd;
                         ch.outBuf = dec_buf + dec_rd;
@@ -219,6 +220,11 @@ int main(int argc, char **argv)
                                 fprintf(stderr, "decode error\n");
                                 exit(1);
                         }
+#else
+                        memcpy(dec_buf, buf, rd);
+                        dec_rd = rd;
+                        rd = 0;
+#endif
                         getfromfics(fd, dec_buf, &dec_rd);
                         if (dec_rd >= sizeof(dec_buf)) {
                                 fprintf(stderr, "Buffer full reading from ICS\n");

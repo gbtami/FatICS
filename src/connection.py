@@ -62,7 +62,7 @@ class Connection(basic.LineReceiver):
     def connectionMade(self):
         lang.langs['en'].install(names=['ngettext'])
         self.session = Session(self)
-        if self.transport.getHost().port == config.zipseal_port:
+        if self.transport.getHost().port in [config.zipseal_port, config.websocket_port]:
             self.session.use_zipseal = True
             self.transport.encoder = timeseal.compress_zipseal
             self.session.check_for_timeseal = False
