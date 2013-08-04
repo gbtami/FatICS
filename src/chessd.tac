@@ -98,9 +98,10 @@ else:
 
 # for WebSocket communication using sockjs
 if SockJSFactory:
-    service = internet.TCPServer(config.websocket_port, SockJSFactory(IcsFactory(config.websocket_port)))
+    cf = ssl.DefaultOpenSSLContextFactory('keys/server.pem', 'keys/server.key')
+    service = internet.SSLServer(config.websocket_port,
+        SockJSFactory(IcsFactory(config.websocket_port)), cf)
     service.setServiceParent(application)
-    #reactor.listenTCP(config.websocket_port, SockJSFactory(IcsFactory(config.websocket_port)))
 
 lc = task.LoopingCall(timer.heartbeat)
 lc.start(timer.heartbeat_timeout)

@@ -132,7 +132,8 @@ class Finger(Command):
                         conn.write(_('Timeseal 2:  On\n'))
                 else:
                     conn.write(_('Zipseal:     Off\n'))
-                if show_admin_info and u.session.use_timeseal:
+                if show_admin_info and (u.session.use_timeseal or
+                    u.session.use_zipseal):
                     conn.write(A_('Acc:         %s\n') % u.session.timeseal_acc)
                     conn.write(A_('System:      %s\n') % u.session.timeseal_system)
 
