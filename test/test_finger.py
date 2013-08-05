@@ -150,6 +150,30 @@ class FingerTest(Test):
         self.close(t)
         self.close(t2)
 
+    @with_player('aUniquePlayer')
+    def test_finger_never_connected_1(self):
+        t = self.connect_as_guest()
+        t.write('f auniqueplayer\n')
+        self.expect('aUniquePlayer has never connected.', t)
+        self.close(t)
+
+    def test_finger_never_connected_2(self):
+        t = self.connect_as_admin()
+        t.write('addplayer oneUniquePlayer somebody@example.com Some Name\n')
+        self.expect('Added:', t)
+
+        t2 = self.connect()
+        t2.write('oneuniqueplayer\nwrongpass\n')
+        self.expect('Invalid pass', t2)
+        t2.close()
+
+        t.write('f oneuniqueplayer\n')
+        self.expect('oneUniquePlayer has never connected.', t)
+        t.write('remplayer oneuniqueplayer\n')
+        self.expect('removed', t)
+        self.close(t)
+
+
 class HandlesTest(Test):
     @with_player('someplayerone')
     @with_player('someplayertwo')

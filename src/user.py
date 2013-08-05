@@ -355,10 +355,6 @@ class RegUser(BaseUser):
         self.vars = db.user_get_vars(self.id,
             var.varlist.get_persistent_var_names())
 
-        if not self.first_login:
-            db.user_set_first_login(self.id)
-            self.first_login = db.user_get_first_login(self.id)
-
         self.vars['formula'] = None
         for num in range(1, 10):
             self.vars['f' + str(num)] = None
@@ -413,6 +409,10 @@ class RegUser(BaseUser):
             u.session.conn.loseConnection('logged in again')
 
         BaseUser.log_on(self, conn)
+
+        if not self.first_login:
+            db.user_set_first_login(self.id)
+            self.first_login = db.user_get_first_login(self.id)
 
         news = db.get_news_since(self.last_logout, is_admin=False)
         if news:

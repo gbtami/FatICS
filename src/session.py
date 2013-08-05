@@ -32,8 +32,6 @@ from game_list import GameList
 class Session(object):
     def __init__(self, conn):
         self.conn = conn
-        self.login_time = time.time()
-        self.last_command_time = time.time()
         self.last_tell_user = None
         self.last_tell_ch = None
         self.last_opp = None
@@ -61,6 +59,8 @@ class Session(object):
 
     def set_user(self, user):
         self.user = user
+        self.login_time = time.time()
+        self.last_command_time = time.time()
         self.conn.write(_('**** Starting FICS session as %s ****\n\n') % user.get_display_name())
 
     def get_idle_time(self):
