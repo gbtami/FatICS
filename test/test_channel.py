@@ -326,6 +326,18 @@ class TestInchannel(Test):
 
         self.close(t)
 
+    def test_inchannel_user(self):
+        t = self.connect_as_guest('GuestTest')
+        t.write('inch admin\n')
+        self.expect('No player named', t)
+        for c in [1, 3, 10, 14, 30, 49, 57, 66, 84, 86, 88, 94, 169]:
+            t.write('+ch %d\n' % c)
+            self.expect('[%d] added' % c, t)
+        t.write('inch guesttes\n')
+        self.expect('GuestTest is in the following channels:\r\n', t)
+        self.expect('1   3   4   10  14  30  49  53  57  66  84  86  88  94  169', t)
+        self.close(t)
+
 class TestCtellVar(Test):
     def test_ctell_var(self):
         t = self.connect_as_admin()

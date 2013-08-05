@@ -27,7 +27,17 @@ import user
 class Inchannel(Command):
     def run(self, args, conn):
         if args[0] is not None:
-            if type(args[0]) != str:
+            if isinstance(args[0], basestring):
+                u = user.find_by_prefix_for_user(args[0], conn,
+                    online_only=True)
+                if not u:
+                    return
+                conn.write(_('%s is in the following channels:\n') % u.name)
+                s = ''
+                for ch in u.channels:
+                    s += '%-3d ' % ch
+                conn.write(s + '\n')
+            else:
                 try:
                     ch = channel.chlist[args[0]]
                 except KeyError:
@@ -38,8 +48,6 @@ class Inchannel(Command):
                         conn.write("%s: %s\n" % (ch.get_display_name(), ' '.join(on)))
                     count = len(on)
                     conn.write(ngettext('There is %d player in channel %d.\n', 'There are %d players in channel %d.\n', count) % (count, args[0]))
-            else:
-                conn.write("INCHANNEL USER\n")
         else:
             for ch in channel.chlist.all.values():
                 on = ch.get_online()
