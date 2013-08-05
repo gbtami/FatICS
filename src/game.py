@@ -454,6 +454,8 @@ class PlayedGame(Game):
         self.rated_str = 'rated' if self.rated else 'unrated'
 
         # GuestBEZD (++++) admin (1000) unrated blitz 2 12
+        # XXX we may need to use self.speed_variant.legacy_str() instead,
+        # if clients expect to see e.g."bughouse" instead of "blitz bughouse"
         self.info_str = '%s (%s) %s (%s) %s %s %d %d' % (
             self.white_name, self.white_rating, self.black_name,
             self.black_rating, self.rated_str, self.speed_variant,

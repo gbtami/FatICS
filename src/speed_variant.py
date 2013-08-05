@@ -57,6 +57,12 @@ class SpeedAndVariant(object):
     def __init__(self, speed, variant):
         self.speed = speed
         self.variant = variant
+        # sometimes we have to abbreviate speed and variant
+        # with one character for compatibility with original FICS
+        if self.variant.name == 'chess':
+            self.abbrev = self.speed.abbrev
+        else:
+            self.abbrev = self.variant.abbrev
 
     def __hash__(self):
         return self.speed.id_ | (self.variant.id_ << 3)

@@ -1400,14 +1400,19 @@ class Bughouse(BaseVariant):
             pos = self.pos.bug_link
             (holding_white, holding_black) = pos.get_holding_str()
             if pc.isupper():
-                machine_str = g.variant.get_b1('W%s' % pc)
-                nonmachine_str = "Game %d: %s received %s -> [%s]\n" % (g.number, g.get_side_user(WHITE), pc, holding_white)
+                machine_str = '\n' + g.variant.get_b1('W%s' % pc)
+                nonmachine_str = "\nGame %d: %s received %s -> [%s]\n" % (g.number, g.get_side_user(WHITE), pc, holding_white)
             else:
-                machine_str = g.variant.get_b1('B%s' % pc.upper())
-                nonmachine_str = "Game %d: %s received %s -> [%s]\n" % (g.number, g.get_side_user(BLACK), pc.upper(), holding_black)
+                machine_str = '\n' + g.variant.get_b1('B%s' % pc.upper())
+                nonmachine_str = "\nGame %d: %s received %s -> [%s]\n" % (g.number, g.get_side_user(BLACK), pc.upper(), holding_black)
             for p in g.observers | g.players:
                 if p.vars['style'] == 12:
                     p.write_nowrap(machine_str)
+                    # Ugly: original FICS sends a prompt here.
+                    # A possible alternative would be chomping off
+                    # the trailing newline instead, but this way
+                    # we imitate existing practice.
+                    p.send_prompt()
                 else:
                     p.write_nowrap(nonmachine_str)
         mv.add_san_decorator()

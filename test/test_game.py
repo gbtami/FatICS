@@ -559,28 +559,6 @@ class TestMoves(Test):
 
         self.close(t)
 
-class TestGames(Test):
-    def test_games(self):
-        t = self.connect_as_guest('GuestABCD')
-        t2 = self.connect_as_admin()
-
-        t.write('games\n')
-        self.expect('There are no games in progress', t)
-
-        t.write('match admin white 1 0\n')
-        self.expect('Challenge:', t2)
-        t2.write('accept\n')
-        self.expect('Creating: GuestABCD (++++) admin (----) unrated lightning 1 0', t)
-        self.expect('Creating: GuestABCD (++++) admin (----) unrated lightning 1 0', t2)
-
-        t.write('games\n')
-        #self.expect('')
-        t.write('abort\n')
-        t2.write('abort\n')
-
-        self.close(t)
-        self.close(t2)
-
 class TestDisconnect(Test):
     def test_forfeit_disconnection_disconnect(self):
         t = self.connect_as_guest('GuestABCD')

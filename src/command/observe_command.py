@@ -187,4 +187,57 @@ class Primary(Command):
                 else:
                     conn.write('You are not observing game %d.\n' % g.number)
 
+@ics_command('games', 'no')
+class Games(Command):
+    def run(self, args, conn):
+        if not game.games.values():
+            conn.write(_('There are no games in progress.\n'))
+            return
+        if args[0]:
+            if not isinstance(args[0], basestring):
+                try:
+                    games = [game.games[args[0]]]
+                except KeyError:
+                    games = []
+            else:
+                conn.write("TODO: games string params\n")
+                raise BadCommandError
+        else:
+            games = game.games.values()
+
+        # TODO: sort games, examined first, by sum of player
+        # ratings
+
+        for g in games:
+            if g.gtype == game.PLAYED:
+                rated_char = 'r' if g.rated else 'u'
+                line = "%3d %4s %-11.11s %4s %-10.10s [ %c%c%3d %3d]" % (
+                    g.number, g.white_rating, g.white_name, g.black_rating,
+                    g.black_name, g.speed_variant.abbrev, rated_char,
+                    g.white_time, g.inc)
+
+                wtime = btime = '0:00' # XXX
+                line = line + "%6s -%6s (%2d-%2d) %c: %2d\n\n" % (wtime, btime,
+                    g.variant.pos.material[1], g.variant.pos.material[0],
+                    'W' if g.variant.get_turn() else 'B',
+                    g.variant.pos.ply // 2 + 1)
+            elif g.gtype == game.EXAMINED:
+                if g.gtype == game.EXAMINED:
+                    gtype = "Exam."
+                else:
+                    gtype = "Setup"
+                variant_char = rated_char = 'u' # XXX
+                line = "%3d (%s %4d %-11.11s %4d %-10.10s) [ %c%c%3d %3d] " % (
+                    g.number, gtype, g.white_rating, g.white_name,
+                    g.black_rating, g.black_name, variant_char,
+                    rated_char, g.white_time, g.inc)
+                line = line + "%c: %2d\n\n" % (
+                    'W' if g.variant.get_turn() else 'B',
+                    g.variant.pos.ply // 2 + 1)
+            else:
+                raise RuntimeError('unknown game type: %s' % g.gtype)
+            conn.write_nowrap(line)
+        conn.write(ngettext('  %(count)d game displayed (of %(total)3d in progress).\n', '  %(count)d games displayed (of %(total)3d in progress).\n', len(games)) % {'count': len(games), 'total': len(game.games)})
+
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

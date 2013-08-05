@@ -579,4 +579,38 @@ class TestRobserve(Test):
         self.close(t2)
         self.close(t3)
 
+class TestGames(Test):
+    def test_games(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+        t3 = self.connect_as_guest('GuestIJKL')
+
+        t.write('games\n')
+        self.expect('There are no games in progress', t)
+
+        t.write('match guestefgh white 1 0\n')
+        self.expect('Challenge:', t2)
+        t2.write('accept\n')
+        self.expect('Creating: GuestABCD (++++) GuestEFGH (++++) unrated lightning 1 0', t)
+        self.expect('Creating: GuestABCD (++++) GuestEFGH (++++) unrated lightning 1 0', t2)
+
+        t3.write('e\n')
+        self.expect('Starting a game', t3)
+        t3.write('games\n')
+        # these are not exactly correct but rather what the server outputs now
+        self.expect('  1 ++++ GuestABCD   ++++ GuestEFGH  [ lu  1   0]  0:00 -  0:00 (39-39) B:  1', t3)
+        self.expect('  2 (Exam.    0 White          0 Black     ) [ uu  0   0] B:  1', t3)
+        self.expect ('  2 games displayed (of   2 in progress).', t3)
+
+        t.write('game 1\n')
+        self.expect('  1 ++++ GuestABCD   ++++ GuestEFGH  [ lu  1   0]  0:00 -  0:00 (39-39) B:  1', t)
+        self.expect ('  1 game displayed (of   2 in progress).', t)
+
+        t.write('abort\n')
+        self.expect('aborted', t2)
+
+        self.close(t)
+        self.close(t2)
+        self.close(t3)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

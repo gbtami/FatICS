@@ -1361,17 +1361,23 @@ class Crazyhouse(BaseVariant):
             # print <b1> line to notify clients of captures
             (holding_white, holding_black) = self.pos.get_holding_str()
             if pc.isupper():
-                machine_str = self.get_b1('W%s' % pc)
-                nonmachine_str = "Game %d: %s received %s -> [%s]\n" % (self.game.number, self.game.get_side_user(WHITE), pc, holding_white)
+                machine_str = '\n' + self.get_b1('W%s' % pc)
+                nonmachine_str = "\nGame %d: %s received %s -> [%s]\n" % (self.game.number, self.game.get_side_user(WHITE), pc, holding_white)
             else:
-                machine_str = self.get_b1('B%s' % pc.upper())
-                nonmachine_str = "Game %d: %s received %s -> [%s]\n" % (self.game.number, self.game.get_side_user(BLACK), pc.upper(), holding_black)
+                machine_str = '\n' + self.get_b1('B%s' % pc.upper())
+                nonmachine_str = "\nGame %d: %s received %s -> [%s]\n" % (self.game.number, self.game.get_side_user(BLACK), pc.upper(), holding_black)
 
             for p in self.game.observers | self.game.players:
                 if p.vars['style'] == 12:
                     p.write_nowrap(machine_str)
+                    # Ugly: original FICS sends a prompt here.
+                    # A possible alternative would be chomping off
+                    # the trailing newline instead, but this way
+                    # we imitate existing practice.
+                    p.send_prompt()
                 else:
                     p.write_nowrap(nonmachine_str)
+
 
         mv.add_san_decorator()
 
@@ -1389,7 +1395,7 @@ class Crazyhouse(BaseVariant):
         else:
             passed_str = ''
 
-        s = '\n<b1> game %d white [%s] black [%s]%s\n' % (self.game.number,
+        s = '<b1> game %d white [%s] black [%s]%s\n' % (self.game.number,
             holding_white, holding_black, passed_str)
         return s
 
