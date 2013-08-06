@@ -20,10 +20,10 @@
 from command import ics_command, Command
 from command_parser import BadCommandError
 
-import online
 import game
 import time_format
 import speed_variant
+import global_
 
 @ics_command('showadmins', '')
 class Showadmins(Command):
@@ -31,7 +31,7 @@ class Showadmins(Command):
         conn.write('Admins:\n')
         conn.write('Name              Status       Idle time\n')
         # TD programs should not be displayed in showadmins (e.g. ROBOadmin)
-        admins = [u for u in online.online if u.is_admin() and not u.has_title('TD')]
+        admins = [u for u in global_.online if u.is_admin() and not u.has_title('TD')]
         for u in admins:
             if u.session.game and u.session.game.gtype == game.PLAYED:
                 status = 'Playing'
@@ -51,7 +51,7 @@ class Showsrs(Command):
     def run(self, args, conn):
         conn.write('SRs:\n')
         conn.write('Name              Status       Idle time\n')
-        srs = [u for u in online.online if u.has_title('SR')]
+        srs = [u for u in global_.online if u.has_title('SR')]
         for u in srs:
             if u.session.game and u.session.game.gtype == game.PLAYED:
                 status = 'Playing'
@@ -71,7 +71,7 @@ class Showtms(Command):
     def run(self, args, conn):
         conn.write('TMs:\n')
         conn.write('Name              Status       Idle time\n')
-        tms = [u for u in online.online if u.has_title('TM')]
+        tms = [u for u in global_.online if u.has_title('TM')]
         for u in tms:
             if u.session.game and u.session.game.gtype == game.PLAYED:
                 status = 'Playing'
@@ -89,7 +89,7 @@ class Showtms(Command):
 @ics_command('who', 'T')
 class Who(Command):
     def run(self, args, conn):
-        users = [u for u in online.online]
+        users = [u for u in global_.online]
 
         sort_order = 'b'
         fmt = 't'

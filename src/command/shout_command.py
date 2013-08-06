@@ -19,6 +19,8 @@
 
 from command import *
 
+import global_
+
 @ics_command('shout', 'S', admin.Level.user)
 class Shout(Command):
     @requires_registration
@@ -35,7 +37,7 @@ class Shout(Command):
             count = 0
             name = conn.user.name
             dname = conn.user.get_display_name()
-            for u in online.online:
+            for u in global_.online:
                 if u.vars['shout'] and not u.in_silence():
                     if name not in u.censor:
                         u.write_("\n%s shouts: %s\n", (dname, args[0]))
@@ -58,7 +60,7 @@ class It(Command):
             count = 0
             name = conn.user.name
             dname = conn.user.get_display_name()
-            for u in online.online:
+            for u in global_.online:
                 if u.vars['shout'] and not u.in_silence():
                     if name not in u.censor:
                         u.write(_("\n--> %s %s\n") %
@@ -83,7 +85,7 @@ class Cshout(Command):
             count = 0
             name = conn.user.name
             dname = conn.user.get_display_name()
-            for u in online.online:
+            for u in global_.online:
                 if u.vars['cshout'] and not u.in_silence():
                     if name not in u.censor:
                         u.write_("\n%s c-shouts: %s\n", (dname, args[0]))

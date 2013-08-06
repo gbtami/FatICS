@@ -20,9 +20,10 @@
 import var
 import user
 import partner
-import online
+import global_
 import speed_variant
 import game
+import global_
 
 from command_parser import BadCommandError
 from command import Command, ics_command
@@ -103,7 +104,7 @@ class Bugwho(Command):
             # bughouse games
             conn.write(_('Bughouse games in progress\n'))
             count = 0
-            for g in game.games.values():
+            for g in global_.games.values():
                 if g.variant.name == 'bughouse':
                     # XXX 
                     conn.write('TODO\n')
@@ -112,26 +113,26 @@ class Bugwho(Command):
                 ' %d games displayed.\n', count) % count)
         if p_:
             conn.write(_('Partnerships not playing bughouse\n'))
-            for p in partner.partners:
+            for p in global_.partners:
                 [p1, p2] = sorted(list(p), key=lambda p: p.name)
                 conn.write('%s %s / %s %s\n' %
                     (p1.get_rating(speed_variant.from_names('blitz',
                         'bughouse')), p1.get_display_name(),
                         p2.get_rating(speed_variant.from_names('blitz',
                         'bughouse')), p2.get_display_name()))
-            count = len(partner.partners)
+            count = len(global_.partners)
             conn.write(ngettext(' %d partnership displayed.\n',
                 '  %d partnerships displayed.\n', count) % count)
 
         if u_:
             conn.write(_('Unpartnered players with bugopen on\n'))
-            ulist = sorted([u for u in online.online if u.vars['bugopen'] and
+            ulist = sorted([u for u in global_.online if u.vars['bugopen'] and
                 not u.session.partner], key=lambda u: u.name)
             for u in ulist:
                 conn.write('%s %s\n' %
                     (u.get_rating(speed_variant.from_names('blitz',
                         'bughouse')), u.get_display_name()))
-            total = len(online.online)
+            total = len(global_.online)
             count = len(ulist)
             conn.write(ngettext(' %(count)d player displayed (of %(total)d).\n',
                 '  %(count)d players displayed (of %(total)d).\n', count)

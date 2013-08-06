@@ -22,7 +22,7 @@ from twisted.internet import reactor
 
 import user
 import command_parser
-import online
+import global_
 import admin
 import speed_variant
 import list_
@@ -69,7 +69,7 @@ class Announce(Command):
     def run(self, args, conn):
         count = 0
         # the announcement message isn't localized
-        for u in online.online:
+        for u in global_.online:
             if u != conn.user:
                 count = count + 1
                 u.write("\n\n    **ANNOUNCEMENT** from %s: %s\n\n" % (conn.user.name, args[0]))
@@ -80,7 +80,7 @@ class Annunreg(Command):
     def run(self, args, conn):
         count = 0
         # the announcement message isn't localized
-        for u in online.online:
+        for u in global_.online:
             if u != conn.user and u.is_guest:
                 count = count + 1
                 u.write("\n\n    **UNREG ANNOUNCEMENT** from %s: %s\n\n" % (conn.user.name, args[0]))
@@ -125,7 +125,7 @@ class Asetmaxplayer(Command):
             config.maxplayer = args[0]
 
         conn.write(A_('There are currently %d regular and %d admin connections available.\n') %
-            (max(config.maxplayer - config.admin_reserve, 0), min(config.maxplayer - len(online.online), config.admin_reserve)))
+            (max(config.maxplayer - config.admin_reserve, 0), min(config.maxplayer - len(global_.online), config.admin_reserve)))
         conn.write(A_('Total allowed connections: %d.\n') % config.maxplayer)
 
 @ics_command('asetmaxguest', 'p', admin.Level.admin)
@@ -362,7 +362,7 @@ class Shutdown(Command):
             if reactor.shuttingDown:
                 reactor.shuttingDown.cancel()
                 reactor.shuttingDown = False
-                for u in online.online:
+                for u in global_.online:
                     u.write_("\n\n    *** Server shutdown canceled by %s ***\n\n", conn.user.name)
                 return
             mins = 5
@@ -372,7 +372,7 @@ class Shutdown(Command):
         else:
             mins = args[0]
 
-        for u in online.online:
+        for u in global_.online:
             u.nwrite_("\n\n    *** The server is shutting down in %d minute, initiated by %s ***\n\n", "\n\n    *** The server is shutting down in %d minutes, initiated by %s ***\n\n", mins, (mins, conn.user.name))
 
         if reactor.shuttingDown:
@@ -406,7 +406,7 @@ class Chkip(Command):
 
         #conn.write(A_("Matches the following player(s): \n\n"))
         count = 0
-        for u in online.online:
+        for u in global_.online:
             if compare_ip(u.session.conn.ip, ip_pat):
                 conn.write('%-18s %s\n' % (u.name, u.session.conn.ip))
                 count += 1

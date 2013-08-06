@@ -21,7 +21,7 @@ from command import Command, ics_command
 
 import channel
 import user
-import online
+import global_
 import admin
 
 from game_constants import PLAYED, EXAMINED
@@ -57,7 +57,7 @@ class TellCommand(Command, ToldMixin):
                 # try to find the user if he or she has logged off
                 # and since reconnected
                 name = u.name
-                u = online.online.find_exact(name)
+                u = global_.online.find_exact(name)
                 if not u:
                     conn.write(_('%s is no longer online.\n') % name)
         elif args[0] == ',':
@@ -159,7 +159,7 @@ class Say(Command, ToldMixin):
                 u = iter(conn.user.session.say_to).next()
                 # try to find the user if he or she has since reconnected
                 name = u.name
-                u = online.online.find_exact(name)
+                u = global_.online.find_exact(name)
                 if u:
                     say_to = [u]
                 else:

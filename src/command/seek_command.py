@@ -17,7 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-
+import global_
 import seek
 import match
 import game
@@ -49,7 +49,7 @@ class Seek(Command):
 
         # Check if the user has already posted the same seek.  It might be
         # more efficient to do this check as part of seek.find_matching()
-        if s in seek.seeks.values():
+        if s in global_.seeks.values():
             conn.write(_('You already have an active seek with the same parameters.\n'))
             return
 
@@ -89,8 +89,8 @@ class Unseek(Command):
     def run(self, args, conn):
         n = args[0]
         if n:
-            if n in seek.seeks and seek.seeks[n].a == conn.user:
-                seek.seeks[n].remove()
+            if n in global_.seeks and global_.seeks[n].a == conn.user:
+                global_.seeks[n].remove()
                 conn.write(_('Your seek %d has been removed.\n') % n)
             else:
                 conn.write(_('You have no seek %d.\n') % n)
@@ -125,7 +125,7 @@ class Play(Command):
                     assert(not ad.expired)
         else:
             try:
-                ad = seek.seeks[args[0]]
+                ad = global_.seeks[args[0]]
             except KeyError:
                 # no such seek
                 ad = None
@@ -174,11 +174,11 @@ class Sought(Command):
     def run(self, args, conn):
         if args[0] is not None:
             if args[0] == 'all':
-                slist = [s for s in seek.seeks.values() if not s.expired]
+                slist = [s for s in global_.seeks.values() if not s.expired]
             else:
                 raise BadCommandError
         else:
-            slist = [s for s in seek.seeks.values() if not s.expired and
+            slist = [s for s in global_.seeks.values() if not s.expired and
                 not conn.user.censor_or_noplay(s.a) and
                 s.check_formula(conn.user) and s.meets_formula_for(conn.user)]
 

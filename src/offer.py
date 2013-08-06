@@ -19,14 +19,14 @@
 import re
 import time
 
+import global_
 import game
 
-offers = {}
 def _find_free_slot():
     """ Find the next available offer number. """
     i = 1
     while True:
-        if i not in offers:
+        if i not in global_.offers:
             return i
         i += 1
 
@@ -36,7 +36,7 @@ class Offer(object):
         self.name = name
         self.game = None
         self.number = _find_free_slot()
-        offers[self.number] = self
+        global_.offers[self.number] = self
 
     def _register(self):
         """ Store the offer as being made for both users. """
@@ -50,7 +50,7 @@ class Offer(object):
         for p in [self.a, self.b]:
             if p.session.ivars['pendinfo']:
                 p.write_nowrap('\n<pr> %d\n' % self.number)
-        del offers[self.number]
+        del global_.offers[self.number]
 
     def pendinfo(self, type_, param):
         if self.a.session.ivars['pendinfo']:

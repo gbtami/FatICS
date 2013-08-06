@@ -18,7 +18,7 @@
 
 import user
 import filter_
-import online
+import global_
 
 from config import config
 from db import db
@@ -58,7 +58,7 @@ class Login(object):
                     conn.write('Due to abuse, guest logins are blocked from your address.\n')
                     conn.loseConnection('filtered')
                     u = None
-                if u and online.online.guest_count >= config.maxguest:
+                if u and global_.online.guest_count >= config.maxguest:
                     conn.write(db.get_server_message('full_unreg'))
                     conn.loseConnection('guests full')
                     u = None
@@ -72,7 +72,7 @@ class Login(object):
         if u:
             pmax = config.maxplayer if u.is_admin() else (config.maxplayer -
                 config.admin_reserve)
-            if len(online.online) >= pmax:
+            if len(global_.online) >= pmax:
                 conn.write(db.get_server_message('full'))
                 conn.loseConnection('players full')
                 u = None

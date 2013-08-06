@@ -85,12 +85,13 @@ for port in ports:
 
 # ssl
 try:
-    keyAndCert = open('keys/fatics.pem')
+    key = open('keys/server.key')
+    cert = open('keys/server.pem')
 except IOError:
     # no ssl
     pass
 else:
-    cert = ssl.PrivateCertificate.loadPEM(keyAndCert.read())
+    cert = ssl.PrivateCertificate.loadPEM(key.read() + cert.read())
     ssl_port = config.ssl_port
     service = internet.SSLServer(ssl_port, IcsFactory(ssl_port),
         cert.options())

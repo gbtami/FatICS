@@ -19,7 +19,7 @@
 import time
 from gettext import ngettext
 
-import online
+import global_
 import game
 import connection
 
@@ -30,7 +30,7 @@ def heartbeat():
     # idle timeout
     if config.idle_timeout:
         now = time.time()
-        for u in online.online:
+        for u in global_.online:
             if (now - u.session.last_command_time > config.idle_timeout and
                     not u.is_admin() and
                     not u.has_title('TD')):
@@ -41,12 +41,12 @@ def heartbeat():
     # rather than sending a large number of ping requests all at once.
     # However, this method is simple, and FICS timeseal 2 seems to do it
     # this way (pinging all capable clients every 10 seconds).
-    for u in online.online:
+    for u in global_.online:
         if u.session.use_zipseal or (u.session.use_timeseal and u.session.timeseal_version == 2):
             u.session.ping()
 
     # forfeit games on time
-    for g in game.games.values():
+    for g in global_.games.values():
         if g.gtype == game.PLAYED and g.clock.is_ticking:
             u = g.get_user_to_move()
             opp = g.get_opp(u)

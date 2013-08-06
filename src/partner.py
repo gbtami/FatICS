@@ -19,7 +19,7 @@
 
 from offer import Offer
 
-partners = []
+import global_
 
 class Partner(Offer):
     def __init__(self, a, b):
@@ -63,7 +63,7 @@ class Partner(Offer):
 
         self.a.session.partner = self.b
         self.b.session.partner = self.a
-        partners.append(set([self.a, self.b]))
+        global_.partners.append(set([self.a, self.b]))
 
         # end any pending partnership offers
         for offer in self.a.session.offers_sent[:]:
@@ -100,7 +100,7 @@ def end_partnership(p1, p2):
     # becoming unavailable for matches, departing, and starting games
     assert(p1.session.partner == p2)
     assert(p2.session.partner == p1)
-    partners.remove(set([p1, p2]))
+    global_.partners.remove(set([p1, p2]))
     #p2.write_('\n%s has ended partnership.\n', p1.name)
     p2.write_('\nYour partner has ended partnership.\n')
     for o in p1.session.offers_sent[:]:

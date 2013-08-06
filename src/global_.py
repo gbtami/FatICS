@@ -17,5 +17,28 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+""" Server-wide global state. """
+
+import online
+
+try:
+    globals_defined
+except NameError:
+    globals_defined = True
+
+    # bughouse partners
+    partners = []
+
+    # all offers
+    offers = {}
+
+    # all games
+    games = {}
+
+    # online players
+    online = online.Online()
+
+    # seeks
+    seeks = {}
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

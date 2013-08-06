@@ -20,7 +20,6 @@ import datetime
 import time
 
 import time_format
-import online
 
 from game_constants import *
 from config import config

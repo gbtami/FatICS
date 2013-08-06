@@ -22,7 +22,7 @@ import trie
 import channel
 import user
 import filter_
-import online
+import global_
 
 from db import db, DuplicateKeyError, DeleteError
 
@@ -434,7 +434,7 @@ class MuteList(SystemUserList):
 
     def _get_names(self):
         # this is slow, but only admins can do it
-        muted_guests = [u.name for u in online.online
+        muted_guests = [u.name for u in global_.online
             if u.is_muted and u.is_guest]
         return db.get_muted_user_names() + muted_guests
 
@@ -550,7 +550,7 @@ class PlaybanList(SystemUserList):
 
     def _get_names(self):
         # this is slow, but only admins can do it
-        playbanned_guests = [u.name for u in online.online
+        playbanned_guests = [u.name for u in global_.online
             if u.is_playbanned and u.is_guest]
         return db.get_playbanned_user_names() + playbanned_guests
 

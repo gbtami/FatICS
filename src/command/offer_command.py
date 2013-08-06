@@ -19,7 +19,7 @@
 
 from command import *
 
-import offer
+import global_
 
 # TODO: make these commands accept a username parameter
 
@@ -36,7 +36,7 @@ class Accept(Command):
             conn.user.session.offers_received[0].accept()
         elif type(args[0]) == int:
             try:
-                o = offer.offers[args[0]]
+                o = global_.offers[args[0]]
             except KeyError:
                 o = None
             if not o or o not in conn.user.session.offers_received:
@@ -60,7 +60,7 @@ class Decline(Command):
             conn.user.session.offers_received[0].decline()
         elif type(args[0]) == int:
             try:
-                o = offer.offers[args[0]]
+                o = global_.offers[args[0]]
             except KeyError:
                 o = None
             if not o or o not in conn.user.session.offers_received:
@@ -84,7 +84,7 @@ class Withdraw(Command):
             conn.user.session.offers_sent[0].withdraw()
         elif type(args[0]) == int:
             try:
-                o = offer.offers[args[0]]
+                o = global_.offers[args[0]]
             except KeyError:
                 o = None
             if not o or o not in conn.user.session.offers_sent:

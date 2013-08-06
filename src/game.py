@@ -28,12 +28,10 @@ import clock
 import history
 import time_format
 import variant
+import global_
 
 from db import db
-from online import online
 from game_constants import *
-
-games = {}
 
 def find_free_slot():
     """Find the first available game number."""
@@ -41,7 +39,7 @@ def find_free_slot():
     # be more than efficient enough.
     i = 1
     while True:
-        if i not in games:
+        if i not in global_.games:
             return i
         i += 1
 
@@ -49,8 +47,8 @@ def from_name_or_number(arg, conn):
     g = None
     try:
         num = int(arg)
-        if num in games:
-            g = games[num]
+        if num in global_.games:
+            g = global_.games[num]
         else:
             conn.write(_("There is no such game.\n"))
     except ValueError:
@@ -69,7 +67,7 @@ class Game(object):
         """ Common setup for examined and played games.  Assumes
         self.players is already set. """
         self.number = find_free_slot()
-        games[self.number] = self
+        global_.games[self.number] = self
         self.observers = set()
         self.pending_offers = []
         self.bug_link = None
@@ -264,7 +262,7 @@ class Game(object):
         for u in self.observers.copy():
             self.unobserve(u)
         assert(not self.observers)
-        del games[self.number]
+        del global_.games[self.number]
 
     def get_eco(self):
         i = min(self.variant.pos.ply, 36)
@@ -537,7 +535,7 @@ class PlayedGame(Game):
         gnotified -= set([p.name for p in self.players])
 
         for un in gnotified:
-            u = online.find_exact(un)
+            u = global_.online.find_exact(un)
             if u:
                 # using info_str doesn't quite work, since original
                 # fics inserts "vs." into the game notification
@@ -549,7 +547,7 @@ class PlayedGame(Game):
                     self.white_time, self.inc, self.number))
 
         # notify users with the gin variable set
-        for u in online.gin_var:
+        for u in global_.online.gin_var:
             u.write_nowrap(create_str_2)
 
         # currently we do not send pings at the start of the game
@@ -821,7 +819,7 @@ class PlayedGame(Game):
         self.black.write_nowrap(line)
         for u in self.observers:
             u.write_nowrap(line)
-        for u in online.gin_var:
+        for u in global_.online.gin_var:
             u.write_nowrap(line)
 
         self.clock.stop()

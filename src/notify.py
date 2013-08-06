@@ -17,8 +17,8 @@
 #
 
 import connection
+import global_
 
-from online import online
 from db import db
 
 def notify_users(user, arrived):
@@ -36,7 +36,7 @@ def notify_users(user, arrived):
                 assert(adj['black_user_id'] == user.id)
                 opp_name = adj['white_name']
             assert(opp_name)
-            opp = online.find_exact(opp_name)
+            opp = global_.online.find_exact(opp_name)
             if opp:
                 opp.write_('\nNotification: %s, who has an adjourned game with you, has arrived.\n', (name,))
                 adjourned_opps.append(opp_name)
@@ -47,7 +47,7 @@ def notify_users(user, arrived):
 
     nlist = []
     for nname in user.notified:
-        u = online.find_exact(nname)
+        u = global_.online.find_exact(nname)
         if u:
             if arrived:
                 if u.name not in adjourned_opps:
@@ -64,7 +64,7 @@ def notify_users(user, arrived):
             user.write(_('The following players were notified of your departure: %s\n') % ' '.join(nlist))
 
     for nname in user.notifiers:
-        u = online.find_exact(nname)
+        u = global_.online.find_exact(nname)
         if u and u.vars['notifiedby'] and u.name not in nlist:
             if arrived:
                 u.write_("\nNotification: %s has arrived and isn't on your notify list.\n", name)
@@ -73,16 +73,16 @@ def notify_users(user, arrived):
 
 def notify_pin(user, arrived):
     """ Notify users who have the pin variable or ivariable set. """
-    if online.pin_ivar:
+    if global_.online.pin_ivar:
         if arrived:
             pin_ivar_str = '\n<wa> %s 001222 1326P1169P0P0P0P0P0P0P\n' % user.name
         else:
             pin_ivar_str = '\n<wd> %s\n' % user.name
-        for u in online.pin_ivar:
+        for u in global_.online.pin_ivar:
             u.write_nowrap(pin_ivar_str)
             connection.written_users.add(u)
 
-    if online.pin_var:
+    if global_.online.pin_var:
         if arrived:
             pin_var_str = '\n[%s has connected.]\n' % user.name
             if user.is_guest:
@@ -92,7 +92,7 @@ def notify_pin(user, arrived):
             admin_pin_var_str = '\n[%s (%s: %s) has connected.]\n' % (user.name, reg_flag, user.session.conn.ip)
         else:
             pin_var_str = '\n[%s has disconnected.]\n' % user.name
-        for u in online.pin_var:
+        for u in global_.online.pin_var:
             if u.is_admin() and arrived:
                 u.session.conn.write(admin_pin_var_str)
             else:

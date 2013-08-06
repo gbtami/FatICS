@@ -18,6 +18,13 @@
 
 import gettext
 
+try:
+   langs
+except NameError:
+    pass
+else:
+    assert(False)
+
 langs = {
     'en': gettext.NullTranslations(),
     'es': gettext.translation('chessd', languages=['es'], localedir='./locale', fallback=True),

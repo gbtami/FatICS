@@ -26,7 +26,6 @@ from server import server
 
 import admin
 
-# New help file system ~ilknight - 8-5-2011
 @ics_command('help', 'o', admin.Level.user)
 class Help(Command):
     def run(self, args, conn):

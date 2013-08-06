@@ -21,7 +21,7 @@ import time
 import re
 
 import speed_variant
-import online
+import global_
 import game
 import formula
 
@@ -37,8 +37,6 @@ EXPIRE_DELAY = 90
 LIMIT = 3
 
 
-seeks = {}
-
 def find_free_slot():
     """ Find the first available seek number. """
     # This is O(n) in the number of games, but it's simple and should
@@ -46,8 +44,8 @@ def find_free_slot():
     i = 1
     expiration_time = time.time() - EXPIRE_DELAY
     while True:
-        if i not in seeks or (seeks[i].expired
-                and seeks[i].expired_time <= expiration_time):
+        if i not in global_.seeks or (global_.seeks[i].expired
+                and global_.seeks[i].expired_time <= expiration_time):
             return i
         i += 1
 
@@ -58,7 +56,7 @@ def find_matching(seek):
     # Would that lead to starvation of seeks with a high number?
     auto_matches = []
     manual_matches = []
-    for s in seeks.values():
+    for s in global_.seeks.values():
         if seek.matches(s):
             if (not seek.a.censor_or_noplay(s.a) and
                     s.check_formula(seek.a) and seek.check_formula(s.a)):
@@ -192,7 +190,7 @@ class Seek(MatchStringParser):
 
         self.when_posted = time.time()
         self.num = find_free_slot()
-        seeks[self.num] = self
+        global_.seeks[self.num] = self
         self.a.session.seeks.append(self)
 
         # build the seek string
@@ -239,7 +237,7 @@ class Seek(MatchStringParser):
             formula_char)
 
         count = 0
-        for u in online.online:
+        for u in global_.online:
             assert(u.is_online)
             assert('formula' in u.vars)
             if not u.session.game:
@@ -308,13 +306,13 @@ class Seek(MatchStringParser):
         assert(self.expired)
 
     def remove(self):
-        assert(seeks[self.num] == self)
+        assert(global_.seeks[self.num] == self)
         self.expired = True
         self.a.session.seeks.remove(self)
         self.expired_time = time.time()
 
         # seekremove
-        for u in online.online:
+        for u in global_.online:
             if u.session.ivars['seekremove'] and not u.session.game:
                 u.write_nowrap('<sr> %d\n' % self.num)
 

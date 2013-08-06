@@ -31,10 +31,10 @@ import connection
 import rating
 import speed_variant
 import lang
+import global_
 
 from server import server
 from db import db
-from online import online
 from config import config
 
 class UsernameException(Exception):
@@ -68,7 +68,7 @@ class BaseUser(object):
         db.user_log(self.name, login=True, ip=conn.ip)
         notify.notify_pin(self, arrived=True)
         self.is_online = True
-        online.add(self)
+        global_.online.add(self)
         if not self.session.ivars['nowrap']:
             conn.transport.enableWrapping(self.vars['width'])
         self.write(server.get_copyright_notice())
@@ -85,7 +85,7 @@ class BaseUser(object):
             channel.chlist[ch].log_off(self)
         self.session.close()
         self.is_online = False
-        online.remove(self)
+        global_.online.remove(self)
         notify.notify_pin(self, arrived=False)
 
     def write(self, s):
@@ -401,9 +401,9 @@ class RegUser(BaseUser):
         self._load_titles()
 
     def log_on(self, conn):
-        if online.is_online(self.name):
+        if global_.online.is_online(self.name):
             conn.write(_("**** %s is already logged in; closing the other connection. ****\n" % self.name))
-            u = online.find_exact(self.name)
+            u = global_.online.find_exact(self.name)
             u.session.conn.write(_("**** %s has arrived; you can't both be logged in. ****\n\n") % self.name)
             #u.session.conn.write(_("**** %s has arrived - you can't both be logged in. ****\n\n") % self.name)
             u.session.conn.loseConnection('logged in again')
@@ -442,7 +442,7 @@ class RegUser(BaseUser):
         for dbu in db.user_get_notifiers(self.id):
             name = dbu['user_name']
             self.notifiers.add(name)
-            if online.is_online(name):
+            if global_.online.is_online(name):
                 nlist.append(name)
         notify.notify_users(self, arrived=True)
 
@@ -685,7 +685,7 @@ class GuestUser(BaseUser):
                 self.name = 'Guest'
                 for i in range(4):
                     self.name = self.name + random.choice(string.ascii_uppercase)
-                if not online.is_online(self.name):
+                if not global_.online.is_online(self.name):
                     break
                 count = count + 1
                 if count > 3:
@@ -742,7 +742,7 @@ def find_by_name_exact(name,
         min_len=config.min_login_name_len, online_only=False):
     """Find a user, accepting only exact matches. """
     _check_name(name, min_len)
-    u = online.find_exact(name)
+    u = global_.online.find_exact(name)
     if not u and not online_only:
         dbu = db.user_get(name)
         if dbu:
@@ -762,7 +762,7 @@ def _find_by_prefix(name, online_only=False):
         _check_name(name, 1)
     if not u:
         # failing that, try a prefix match
-        ulist = online.find_part(name)
+        ulist = global_.online.find_part(name)
         if len(ulist) == 1:
             u = ulist[0]
         elif len(ulist) > 1:

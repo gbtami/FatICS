@@ -23,7 +23,7 @@ import datetime
 import trie
 import lang
 import formula
-import online
+import global_
 import partner
 
 from config import config
@@ -45,26 +45,26 @@ def _set_nowrap(user, val):
 def _set_pin_ivar(user, val):
     """ Called when the pin ivar is set. """
     if val:
-        online.online.pin_ivar.add(user)
+        global_.online.pin_ivar.add(user)
     else:
-        if user in online.online.pin_ivar:
-            online.online.pin_ivar.remove(user)
+        if user in global_.online.pin_ivar:
+            global_.online.pin_ivar.remove(user)
 
 def _set_pin_var(user, val):
     """ Called when the pin var is set. """
     if val:
-        online.online.pin_var.add(user)
+        global_.online.pin_var.add(user)
     else:
-        if user in online.online.pin_var:
-            online.online.pin_var.remove(user)
+        if user in global_.online.pin_var:
+            global_.online.pin_var.remove(user)
 
 def _set_gin_var(user, val):
     """ Called when the gin var is set. """
     if val:
-        online.online.gin_var.add(user)
+        global_.online.gin_var.add(user)
     else:
-        if user in online.online.gin_var:
-            online.online.gin_var.remove(user)
+        if user in global_.online.gin_var:
+            global_.online.gin_var.remove(user)
 
 def _set_open_var(u, val):
     for offer in u.session.offers_sent[:]:

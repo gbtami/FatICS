@@ -19,7 +19,7 @@
 
 from command import Command, ics_command
 
-import online
+import global_
 import admin
 import user
 
@@ -55,7 +55,7 @@ class Znotify(Command):
         else:
             show_idle = False
         notifiers = [name for name in conn.user.notifiers
-            if online.online.is_online(name)]
+            if global_.online.is_online(name)]
         if len(notifiers) == 0:
             conn.write(_('No one from your notify list is logged on.\n'))
         else:
@@ -63,7 +63,7 @@ class Znotify(Command):
                 ' '.join(notifiers))
 
         name = conn.user.name
-        notified = [u.name for u in online.online if name in u.notifiers]
+        notified = [u.name for u in global_.online if name in u.notifiers]
         if len(notified) == 0:
             conn.write(_('No one logged in has you on their notify list.\n'))
         else:

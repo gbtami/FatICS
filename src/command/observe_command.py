@@ -21,6 +21,7 @@ from command import ics_command, Command
 
 import game
 import user
+import global_
 
 @ics_command('observe', 'i')
 class Observe(Command):
@@ -94,7 +95,7 @@ class Allobservers(Command):
                     conn.write(_('No one is observing game %d.\n')
                         % g.number)
         else:
-            for g in game.games.itervalues():
+            for g in global_.games.itervalues():
                 if g.allobservers(conn):
                     count += 1
 
@@ -102,7 +103,7 @@ class Allobservers(Command):
             conn.write(ngettext(
                 '  %(count)d game displayed (of %(total)d in progress).\n',
                 '  %(count)d games displayed (of %(total)d in progress).\n',
-                    count) % {'count': count, 'total': len(game.games)})
+                    count) % {'count': count, 'total': len(global_.games)})
 
 @ics_command('pfollow', 'o')
 class Pfollow(Command):
@@ -190,20 +191,20 @@ class Primary(Command):
 @ics_command('games', 'no')
 class Games(Command):
     def run(self, args, conn):
-        if not game.games.values():
+        if not global_.games.values():
             conn.write(_('There are no games in progress.\n'))
             return
         if args[0]:
             if not isinstance(args[0], basestring):
                 try:
-                    games = [game.games[args[0]]]
+                    games = [global_.games[args[0]]]
                 except KeyError:
                     games = []
             else:
                 conn.write("TODO: games string params\n")
                 raise BadCommandError
         else:
-            games = game.games.values()
+            games = global_.games.values()
 
         # TODO: sort games, examined first, by sum of player
         # ratings
@@ -237,7 +238,7 @@ class Games(Command):
             else:
                 raise RuntimeError('unknown game type: %s' % g.gtype)
             conn.write_nowrap(line)
-        conn.write(ngettext('  %(count)d game displayed (of %(total)3d in progress).\n', '  %(count)d games displayed (of %(total)3d in progress).\n', len(games)) % {'count': len(games), 'total': len(game.games)})
+        conn.write(ngettext('  %(count)d game displayed (of %(total)3d in progress).\n', '  %(count)d games displayed (of %(total)3d in progress).\n', len(games)) % {'count': len(games), 'total': len(global_.games)})
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

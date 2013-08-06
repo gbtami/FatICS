@@ -22,9 +22,9 @@ import match
 import admin
 import user
 import speed_variant
+import global_
 
 from command import Command, ics_command
-from online import online
 
 @ics_command('match', 'wt', admin.Level.user)
 class Match(Command):
@@ -56,7 +56,7 @@ class Rematch(Command):
             conn.write(_('You have no previous opponent.\n'))
             return
         h = hist[-1]
-        opp = online.find_exact(h['opp_name'])
+        opp = global_.online.find_exact(h['opp_name'])
         if not opp:
             conn.write(_('Your last opponent, %s, is not logged in.\n') % h['opp_name'])
             return
