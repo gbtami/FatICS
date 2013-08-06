@@ -452,4 +452,212 @@ class TestPartner(Test):
         self.close(t)
         self.close(t2)
 
+class TestBughouseKibitz(Test):
+    def test_kibitz(self):
+        # kibitz goes to all 4 players
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+        t3 = self.connect_as_guest('GuestIJKL')
+        t4 = self.connect_as_guest('GuestMNOP')
+
+        self.set_nowrap(t)
+        self.set_nowrap(t2)
+        self.set_nowrap(t3)
+        self.set_nowrap(t4)
+
+        t2.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t2)
+        t.write('part guestefgh\n')
+        self.expect('GuestABCD offers', t2)
+        t2.write('part guestabcd\n')
+        self.expect('GuestEFGH accepts', t)
+
+        t4.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t4)
+        t3.write('part guestmnop\n')
+        self.expect('GuestIJKL offers', t4)
+        t4.write('a\n')
+        self.expect('GuestMNOP accepts', t3)
+
+        t.write('match guestijkl bughouse 3+0\n')
+        self.expect('Issuing: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t)
+        self.expect('Your bughouse partner issues: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t2)
+        self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t2)
+        self.expect('Challenge: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t3)
+        self.expect('Your bughouse partner was challenged: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t4)
+        self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t4)
+
+        t3.write('match guestabcd bughouse 3+0\n') # intercept
+        self.expect('Creating:', t)
+        self.expect('Creating:', t2)
+        self.expect('Creating:', t3)
+        self.expect('Creating:', t4)
+
+        t5 = self.connect_as_guest()
+        t5.write('o guestmnop\n')
+        self.expect('You are now observing', t5)
+
+        t.write('ki this is a test\n')
+        self.expect('GuestABCD(U)(++++)[1] kibitzes: this is a test', t)
+        self.expect('GuestABCD(U)(++++)[1] kibitzes: this is a test', t2)
+        self.expect('GuestABCD(U)(++++)[1] kibitzes: this is a test', t3)
+        self.expect('GuestABCD(U)(++++)[1] kibitzes: this is a test', t4)
+        self.expect('GuestABCD(U)(++++)[1] kibitzes: this is a test', t5)
+        self.expect('(kibitzed to 4 players)', t)
+
+        self.close(t5)
+
+        t.write('abo\n')
+        self.expect('aborted', t2)
+        self.expect('aborted', t3)
+        self.expect('aborted', t4)
+
+        self.close(t)
+        self.close(t2)
+        self.close(t3)
+        self.close(t4)
+
+    def test_whisper(self):
+        # whisper goes to all 4 players
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+        t3 = self.connect_as_guest('GuestIJKL')
+        t4 = self.connect_as_guest('GuestMNOP')
+
+        self.set_nowrap(t)
+        self.set_nowrap(t2)
+        self.set_nowrap(t3)
+        self.set_nowrap(t4)
+
+        t2.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t2)
+        t.write('part guestefgh\n')
+        self.expect('GuestABCD offers', t2)
+        t2.write('part guestabcd\n')
+        self.expect('GuestEFGH accepts', t)
+
+        t4.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t4)
+        t3.write('part guestmnop\n')
+        self.expect('GuestIJKL offers', t4)
+        t4.write('a\n')
+        self.expect('GuestMNOP accepts', t3)
+
+        t.write('match guestijkl bughouse 3+0\n')
+        self.expect('Issuing: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t)
+        self.expect('Your bughouse partner issues: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t2)
+        self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t2)
+        self.expect('Challenge: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t3)
+        self.expect('Your bughouse partner was challenged: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t4)
+        self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t4)
+
+        t3.write('match guestabcd bughouse 3+0\n') # intercept
+        self.expect('Creating:', t)
+        self.expect('Creating:', t2)
+        self.expect('Creating:', t3)
+        self.expect('Creating:', t4)
+
+        t5 = self.connect_as_guest()
+        t5.write('o guestabcd\n')
+        self.expect('You are now observing', t5)
+
+        t3.write('whi this is a test\n')
+        self.expect('GuestIJKL(U)(++++)[1] whispers: this is a test', t5)
+        self.expect('(whispered to 1 player)', t3)
+
+        self.close(t5)
+
+        t.write('abo\n')
+        self.expect('aborted', t2)
+        self.expect('aborted', t3)
+        self.expect('aborted', t4)
+
+        self.close(t)
+        self.close(t2)
+        self.close(t3)
+        self.close(t4)
+
+class TestBughouseSay(Test):
+    def test_say(self):
+        # say goes to the other three players
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+        t3 = self.connect_as_guest('GuestIJKL')
+        t4 = self.connect_as_guest('GuestMNOP')
+
+        self.set_nowrap(t)
+        self.set_nowrap(t2)
+        self.set_nowrap(t3)
+        self.set_nowrap(t4)
+
+        t2.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t2)
+        t.write('part guestefgh\n')
+        self.expect('GuestABCD offers', t2)
+        t2.write('part guestabcd\n')
+        self.expect('GuestEFGH accepts', t)
+
+        t4.write('set bugopen\n')
+        self.expect('You are now open for bughouse.', t4)
+        t3.write('part guestmnop\n')
+        self.expect('GuestIJKL offers', t4)
+        t4.write('a\n')
+        self.expect('GuestMNOP accepts', t3)
+
+        t.write('match guestijkl bughouse 3+0\n')
+        self.expect('Issuing: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t)
+        self.expect('Your bughouse partner issues: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t2)
+        self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t2)
+        self.expect('Challenge: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t3)
+        self.expect('Your bughouse partner was challenged: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t4)
+        self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t4)
+
+        t3.write('match guestabcd bughouse 3+0\n') # intercept
+        self.expect('Creating:', t)
+        self.expect('Creating:', t2)
+        self.expect('Creating:', t3)
+        self.expect('Creating:', t4)
+
+        t.write('say abc def\n')
+        # the order of "(told...)" message is not defined
+        self.expect_re('\(told Guest(?:EFGH|IJKL|MNOP), who is playing\)', t)
+        self.expect_re('\(told Guest(?:EFGH|IJKL|MNOP), who is playing\)', t)
+        self.expect_re('\(told Guest(?:EFGH|IJKL|MNOP), who is playing\)', t)
+        self.expect_not('(told GuestABCD', t)
+        self.expect('GuestABCD(U)[1] says: abc def', t2)
+        self.expect('GuestABCD(U)[1] says: abc def', t3)
+        self.expect('GuestABCD(U)[1] says: abc def', t4)
+
+        t.write('abo\n')
+        self.expect('aborted', t2)
+        self.expect('aborted', t3)
+        self.expect('aborted', t4)
+
+        t4.write('say game over\n')
+        self.expect_re('\(told Guest(?:ABCD|EFGH|IJKL)\)', t4)
+        self.expect_re('\(told Guest(?:ABCD|EFGH|IJKL)\)', t4)
+        self.expect_re('\(told Guest(?:ABCD|EFGH|IJKL)\)', t4)
+        self.expect('GuestMNOP(U) says: game over', t)
+        self.expect('GuestMNOP(U) says: game over', t2)
+        self.expect('GuestMNOP(U) says: game over', t3)
+
+        self.close(t4)
+
+        t3.write('say my partner left\n')
+        self.expect_re('\(told Guest(?:ABCD|EFGH)\)', t3)
+        self.expect_re('\(told Guest(?:ABCD|EFGH)\)', t3)
+        self.expect('GuestIJKL(U) says: my partner left', t)
+        self.expect('GuestIJKL(U) says: my partner left', t2)
+
+        self.close(t3)
+
+        t.write('+cen guestefgh\n')
+        self.expect('added to your censor', t)
+        t2.write('say only we are left\n')
+        self.expect('GuestABCD is censoring you.', t2)
+
+        self.close(t2)
+        self.close(t)
+
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

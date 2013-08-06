@@ -269,7 +269,8 @@ class TestCensor(Test):
         self.expect('admin added to your censor list.', t2)
 
         t.write('say foo\n')
-        self.expect('says: foo', t2)
+        self.expect('TestPlayer is censoring you', t)
+        self.expect_not('says: foo', t2)
         t2.write('say bar\n')
         self.expect('admin is censoring you', t2)
         self.expect_not('says: bar', t)

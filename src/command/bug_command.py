@@ -104,7 +104,9 @@ class Bugwho(Command):
             conn.write(_('Bughouse games in progress\n'))
             count = 0
             for g in game.games.values():
-                if game.variant.name == 'bughouse':
+                if g.variant.name == 'bughouse':
+                    # XXX 
+                    conn.write('TODO\n')
                     count += 1
             conn.write(ngettext(' %d game displayed.\n',
                 ' %d games displayed.\n', count) % count)

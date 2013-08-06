@@ -594,6 +594,11 @@ class Challenge(Offer, MatchStringParser):
             for p in [g.get_side_user(WHITE), g2.get_side_user(WHITE)]:
                 if p.has_timeseal():
                     p.session.ping(for_move=True)
+            all_players = set([g.white, g.black, g2.white, g2.black])
+            # each player's "say" goes to all the other players except
+            # themselves
+            for p in all_players:
+                p.session.say_to = all_players - set([p])
 
     def withdraw_logout(self):
         Offer.withdraw_logout(self)

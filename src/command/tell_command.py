@@ -150,34 +150,42 @@ class Say(Command, ToldMixin):
             # mute now prevents *all* tells
             conn.write(_('You are muted.\n'))
             return
-        if conn.user.session.game:
-            # TODO: send says to bughouse linked game, if any
-            g = conn.user.session.game
-            opp = g.get_opp(conn.user)
-            assert(opp.is_online)
-            if conn.user.name in opp.censor and not conn.user.is_admin():
-                conn.write(_("%s is censoring you.\n") % opp.name)
-                return
-            opp.write_("\n%s[%d] says: %s\n", (conn.user.get_display_name(),
-                g.number, args[0]))
-            self._told(opp, conn)
-        else:
-            opp = conn.user.session.last_opp
-            if opp:
-                if not opp.is_online:
-                    name = opp.name
-                    opp = online.online.find_exact(name)
-                    if not opp:
-                        conn.write(_('%s is no longer online.\n') % name)
-                if opp:
-                    if conn.user.name in opp.censor and (
-                            not conn.user.is_admin()):
-                        conn.write(_("%s is censoring you.\n") % opp.name)
-                        return
-                    opp.write_("\n%s says: %s\n", (conn.user.get_display_name(),
-                        args[0]))
-                    self._told(opp, conn)
+
+        say_to = [u for u in conn.user.session.say_to if u.is_online]
+        if not say_to:
+            if len(conn.user.session.say_to) == 1:
+                # The common case: the opponent logged
+                # out after a non-bug game
+                u = iter(conn.user.session.say_to).next()
+                # try to find the user if he or she has since reconnected
+                name = u.name
+                u = online.online.find_exact(name)
+                if u:
+                    say_to = [u]
+                else:
+                    conn.write(_('%s is no longer online.\n') % name)
             else:
+                # All other players have logged out after a bug game
                 conn.write(_("I don't know whom to say that to.\n"))
+        if say_to:
+            g = conn.user.session.game
+            if g and g.gtype == PLAYED:
+                assert(g.get_opp(conn.user) in say_to)
+                game_num = g.number
+            else:
+                game_num = None
+        for p in say_to:
+            # Don't bother checking for admins; they can use "tell"
+            # if they want to override censor.
+            if conn.user.name in p.censor:
+                conn.write(_("%s is censoring you.\n") % p.name)
+                continue
+            if game_num:
+                p.write_("\n%s[%d] says: %s\n", (conn.user.get_display_name(),
+                    g.number, args[0]))
+            else:
+                p.write_("\n%s says: %s\n", (conn.user.get_display_name(),
+                    args[0]))
+            self._told(p, conn)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

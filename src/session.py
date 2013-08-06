@@ -34,7 +34,6 @@ class Session(object):
         self.conn = conn
         self.last_tell_user = None
         self.last_tell_ch = None
-        self.last_opp = None
         self.use_timeseal = False
         self.ping_sent = []
         self.ping_time = []
@@ -54,6 +53,7 @@ class Session(object):
         self.followed_by = set()
         self.idlenotifying = set()
         self.idlenotified_by = set()
+        self.say_to = set()
         self.ftell = None
         self.ftell_admins = set()
 

@@ -507,8 +507,8 @@ class PlayedGame(Game):
         self.white.session.game = self
         self.black.session.game = self
 
-        self.white.session.last_opp = self.black
-        self.black.session.last_opp = self.white
+        self.white.session.say_to = set([self.black])
+        self.black.session.say_to = set([self.white])
 
         gnotified = set()
         for p in self.players:
@@ -536,7 +536,6 @@ class PlayedGame(Game):
         # don't notify players of this game themselves
         gnotified -= set([p.name for p in self.players])
 
-        # notify players, unless they are one of the players of this game
         for un in gnotified:
             u = online.find_exact(un)
             if u:
