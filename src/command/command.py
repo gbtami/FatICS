@@ -26,7 +26,7 @@ import history
 import speed_variant
 import time_format
 import channel
-import command_parser
+import global_
 
 from server import server
 from db import db, DeleteError
@@ -49,9 +49,9 @@ class Command(object):
         self.name = name
         self.param_str = param_str
         self.admin_level = admin_level
-        command_parser.command_list.admin_cmds[name] = self
+        global_.command_list.admin_cmds[name] = self
         if admin_level <= admin.Level.user:
-            command_parser.command_list.cmds[name] = self
+            global_.command_list.cmds[name] = self
 
     def help(self, conn):
         conn.write("help for %s\n" % self.name)

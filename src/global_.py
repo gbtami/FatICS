@@ -20,6 +20,7 @@
 """ Server-wide global state. """
 
 import online
+import command_parser
 
 try:
     globals_defined
@@ -40,5 +41,9 @@ except NameError:
 
     # seeks
     seeks = {}
+
+    # commands
+    command_list = command_parser.CommandList()
+
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

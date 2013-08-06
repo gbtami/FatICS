@@ -31,19 +31,13 @@ import admin
 import timeseal
 import block
 import block_codes
-
-
 class CommandList(object):
     def __init__(self):
         self.cmds = trie.Trie()
         self.admin_cmds = trie.Trie()
 
-try:
-    command_list
-except NameError:
-    command_list = CommandList()
-
 from command import *
+import global_
 
 class CommandParser(object):
     command_re = re.compile(r'^(\S+)(?:\s+(.*))?$')
@@ -97,10 +91,10 @@ class CommandParser(object):
                 # no exact code
                 return block_codes.BLKCMD_ERROR_BADCOMMAND
 
-        if conn.user.admin_level > admin.Level.user:
-            cmds = command_list.admin_cmds
+        if conn.user.is_admin():
+            cmds = global_.command_list.admin_cmds
         else:
-            cmds = command_list.cmds
+            cmds = global_.command_list.cmds
 
         cmd = None
         m = self.command_re.match(s)

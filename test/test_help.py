@@ -34,6 +34,14 @@ class TestHelp(Test):
         self.expect("Command: say", t)
         self.expect("Usage: say", t)
 
+        t.write('help commands\n')
+        self.expect('Current command list:', t)
+
+        # abbreviation
+        t.write('help allob\n')
+        self.expect("Command: allobservers", t)
+        self.expect("Usage: allobservers", t)
+
         self.close(t)
 
     def test_help_error(self):

@@ -21,48 +21,67 @@ import os.path
 import re
 
 from command import ics_command, Command
-import command_parser
+import global_
 from server import server
 
 import admin
+import trie
+
+help_dir = 'help/'
 
 @ics_command('help', 'o', admin.Level.user)
 class Help(Command):
     def run(self, args, conn):
-        # non-admins should not be able to see/view documentation for
-        # admin commands.
-        if conn.user.admin_level > admin.level.user:
-            help_cmds = [c.name for c in command_parser.command_list.admin_cmds.itervalues()]
-        else:
-            help_cmds = [c.name for c in command_parser.command_list.cmds.itervalues()]
-            
+        if not args[0]:
+            args[0] = 'help'
+
+        assert(args[0] == args[0].lower())
+
         # for legal reasons, the license help file should be in the code
         # and not in a separate file
         if args[0] in ['license', 'license', 'copying', 'copyright']:
             conn.write(server.get_license())
             return
 
-        # "help commands" should return a complete list of server commands
-        elif args[0] == 'commands':
-            conn.write('Current FatICS command list:\n\n%s\n' % help_cmds)
+        # non-admins should not be able to see/view documentation for
+        # admin commands.
+        if conn.user.is_admin():
+            cmds = global_.command_list.admin_cmds
+        else:
+            cmds = global_.command_list.cmds
+
+        if args[0] == 'commands':
+            help_cmds = [c.name for c in cmds.itervalues()]
+            conn.write('Current command list:\n\n%s\n' % help_cmds)
             return
 
-        # Create list for all commands. If user is not admin, populate only with
-        # regular user commands. If user is admin, populate with all commands.
-        if not args[0]:
-            # TODO: some help text for "help" with no arguments
-            args[0] = 'help'
-
-        # Search for actual .txt help file and return text inside that file
-        help_file = 'help/%s.txt' % args[0]
-        if args[0] in help_cmds and os.path.exists(help_file):
-            # security safeguard
-            assert(re.match('[a-z]+', args[0]))
-            help_file = open(help_file, "r")
-            conn.write(_('Help file documentation for "%s":\n\n%s\n') %
-                (args[0], help_file.read()))
-        else:
+        cmd = None
+        try:
+            cmd = cmds[args[0]]
+        except KeyError:
             conn.write(_('There is no help available for "%s".\n')
                 % args[0])
+        except trie.NeedMore:
+            matches = cmds.all_children(args[0])
+            assert(len(matches) > 0)
+            if len(matches) == 1:
+                cmd = matches[0]
+            else:
+                conn.write(_("""Ambiguous command "%(cmd)s". Matches: %(matches)s\n""")
+                    % {'cmd': args[0], 'matches':
+                        ' '.join([c.name for c in matches])})
+
+        if cmd:
+            cmd = cmd.name
+            # Search for actual .txt help file and return text inside that file
+            help_file = '%s/%s.txt' % (help_dir, cmd)
+            if os.path.exists(help_file):
+                # security safeguard
+                assert(re.match('[a-z]+', cmd))
+                help_file = open(help_file, "r")
+                conn.write(_('Help file documentation for "%s":\n\n%s\n') %
+                    (cmd, help_file.read()))
+            else:
+                conn.write('It appears "%s" is a command but it has no help file. Perhaps you should volunteer to write it. ;)\n' % cmd)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
