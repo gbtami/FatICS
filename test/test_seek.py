@@ -426,6 +426,21 @@ class TestPlay(Test):
         self.close(t2)
         self.close(t)
 
+    @with_player('TestComp', ['computer'])
+    def test_play_comp(self):
+        t = self.connect_as_guest()
+        t2 = self.connect_as('testcomp')
+
+        t.write('seek 3 0 white\n')
+        m = self.expect_re(r'Your seek has been posted with index (\d+).', t)
+        n = int(m.group(1))
+
+        t2.write('play %d\n' % n)
+        self.expect('Computers cannot accept seeks.', t2)
+
+        self.close(t2)
+        self.close(t)
+
     @with_player('TestPlayer')
     def test_play_name(self):
         t = self.connect_as_admin()

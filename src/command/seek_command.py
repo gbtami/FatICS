@@ -112,6 +112,10 @@ class Play(Command):
                 conn.write(_('You are playing a game.\n'))
             return
 
+        if conn.user.has_title('computer'):
+            conn.write(_('Computers cannot accept seeks.\n'))
+            return
+
         ad = None
         if isinstance(args[0], basestring):
             u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
