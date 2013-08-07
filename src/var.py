@@ -28,8 +28,6 @@ import partner
 
 from config import config
 
-vars = trie.Trie()
-ivars = trie.Trie()
 ivar_number = {}
 
 class BadVarError(Exception):
@@ -116,12 +114,12 @@ class Var(object):
         # display in vars output
 
     def add_as_var(self):
-        vars[self.name] = self
+        global_.vars_[self.name] = self
         self.is_ivar = False
         return self
 
     def add_as_ivar(self, number=None):
-        ivars[self.name] = self
+        global_.ivars[self.name] = self
         if number is not None:
             ivar_number[number] = self
         self.is_ivar = True
@@ -368,7 +366,7 @@ class VarList(object):
         self.default_vars = {}
         self.transient_vars = {}
         self.persistent_vars = set()
-        for var in vars.itervalues():
+        for var in global_.vars_.itervalues():
             if var.is_persistent:
                 self.default_vars[var.name] = var.default
                 if not var.is_formula_or_note:
@@ -422,7 +420,7 @@ class VarList(object):
         # does not allow setting an xml ivariable.
 
         self.default_ivars = {}
-        for ivar in ivars.itervalues():
+        for ivar in global_.ivars.itervalues():
             self.default_ivars[ivar.name] = ivar.default
 
     def get_persistent_var_names(self):

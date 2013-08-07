@@ -25,7 +25,7 @@ import speed_variant
 import clock
 import command_parser
 import formula
-import var
+import global_
 
 from offer import Offer
 from game_constants import *
@@ -527,7 +527,7 @@ class Challenge(Offer, MatchStringParser):
                 raise MatchError(_("%s is playing a game.\n") % b.name)
 
         if not a.vars['open']:
-            var.vars['open'].set(a, '1')
+            global_.vars_['open'].set(a, '1')
 
     def __eq__(self, other):
         if (self.name == other.name and

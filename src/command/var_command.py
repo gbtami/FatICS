@@ -23,13 +23,14 @@ import var
 import user
 import trie
 import admin
+import global_
 
 @ics_command('iset', 'wS', admin.Level.user)
 class Iset(Command):
     def run(self, args, conn):
         [name, val] = args
         try:
-            v = var.ivars.get(name)
+            v = global_.ivars.get(name)
             v.set(conn.user, val)
         except trie.NeedMore as e:
             assert(len(e.matches) >= 2)
@@ -45,7 +46,7 @@ class Set(Command):
         # val can be None if the user gave no value
         [name, val] = args
         try:
-            v = var.vars.get(name)
+            v = global_.vars_.get(name)
             v.set(conn.user, val)
         except trie.NeedMore as e:
             assert(len(e.matches) >= 2)
@@ -132,6 +133,6 @@ class Variables(Command):
 class Style(Command):
     def run(self, args, conn):
         #conn.write('Warning: the "style" command is deprecated.  Please use "set style" instead.\n')
-        var.vars['style'].set(conn.user, str(args[0]))
+        global_.vars_['style'].set(conn.user, str(args[0]))
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

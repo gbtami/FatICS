@@ -65,7 +65,7 @@ class Partner(Command):
                 return
             if not conn.user.vars['bugopen']:
                 conn.write(_('Setting you open for bughouse.\n'))
-                var.vars['bugopen'].set(conn.user, '1')
+                global_.vars_['bugopen'].set(conn.user, '1')
 
             partner.Partner(conn.user, u)
 

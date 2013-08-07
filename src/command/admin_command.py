@@ -351,7 +351,7 @@ class Ftell(Command):
 @ics_command('hideinfo', '', admin.Level.admin)
 class Hideinfo(Command):
     def run(self, args, conn):
-        var.vars['hideinfo'].set(conn.user, None)
+        global_.vars_['hideinfo'].set(conn.user, None)
 
 @ics_command('shutdown', 'p', admin.Level.admin)
 class Shutdown(Command):

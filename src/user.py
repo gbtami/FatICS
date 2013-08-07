@@ -139,6 +139,8 @@ class BaseUser(object):
         return self._titles
 
     def set_var(self, v, val):
+        """ This does not notify the user. """
+        # XXX maybe it should?
         if val is not None:
             self.vars[v.name] = val
         else:

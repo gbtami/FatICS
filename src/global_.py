@@ -21,6 +21,7 @@
 
 import online
 import command_parser
+import trie
 
 try:
     globals_defined
@@ -44,6 +45,10 @@ except NameError:
 
     # commands
     command_list = command_parser.CommandList()
+
+    # player variables and ivariables
+    vars_ = trie.Trie()
+    ivars = trie.Trie()
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
