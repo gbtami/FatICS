@@ -78,9 +78,9 @@ class Connection(basic.LineReceiver):
     def idle_timeout(self, mins):
         if self.state not in ['prompt']:
             print 'error: got idle timeout in %s state' % self.state
+        assert(self.state in ['prompt'])
         self.write(_("\n**** Auto-logout because you were idle more than %d minutes. ****\n") % mins)
         self.loseConnection('idle timeout')
-        assert(self.state in ['prompt'])
 
     def login(self):
         self.state = 'login'
