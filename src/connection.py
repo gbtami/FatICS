@@ -249,6 +249,24 @@ class Connection(basic.LineReceiver):
             pass
         self.factory.connections.remove(self)
 
+    def write_paged(self, s):
+        """ Write text, but split up long text into pages that can
+        be read using the "next" command. If the parameter is None,
+        continue previous long output."""
+        assert(self.state == 'prompt')
+        height = self.user.vars['height']
+        assert(height >= 5)
+        if s is None:
+            s = self.session.next_lines
+        lines = s.split('\n', height - 2)
+        if len(lines) ==  height - 1:
+            self.session.next_lines = lines.pop()
+            s = '\n'.join(lines)
+            s = '%s\nType [next] to see next page.\n' % s
+        else:
+            self.session.next_lines = ''
+        self.write(s)
+
     def write(self, s):
         if self.buffer_output:
             self.output_buffer += s

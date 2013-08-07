@@ -31,36 +31,39 @@ from game_list import GameList
 # user state that is per-session and not saved to persistent storage
 class Session(object):
     def __init__(self, conn):
+        """ Created when a connection is made. """
         self.conn = conn
-        self.last_tell_user = None
-        self.last_tell_ch = None
         self.use_timeseal = False
-        self.ping_sent = []
-        self.ping_time = []
-        self.move_sent_timestamp = None
         self.use_zipseal = False
         self.check_for_timeseal = True
-        self.offers_sent = []
-        self.offers_received = []
-        self.game = None
         self.ivars = var.varlist.get_default_ivars()
-        self.lag = 0
-        self.observed = GameList()
         self.closed = False
-        self.seeks = []
-        self.partner = None
-        self.following = None
-        self.followed_by = set()
-        self.idlenotifying = set()
-        self.idlenotified_by = set()
-        self.say_to = set()
-        self.ftell = None
-        self.ftell_admins = set()
 
     def set_user(self, user):
+        """ Called when a reg. player or guest has passed the login step. """
         self.user = user
         self.login_time = time.time()
         self.last_command_time = time.time()
+        self.last_tell_user = None
+        self.last_tell_ch = None
+        self.move_sent_timestamp = None
+        self.say_to = set()
+        self.lag = 0
+        self.following = None
+        self.ping_sent = []
+        self.ping_time = []
+        self.followed_by = set()
+        self.ftell = None
+        self.ftell_admins = set()
+        self.next_lines = ''
+        self.offers_sent = []
+        self.game = None
+        self.offers_received = []
+        self.idlenotifying = set()
+        self.idlenotified_by = set()
+        self.seeks = []
+        self.observed = GameList()
+        self.partner = None
         self.conn.write(_('**** Starting FICS session as %s ****\n\n') % user.get_display_name())
 
     def get_idle_time(self):

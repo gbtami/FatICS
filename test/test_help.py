@@ -52,4 +52,31 @@ class TestHelp(Test):
         self.expect('There is no help available for "a/test".', t)
         self.close(t)
 
+class TestNext(Test):
+    def test_next(self):
+        t = self.connect_as_guest()
+        t.write('next\n')
+        self.expect('There is no more', t)
+        t.write('next foo\n')
+        self.expect('Usage:', t)
+        t.write('help license\n')
+        self.expect('Type [next] to see next page.', t)
+
+        # other commands should not interfere
+        t.write('f\n')
+        self.expect('Finger of ', t)
+
+        for i in range(29):
+            t.write('next\n')
+            self.expect('Type [next] to see next page.', t)
+
+        t.write('next\n')
+        self.expect_not('Type [next] to see next page.', t)
+        t.write('next\n')
+        self.expect('There is no more', t)
+        t.write('next\n')
+        self.expect('There is no more', t)
+
+        self.close(t)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

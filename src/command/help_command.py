@@ -29,7 +29,7 @@ import trie
 
 help_dir = 'help/'
 
-@ics_command('help', 'o', admin.Level.user)
+@ics_command('help', 'o')
 class Help(Command):
     def run(self, args, conn):
         if not args[0]:
@@ -40,7 +40,7 @@ class Help(Command):
         # for legal reasons, the license help file should be in the code
         # and not in a separate file
         if args[0] in ['license', 'license', 'copying', 'copyright']:
-            conn.write(server.get_license())
+            conn.write_paged(server.get_license())
             return
 
         # non-admins should not be able to see/view documentation for
@@ -79,9 +79,21 @@ class Help(Command):
                 # security safeguard
                 assert(re.match('[a-z]+', cmd))
                 help_file = open(help_file, "r")
-                conn.write(_('Help file documentation for "%s":\n\n%s\n') %
-                    (cmd, help_file.read()))
+                conn.write_paged(help_file.read())
             else:
                 conn.write('It appears "%s" is a command but it has no help file. Perhaps you should volunteer to write it. ;)\n' % cmd)
+
+# The original FICS allows paging through text files and hstat
+# separately, using the optional "stats" and "text" parameters.
+# I am not convinced that is useful enough to be worth the extra
+# implementation complexity.
+@ics_command('next', '')
+class Next(Command):
+    def run(self, args, conn):
+        s = conn.user.session.next_lines
+        if not s:
+            conn.write(_('There is no more to show.\n'))
+        else:
+            conn.write_paged(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

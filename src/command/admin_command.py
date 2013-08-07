@@ -318,8 +318,8 @@ class Showcomment(Command):
                 if not comments:
                     conn.write(A_('There are no comments for %s.\n') % u.name)
                 else:
-                    for c in comments:
-                        conn.write(A_('%s at %s: %s\n') % (c['admin_name'], c['when_added'], c['txt']))
+                    allcomments = [A_('%s at %s: %s\n') % (c['admin_name'], c['when_added'], c['txt']) for c in comments]
+                    conn.write_paged('\n'.join(allcomments))
 
 @ics_command('ftell', 'o', admin.Level.admin)
 class Ftell(Command):
