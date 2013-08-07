@@ -32,6 +32,7 @@ protocol.  Since the the goal is to be compatible with FICS clients,
 followed the server and not the RFC."""
 
 import textwrap
+import base64
 
 from zope.interface import implements
 from twisted.internet import protocol, interfaces
@@ -83,6 +84,9 @@ class TelnetTransport(protocol.Protocol):
     def _write(self, bytes):
         if self.encoder is not None:
             bytes = self.encoder(bytes)
+        if not self.send_IAC:
+            # XXX hack for sockjs
+            bytes = base64.b64encode(bytes)
         self.transport.write(bytes)
 
     def do(self, option):
