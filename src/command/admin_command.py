@@ -203,7 +203,6 @@ class Asetemail(Command):
 
             email = args[1]
             if email is None:
-                # TODO?
                 assert(False)
             else:
                 if '@' not in email:
@@ -234,7 +233,6 @@ class Asetrealname(Command):
 
             real_name = args[1]
             if real_name is None:
-                # TODO?
                 assert(False)
             else:
                 old_real_name = u.real_name

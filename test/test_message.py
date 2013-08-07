@@ -142,6 +142,9 @@ class TestMessage(Test):
 
         t2.write('mess u\n')
         self.expect('You have no unread messages.', t2)
+
+        t2.write('mess u foo\n')
+        self.expect('Usage:', t2)
         self.close(t2)
 
         t.write('mess testplayer message #4\n')
