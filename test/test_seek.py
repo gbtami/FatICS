@@ -404,6 +404,9 @@ class TestPlay(Test):
         self.expect('TestPlayer (----) seeking', t)
         self.expect_not('TestPlayer', t3)
 
+        t2.write('play %d\n' % n)
+        self.expect('You cannot accept your own seek', t2)
+
         t3.write('play %d\n' % n)
         self.expect('Only registered players can play rated games.', t3)
         self.close(t3)

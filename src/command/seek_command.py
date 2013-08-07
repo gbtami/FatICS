@@ -139,6 +139,9 @@ class Play(Command):
             if conn.user.is_playbanned:
                 conn.write(_('You may not play games.\n'))
                 ad = None
+            elif conn.user == ad.a:
+                conn.write(_('You cannot accept your own seeks.\n'))
+                ad = None
             elif ad.rated and conn.user.is_guest:
                 conn.write(_('Only registered players can play rated games.\n'))
                 ad = None
