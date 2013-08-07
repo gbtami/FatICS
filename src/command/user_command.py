@@ -90,6 +90,7 @@ class Finger(Command):
                     else:
                         assert(False)
             else:
+                assert(not u.is_guest)
                 if u.last_logout is None:
                     conn.write(_('%s has never connected.\n') % u.name)
                 else:
