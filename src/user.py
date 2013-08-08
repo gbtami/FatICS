@@ -739,7 +739,7 @@ def _check_name(name, min_len):
     elif not username_re.match(name):
         raise UsernameException(_('Names should only consist of lower and upper case letters.  Try again.\n'))
 
-username_re = re.compile('^[a-zA-Z_]+$')
+username_re = re.compile('^[a-zA-Z]+$')
 def find_by_name_exact(name,
         min_len=config.min_login_name_len, online_only=False):
     """Find a user, accepting only exact matches. """
