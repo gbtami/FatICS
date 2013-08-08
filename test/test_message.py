@@ -31,6 +31,8 @@ class TestMessage(Test):
         t2 = self.connect_as_admin()
         t2.write('mess guestabcd foobar\n')
         self.expect('Only registered players can have messages.', t2)
+        t2.write('mess guestabcd\n')
+        self.expect('Only registered players can have messages.', t2)
         self.close(t2)
 
         self.close(t)

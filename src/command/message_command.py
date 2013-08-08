@@ -141,13 +141,13 @@ class Messages(Command, FormatMessage):
                 db.set_messages_read_all(conn.user.id)
         elif args[1] is None:
             # display some messages
-            if type(args[0]) == type(1):
+            try:
                 i = int(args[0])
                 msgs = db.get_messages_range(conn.user.id, i, i)
                 if not msgs:
                     conn.write(_('There is no such message.\n'))
                     return
-            else:
+            except ValueError:
                 m = self.range_re.match(args[0])
                 if m:
                     (start, end) = (int(m.group(1)), int(m.group(2)))
@@ -159,6 +159,9 @@ class Messages(Command, FormatMessage):
                 else:
                     u2 = user.find_by_prefix_for_user(args[0], conn)
                     if not u2:
+                        return
+                    if u2.is_guest:
+                        conn.write(_('Only registered players can have messages.\n'))
                         return
                     msgs = db.get_messages_from_to(conn.user.id, u2.id)
                     if not msgs:
