@@ -234,7 +234,7 @@ class TestFollow(Test):
         self.close(t)
         self.close(t2)
 
-    def test_follow_logout(self):
+    def test_follow_logout_1(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_guest()
 
@@ -248,6 +248,23 @@ class TestFollow(Test):
         self.expect('Variable settings of', t2)
         self.expect_not('Following:', t2)
         self.close(t2)
+
+    def test_follow_logout_2(self):
+        """ When a player logs out, they should no longer follow. """
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest()
+
+        t2.write('follow guestabcd\n')
+        self.expect("You will now be following GuestABCD's games.", t2)
+
+        self.close(t2)
+
+        t.write('e\n')
+        self.expect('Starting a game', t)
+        # We are really checking that no exception occurs in the
+        # server. Previously there was an exception attempting to
+        # notify the logged-out player.
+        self.close(t)
 
     def test_follow_bad(self):
         t = self.connect_as_guest('GuestABCD')

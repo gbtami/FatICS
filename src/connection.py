@@ -111,9 +111,9 @@ class Connection(basic.LineReceiver):
             return
         elif t == 0:
             # it seems the Jin application's timeseal sometimes sends
-            # a timeptamp of 0, but still expects the command
+            # a timestamp of 0, but still expects the command
             # to be executed
-            self.log('warning: got timeseal/zipseal 0 on line: {%r} {%r}' % (line, dline))
+            self.log('warning: got timeseal/zipseal 0 on line: {%r} {%s}' % (line, line))
 
         self.session.timeseal_last_timestamp = t
         if self.state:
