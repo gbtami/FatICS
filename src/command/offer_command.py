@@ -17,7 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from command import *
+from .command import *
 
 import global_
 
@@ -58,7 +58,9 @@ class Decline(Command):
                 conn.write(_('You have more than one pending offer. Use "pending" to see them and "decline n" to choose one.\n'))
                 return
             conn.user.session.offers_received[0].decline()
-        elif type(args[0]) == int:
+        elif isinstance(args[0], basestring):
+            conn.write('TODO: find by user\n')
+        else:
             try:
                 o = global_.offers[args[0]]
             except KeyError:
@@ -67,9 +69,6 @@ class Decline(Command):
                 conn.write(_('There is no offer %d to decline.\n') % args[0])
             else:
                 o.decline()
-        else:
-            # TODO: find by user
-            pass
 
 @ics_command('withdraw', 'n', admin.Level.user)
 class Withdraw(Command):
@@ -82,7 +81,9 @@ class Withdraw(Command):
                 conn.write(_('You have more than one pending offer. Use "pending" to see them and "withdraw n" to choose one.\n'))
                 return
             conn.user.session.offers_sent[0].withdraw()
-        elif type(args[0]) == int:
+        elif isinstance(args[0], basestring):
+            conn.write('TODO: find by user\n')
+        else:
             try:
                 o = global_.offers[args[0]]
             except KeyError:
@@ -91,8 +92,5 @@ class Withdraw(Command):
                 conn.write(_('There is no offer %d to withdraw.\n') % args[0])
             else:
                 o.withdraw()
-        else:
-            # TODO: find by user
-            pass
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

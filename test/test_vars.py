@@ -140,6 +140,10 @@ class TestVars(Test):
         t.write('fi\n')
         self.expect('Finger of Guest', t)
         self.expect('foobar% ', t)
+
+        t.write('set prompt\n')
+        self.expect('prompt set to "fics% ".', t)
+
         self.close(t)
 
     def test_transient_var_user(self):

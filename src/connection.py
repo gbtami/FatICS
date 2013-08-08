@@ -77,7 +77,7 @@ class Connection(basic.LineReceiver):
 
     def idle_timeout(self, mins):
         if self.state not in ['prompt']:
-            print 'error: got idle timeout in %s state' % self.state
+            print('error: got idle timeout in %s state' % self.state)
         assert(self.state in ['prompt'])
         self.write(_("\n**** Auto-logout because you were idle more than %d minutes. ****\n") % mins)
         self.loseConnection('idle timeout')
@@ -182,8 +182,8 @@ class Connection(basic.LineReceiver):
             elif self.claimed_user.check_passwd(passwd):
                 self.prompt()
             else:
-                print 'wrong password from %s for user %s' % (self.ip,
-                    self.claimed_user.name)
+                print('wrong password from %s for user %s' % (self.ip,
+                    self.claimed_user.name))
                 self.write('\n**** Invalid password! ****\n\n')
                 self._paused = True
                 reactor.callLater(3, self.unpause)

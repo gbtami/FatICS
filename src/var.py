@@ -169,12 +169,12 @@ class PromptVar(StringVar):
             raise BadVarError()
         assert(not self.is_ivar)
         if val is None:
-            user.set_var(self, val)
-            user.write(_('''%s unset.\n''') % self.name)
+            val = 'fics% '
         else:
             val += ' '
-            user.set_var(self, val)
-            user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
+
+        user.set_var(self, val)
+        user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
 
 class LangVar(StringVar):
     def set(self, user, val):
