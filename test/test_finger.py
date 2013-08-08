@@ -48,6 +48,9 @@ class FingerTest(Test):
         t.write('finger admin1\n')
         self.expect('not a valid handle', t, "invalid name")
 
+        t.write('finger ____\n')
+        self.expect('not a valid handle', t)
+
         self.close(t)
 
     def test_finger_timezone(self):

@@ -266,6 +266,32 @@ class TestFollow(Test):
         # notify the logged-out player.
         self.close(t)
 
+    def test_follow_observe_self(self):
+        """ A player should not try to observe himself or herself
+        when starting a game with a player they are following. """
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t2.write('follow guestabcd\n')
+        self.expect("You will now be following GuestABCD's games.", t2)
+
+        t.write('match guestefgh 1 0 u\n')
+        self.expect('Challenge:', t2)
+        t2.write('a\n')
+
+        # We are also checking that no exception occurs in the
+        # server.
+
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+
+        # this should start following, but not observe the current game
+        t.write("follow guestefgh\n")
+        self.expect("You will now be following GuestEFGH's games.", t)
+
+        self.close(t)
+        self.close(t2)
+
     def test_follow_bad(self):
         t = self.connect_as_guest('GuestABCD')
 
@@ -335,6 +361,7 @@ class TestPfollow(Test):
         t4 = self.connect_as_guest('GuestMNOP')
         t5 = self.connect_as_guest()
         self.set_nowrap(t5)
+        self.set_style_12(t5)
 
         t5.write('pfollow guestabc\n')
         self.expect("You will now be following GuestABCD's partner's games.", t5)
@@ -362,6 +389,10 @@ class TestPfollow(Test):
         t4.write('abort\n')
         self.expect('aborted', t2)
 
+        # pfollowing own partner should basially have no effect
+        t.write('pfollow guestefgh\n')
+        self.expect("now be following GuestEFGH's partner's games", t)
+
         # the order in which the linked games are created could
         # matter, so choose randomly
         if random.choice([True, False]):
@@ -380,6 +411,15 @@ class TestPfollow(Test):
 
         self.expect("GuestABCD's partner, GuestEFGH, whom you are following, has started a game with GuestMNOP.", t5)
         self.expect('GuestMNOP (++++) GuestEFGH (++++) unrated blitz bughouse 3 0', t5)
+
+        t5.write('uno\n')
+        self.expect('Removing game', t5)
+
+        t5.write('pfollow guestefgh\n')
+        self.expect("You will no longer be following GuestABCD's partner's games.", t5)
+        self.expect("You will now be following GuestEFGH's partner's games.", t5)
+        self.expect('GuestABCD (++++) GuestIJKL', t5)
+
         t.write('abo\n')
         self.expect('aborted', t5)
 

@@ -66,7 +66,7 @@ class TestBughouseMatch(Test):
         self.expect('You are no longer examining', t4)
 
         t.write('match guestefgh bughouse 3+0\n')
-        self.expect('You cannot challenge your own partner for bughouse.', t)
+        self.expect('You cannot challenge your partner to bughouse.', t)
 
         t.write('match guestijkl bughouse 3+0\n')
         self.expect('Issuing: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t)

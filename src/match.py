@@ -492,7 +492,7 @@ class Challenge(Offer, MatchStringParser):
             assert(apart.vars['bugopen'])
             assert(bpart.vars['bugopen'])
             if a == bpart:
-                raise MatchError(_('You cannot challenge your own partner for bughouse.\n'))
+                raise MatchError(_('You cannot challenge your partner to bughouse.\n'))
             if not apart.vars['open'] or apart.session.game:
                 raise MatchError(_('Your partner is not available to play right now.\n'))
             if not bpart.vars['open'] or bpart.session.game:
@@ -586,6 +586,11 @@ class Challenge(Offer, MatchStringParser):
             g.bug_link = g2
             g2.variant.pos.bug_link = g.variant.pos
             g.variant.pos.bug_link = g2.variant.pos
+            g.minmovetime = (g.white.vars['minmovetime']
+                or g.black.vars['minmovetime']
+                or g2.white.vars['minmovetime']
+                or g2.black.vars['minmovetime'])
+            g2.minmovetime = g.minmovetime
             # start clocks immediately for bug
             g.clock.start(WHITE)
             g2.clock.start(WHITE)

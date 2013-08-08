@@ -50,6 +50,10 @@ class LoginTest(Test):
         t.write('admin1\n')
         self.expect(' should only consist of ', t)
 
+        # login contains underscores
+        t.write('ad_min\n')
+        self.expect(' should only consist of ', t)
+
         # anonymous guest login start
         t.write('guest\n')
         self.expect('Press return to enter', t)

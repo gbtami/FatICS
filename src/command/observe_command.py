@@ -78,10 +78,11 @@ class Follow(Command):
 
                 # If there is a game in progress and we are not already
                 # observing it, start observing it.
-                if (u2.session.game and
-                        u2.session.game not in conn.user.session.observed):
-                    u2.session.game.observe(conn.user)
-                    assert(u2.session.game in conn.user.session.observed)
+                g = u2.session.game
+                if (g and g not in conn.user.session.observed and
+                        conn.user not in g.players):
+                    g.observe(conn.user)
+                    assert(g in conn.user.session.observed)
 
 @ics_command('allobservers', 'o')
 class Allobservers(Command):
@@ -144,7 +145,8 @@ class Pfollow(Command):
                 # observing it, start observing it.
                 g = u2.session.game
                 if (g and g.variant.name == 'bughouse' and
-                    g.bug_link not in conn.user.session.observed):
+                    g.bug_link not in conn.user.session.observed and
+                    conn.user not in g.players):
                     g.bug_link.observe(conn.user)
 
 @ics_command('unobserve', 'n')
