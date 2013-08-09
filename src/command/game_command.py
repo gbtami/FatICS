@@ -108,12 +108,29 @@ class Eco(Command, GameMixin):
         g = None
         if args[1] is not None:
             assert(args[0] is not None)
+            def printEco(conn, rows):
+                for row in rows:
+                    if row['eco'] is None:
+                        row['eco'] = 'A00'
+                    if row['nic'] is None:
+                        row['nic'] = '-----'
+                    if row['long_'] is None:
+                        row['long_'] = 'Unknown / not matched'
+                    assert(row['fen'] is not None)
+                    conn.write('\n')
+                    conn.write('  ECO: %s\n' % row['eco'])
+                    conn.write('  NIC: %s\n' % row['nic'])
+                    conn.write(' LONG: %s\n' % row['long_'])
+                    conn.write('  FEN: %s\n' % row['fen'])
+                conn.user.send_prompt()
             rows = []
             if args[0] == 'e':
                 if not self.eco_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid ECO code.\n"))
                 else:
-                    rows = db.look_up_eco(args[1])
+                    d = db.look_up_eco(args[1])
+                    d.addCallback(lambda rows: printEco(conn, rows))
+                    return d
             elif args[0] == 'n':
                 if not self.nic_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid NIC code.\n"))
@@ -121,19 +138,7 @@ class Eco(Command, GameMixin):
                     rows = db.look_up_nic(args[1])
             else:
                 raise BadCommandError()
-            for row in rows:
-                if row['eco'] is None:
-                    row['eco'] = 'A00'
-                if row['nic'] is None:
-                    row['nic'] = '-----'
-                if row['long_'] is None:
-                    row['long_'] = 'Unknown / not matched'
-                assert(row['fen'] is not None)
-                conn.write('\n')
-                conn.write('  ECO: %s\n' % row['eco'])
-                conn.write('  NIC: %s\n' % row['nic'])
-                conn.write(' LONG: %s\n' % row['long_'])
-                conn.write('  FEN: %s\n' % row['fen'])
+            printEco(conn, rows)
         else:
             g = self._game_param(args[0], conn)
 

@@ -18,6 +18,7 @@
 
 from MySQLdb import connect, cursors, IntegrityError, OperationalError
 from config import config
+from twisted.enterprise import adbapi
 
 class DuplicateKeyError(Exception):
     pass
@@ -37,6 +38,16 @@ class DB(object):
         cursor = self.query(cursor, """SET time_zone='+00:00'""")
         self.db.set_character_set('utf8')
         cursor.close()
+
+
+        def openfun(adbconn):
+            cursor = adbconn.cursor()
+            cursor.execute("""SET time_zone='+00:00'""")
+            cursor.execute("""SET charset utf8""")
+        self.adb = adbapi.ConnectionPool("MySQLdb",
+            host=config.db_host, db=config.db_db,
+            read_default_file="~/.my.cnf", cursorclass=cursors.DictCursor,
+            cp_reconnect=True, cp_min=1, cp_max=3, cp_openfun=openfun)
 
     def query(self, cursor, *args):
         try:
@@ -713,14 +724,11 @@ class DB(object):
         return row
 
     def look_up_eco(self, eco):
-        cursor = self.db.cursor(cursors.DictCursor)
         if len(eco) == 3:
             # match all subvariations
             eco = '%s%%' % eco
-        cursor = self.query(cursor, """SELECT eco,nic,long_,eco.fen AS fen FROM eco LEFT JOIN nic USING(hash) WHERE eco LIKE %s LIMIT 100""", (eco,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        d = self.adb.runQuery("""SELECT eco,nic,long_,eco.fen AS fen FROM eco LEFT JOIN nic USING(hash) WHERE eco LIKE %s LIMIT 100""", (eco,))
+        return d
 
     def look_up_nic(self, nic):
         cursor = self.db.cursor(cursors.DictCursor)
@@ -1204,6 +1212,7 @@ class DB(object):
 
 try:
     db
+    assert(False)
 except NameError:
     db = DB()
 
