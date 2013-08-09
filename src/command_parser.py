@@ -18,6 +18,7 @@
 
 import time
 import re
+import traceback
 
 class InternalException(Exception):
     pass
@@ -42,6 +43,7 @@ import global_
 class CommandParser(object):
     command_re = re.compile(r'^(\S+)(?:\s+(.*))?$')
     def _do_parse(self, s, conn):
+        assert(conn.user.is_online)
         s = s.strip()
 
         if not utf8.check_user_utf8(s):
@@ -122,6 +124,14 @@ class CommandParser(object):
             except BadCommandError:
                 ret = block_codes.BLKCMD_ERROR_BADCOMMAND
                 cmd.usage(conn)
+            except Exception as e:
+                t = traceback.format_exc()
+                print(t)
+                print('command that caused exception was: %s' % s)
+                conn.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
+                conn.write_nowrap('Error info: exception %s; command was "%s"\n' % (str(e), s))
+                conn.loseConnection('exception')
+                ret = block_codes.BLKCMD_ERROR_BADCOMMAND
             else:
                 ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper(), block_codes.BLKCMD_SUCCESS)
 
@@ -134,7 +144,8 @@ class CommandParser(object):
             (identifier, s) = block.block.start_block(s, conn)
             if identifier is not None:
                 code = self._do_parse(s, conn)
-                block.block.end_block(identifier, code, conn)
+                if conn.user.is_online:
+                    block.block.end_block(identifier, code, conn)
 
     def parse_args(self, s, param_str):
         args = []

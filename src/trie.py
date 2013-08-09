@@ -26,10 +26,11 @@ class NeedMore(Exception):
     def __init__(self, matches=None):
         self.matches = matches
 
+NO_VALUE = object()
+
 class Node(object):
     """Internal representation of Trie nodes."""
     __slots__ = 'parent key nodes value'.split()
-    no_value = object()
 
     def __init__(self, parent, key, nodes, value):
         self.parent = parent
@@ -49,7 +50,7 @@ class Node(object):
         nodes = [self]
         while nodes:
             node = nodes.pop()
-            if node.value is not node.no_value:
+            if node.value is not NO_VALUE:
                 yield node
             nodes.extend(node.nodes[key] for key in sorted(node.nodes, reverse=True))
 
@@ -93,7 +94,7 @@ class Trie(object):
      (['f', 'o', 'o', 'q', 'a', 't'], "What's a fooqat?")]
     """
 
-    def __init__(self, root_data=Node.no_value, mapping=()):
+    def __init__(self, root_data=NO_VALUE, mapping=()):
         """Initialize a Trie instance.
 
         Args (both optional):
@@ -111,7 +112,7 @@ class Trie(object):
     def __setitem__(self, k, v):
         n = self.root
         for c in k:
-            n = n.nodes.setdefault(c, Node(n, c, {}, Node.no_value))
+            n = n.nodes.setdefault(c, Node(n, c, {}, NO_VALUE))
         n.value = v
 
     def _getnode(self, k):
@@ -125,7 +126,7 @@ class Trie(object):
 
     def __getitem__(self, k):
         n = self._getnode(k)
-        if n.value is Node.no_value:
+        if n.value is NO_VALUE:
             if n.nodes:
                 raise NeedMore()
             else:
@@ -135,7 +136,7 @@ class Trie(object):
     """like __getitem__, but returns the matches"""
     def get(self, k):
         n = self._getnode(k)
-        if n.value is Node.no_value:
+        if n.value is NO_VALUE:
             if n.nodes:
                 children = self.all_children(k)
                 assert(len(children) > 0)
@@ -151,11 +152,11 @@ class Trie(object):
 
     def __delitem__(self, k):
         n = self._getnode(k)
-        if n.value is Node.no_value:
+        if n.value is NO_VALUE:
             raise KeyError(k)
-        n.value = Node.no_value
+        n.value = NO_VALUE
         while True:
-            if n.nodes or not n.parent:
+            if n.nodes or not n.parent or n.value is not NO_VALUE:
                 break
             del n.parent.nodes[n.key]
             n = n.parent
@@ -173,10 +174,10 @@ class Trie(object):
         n = self._getnode(k)
         return dict((k, n.nodes[k].value)
                     for k in n.nodes
-                    if n.nodes[k].value is not Node.no_value)
+                    if n.nodes[k].value is not NO_VALUE)
 
     def _all_children_help(self, n, ret):
-        if n.value is not Node.no_value:
+        if n.value is not NO_VALUE:
             ret.append(n.value)
         for k in n.nodes:
             self._all_children_help(n.nodes[k], ret)

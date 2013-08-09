@@ -24,10 +24,10 @@ import trie
 
 class Online(object):
     def __init__(self):
-        self.online = trie.Trie()
+        self._online = trie.Trie()
         # this is redundant, but faster; it's very slow to iterate
         # over the trie
-        self.online_names = {}
+        self._online_names = {}
         self.guest_count = 0
         self.pin_ivar = set()
         self.pin_var = set()
@@ -35,8 +35,10 @@ class Online(object):
         #self.shouts_var = set()
 
     def add(self, u):
-        self.online[u.name.lower()] = u
-        self.online_names[u.name.lower()] = u
+        name = u.name.lower()
+        assert(name not in self._online_names)
+        self._online[name] = u
+        self._online_names[name] = u
         if u.vars['pin']:
             self.pin_var.add(u)
         if u.vars['gin']:
@@ -53,21 +55,17 @@ class Online(object):
             self.gin_var.remove(u)
         #if u in shouts_var:
         #    shouts_var.remove(u)
-        try:
-            del self.online[u.name.lower()]
-            del self.online_names[u.name.lower()]
-        except KeyError:
-            pass
-        else:
-            self.guest_count -= int(u.is_guest)
+        del self._online_names[u.name.lower()]
+        del self._online[u.name.lower()]
+        self.guest_count -= int(u.is_guest)
 
     def is_online(self, name):
-        return name.lower() in self.online_names
+        return name.lower() in self._online_names
 
     def find_exact(self, name):
         name = name.lower()
         try:
-            u = self.online_names[name.lower()]
+            u = self._online_names[name]
         except KeyError:
             u = None
         return u
@@ -76,15 +74,15 @@ class Online(object):
         assert(not self.is_online(prefix))
         prefix = prefix.lower()
         try:
-            ulist = self.online.all_children(prefix)
+            ulist = self._online.all_children(prefix)
         except KeyError:
             ulist = []
         return ulist
 
     def __iter__(self):
-        return iter(self.online_names.values())
+        return iter(self._online_names.values())
 
     def __len__(self):
-        return len(self.online_names)
+        return len(self._online_names)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

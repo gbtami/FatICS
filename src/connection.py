@@ -189,9 +189,9 @@ class Connection(basic.LineReceiver):
                 reactor.callLater(3, self.unpause)
 
     def prompt(self):
-        self.user = self.claimed_user
         self.timeout_check.cancel()
         self.timeout_check = None
+        self.user = self.claimed_user
         self.user.log_on(self)
         assert(self.user.is_online)
         written_users.add(self.user)
@@ -228,8 +228,10 @@ class Connection(basic.LineReceiver):
         # we can print messages such as forfeit by disconnection,
         # but if the user disconnects abruptly then log_off() will be
         # called in connectionLost() instead.
-        if self.user and self.user.is_online:
+        if self.user: #and self.user.is_online:
+            assert(self.user.is_online)
             self.user.log_off()
+            self.user = None
         self.transport.loseConnection()
         if reason == 'quit':
             #timeseal.print_stats()
@@ -237,16 +239,14 @@ class Connection(basic.LineReceiver):
 
     def connectionLost(self, reason):
         basic.LineReceiver.connectionLost(self, reason)
-        try:
-            if self.user.is_online:
-                if self.logged_in_again:
-                    self.logged_in_again = False
-                else:
-                    # abrupt disconnection
-                    self.user.log_off()
-        except AttributeError:
-            # never logged in
-            pass
+        if self.user: # and self.user.is_online:
+            assert(self.user.is_online)
+            if self.logged_in_again:
+                self.logged_in_again = False
+            else:
+                # abrupt disconnection
+                self.user.log_off()
+                self.user = None
         self.factory.connections.remove(self)
 
     def write_paged(self, s):

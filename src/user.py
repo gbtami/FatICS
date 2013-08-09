@@ -745,6 +745,8 @@ def find_by_name_exact(name,
     """Find a user, accepting only exact matches. """
     _check_name(name, min_len)
     u = global_.online.find_exact(name)
+    if u:
+        assert(u.is_online)
     if not u and not online_only:
         dbu = db.user_get(name)
         if dbu:
@@ -767,6 +769,8 @@ def _find_by_prefix(name, online_only=False):
         ulist = global_.online.find_part(name)
         if len(ulist) == 1:
             u = ulist[0]
+            if u and online_only:
+                assert(u.is_online)
         elif len(ulist) > 1:
             # when there are multiple matching users
             # online, don't bother searching for offline
