@@ -22,6 +22,7 @@
 import online
 import command_parser
 import trie
+import list_
 
 try:
     globals_defined
@@ -50,5 +51,8 @@ except NameError:
     vars_ = trie.Trie()
     ivars = trie.Trie()
 
+    lists = trie.Trie()
+    admin_lists = trie.Trie()
+    list_.init_lists()
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

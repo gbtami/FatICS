@@ -16,7 +16,6 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import trie
 import channel
 import user
 import filter_
@@ -44,9 +43,9 @@ class MyList(object):
     def __init__(self, name, is_public=True):
         self.name = name
         self.is_public = is_public
-        admin_lists[name.lower()] = self
+        global_.admin_lists[name.lower()] = self
         if is_public:
-            lists[name.lower()] = self
+            global_.lists[name.lower()] = self
 
     def _require_admin(self, user):
         if not user.is_admin():
@@ -552,7 +551,7 @@ class PlaybanList(SystemUserList):
             if u.is_playbanned and u.is_guest]
         return db.get_playbanned_user_names() + playbanned_guests
 
-def _init_lists():
+def init_lists():
     """ initialize lists """
     ChannelList("channel")
     NotifyList("notify")
@@ -571,13 +570,6 @@ def _init_lists():
 
     for title in db.title_get_all():
         TitleList(title)
-
-try:
-    lists
-except NameError:
-    lists = trie.Trie()
-    admin_lists = trie.Trie()
-    _init_lists()
 
 # Not implemented:
 # removedcom, c1muzzle, c24muzzle, c46muzzle, c49muzzle,

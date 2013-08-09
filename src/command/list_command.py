@@ -17,6 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import global_
 import list_
 import trie
 
@@ -26,9 +27,9 @@ from .command import ics_command, Command
 class Addlist(Command):
     def run(self, args, conn):
         if conn.user.is_admin():
-            ulists = list_.admin_lists
+            ulists = global_.admin_lists
         else:
-            ulists = list_.lists
+            ulists = global_.lists
         try:
             ls = ulists.get(args[0])
         except KeyError:
@@ -45,14 +46,14 @@ class Addlist(Command):
 class Showlist(Command):
     def run(self, args, conn):
         if args[0] is None:
-            for c in list_.lists.itervalues():
+            for c in global_.lists.itervalues():
                 conn.write('%s\n' % c.name)
             return
 
         if conn.user.is_admin():
-            ulists = list_.admin_lists
+            ulists = global_.admin_lists
         else:
-            ulists = list_.lists
+            ulists = global_.lists
         try:
             ls = ulists.get(args[0])
         except KeyError:
@@ -69,9 +70,9 @@ class Showlist(Command):
 class Sublist(Command):
     def run(self, args, conn):
         if conn.user.is_admin():
-            ulists = list_.admin_lists
+            ulists = global_.admin_lists
         else:
-            ulists = list_.lists
+            ulists = global_.lists
         try:
             ls = ulists.get(args[0])
         except KeyError:
