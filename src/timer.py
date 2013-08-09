@@ -53,6 +53,4 @@ def heartbeat():
                 # TODO: send auto-flagging message a la original fics.
                 g.clock.check_flag(g, g.get_user_side(u))
 
-    connection.send_prompts()
-
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

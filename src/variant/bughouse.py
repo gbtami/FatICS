@@ -1412,7 +1412,7 @@ class Bughouse(BaseVariant):
                     # A possible alternative would be chomping off
                     # the trailing newline instead, but this way
                     # we imitate existing practice.
-                    p.send_prompt()
+                    p.write_prompt()
                 else:
                     p.write_nowrap(nonmachine_str)
         mv.add_san_decorator()

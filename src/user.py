@@ -91,35 +91,39 @@ class BaseUser(object):
     def write(self, s):
         """ Write a string to the user. """
         assert(self.is_online)
-        connection.written_users.add(self)
         self.session.conn.write(s)
 
-    def write_nowrap(self, s):
+    def write_nowrap(self, s, prompt=False):
         """ Write a string to the user without word wrapping. """
-        connection.written_users.add(self)
+        # XXX this does not obey conn.buffer_output
         self.session.conn.transport.write(s, wrap=False)
+        if prompt:
+            self.write_prompt()
 
     def write_(self, s, args={}):
         """ Like write(), but localizes for this user. """
         #assert(isinstance(args, (list, dict, tuple)))
-        connection.written_users.add(self)
         self.session.conn.write(lang.langs[self.vars['lang']].gettext(s) %
             args)
+        self.write_prompt()
 
     def nwrite_(self, s1, s2, n, args={}):
-        connection.written_users.add(self)
         self.session.conn.write(
             lang.langs[self.vars['lang']].ngettext(s1, s2, n) % args)
+        self.write_prompt()
 
     def translate(self, s, args={}):
         return lang.langs[self.vars['lang']].gettext(s) % args
 
-    def send_prompt(self):
+    def write_prompt(self):
         assert(self.is_online)
+        # XXX maybe we shouldn't check this for every line,
+        # but instead prevent changing the prompt value when
+        # defprompt is set
         if self.session.ivars['defprompt']:
-            self.session.conn.write(config.prompt)
+            self.session.conn.write_nowrap(config.prompt)
         else:
-            self.session.conn.write(self.vars['prompt'])
+            self.session.conn.write_nowrap(self.vars['prompt'])
 
     def get_display_name(self):
         assert(self._title_str is not None)

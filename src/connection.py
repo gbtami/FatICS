@@ -34,16 +34,6 @@ from timeseal import timeseal, TIMESEAL_PONG
 from session import Session
 from login import login
 
-# the set of users we have sent messages to and to whom we should
-# thefore send prompts
-written_users = set()
-def send_prompts():
-    for u in written_users:
-        if u.is_online:
-            u.send_prompt()
-    written_users.clear()
-    assert(not written_users)
-
 class Connection(basic.LineReceiver):
     implements(twisted.internet.interfaces.IProtocol)
     # the telnet transport changes all '\r\n' to '\n',
@@ -194,9 +184,8 @@ class Connection(basic.LineReceiver):
         self.user = self.claimed_user
         self.user.log_on(self)
         assert(self.user.is_online)
-        written_users.add(self.user)
         self.state = 'prompt'
-        send_prompts()
+        self.user.write_prompt()
 
     def handleLine_prompt(self, line):
         if line == TIMESEAL_PONG:
@@ -204,12 +193,9 @@ class Connection(basic.LineReceiver):
             return
 
         lang.langs[self.user.vars['lang']].install(names=['ngettext'])
-        written_users.clear()
-        written_users.add(self.user)
-        try:
-            command_parser.parser.parse(line, self)
-        finally:
-            send_prompts()
+        command_parser.parser.parse(line, self)
+        if self.user:
+            self.user.write_prompt()
 
     def loseConnection(self, reason):
         self.state = 'quitting'
@@ -273,11 +259,14 @@ class Connection(basic.LineReceiver):
         else:
             self.transport.write(s)
 
-    def write_nowrap(self, s):
+    def write_nowrap(self, s, prompt=False):
         if self.buffer_output:
             self.output_buffer += s
+            # XXX prompt
         else:
             self.transport.write(s, wrap=False)
+            if prompt:
+                self.user.write_prompt()
 
     def unpause(self):
         """ Resume logging in after a pause due to an incorrect

@@ -44,6 +44,7 @@ class DB(object):
             cursor = adbconn.cursor()
             cursor.execute("""SET time_zone='+00:00'""")
             cursor.execute("""SET charset utf8""")
+            cursor.close()
         self.adb = adbapi.ConnectionPool("MySQLdb",
             host=config.db_host, db=config.db_db,
             read_default_file="~/.my.cnf", cursorclass=cursors.DictCursor,

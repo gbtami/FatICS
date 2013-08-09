@@ -80,7 +80,7 @@ def notify_pin(user, arrived):
             pin_ivar_str = '\n<wd> %s\n' % user.name
         for u in global_.online.pin_ivar:
             u.write_nowrap(pin_ivar_str)
-            connection.written_users.add(u)
+            u.write_prompt()
 
     if global_.online.pin_var:
         if arrived:

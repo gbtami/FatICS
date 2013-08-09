@@ -122,7 +122,7 @@ class Eco(Command, GameMixin):
                     conn.write('  NIC: %s\n' % row['nic'])
                     conn.write(' LONG: %s\n' % row['long_'])
                     conn.write('  FEN: %s\n' % row['fen'])
-                conn.user.send_prompt()
+                conn.user.write_prompt()
             rows = []
             if args[0] == 'e':
                 if not self.eco_pat.match(args[1]):

@@ -609,10 +609,8 @@ class Challenge(Offer, MatchStringParser):
         Offer.withdraw_logout(self)
         self.a.write(_('Challenge to %s withdrawn.\n') %
             (self.b.name,))
-        self.b.write_('\n%s, who was challenging you, has departed.\n',
-            (self.a.name,))
-        self.b.write_('Challenge from %s removed.\n',
-            (self.a.name,))
+        self.b.write_('\n%s, who was challenging you, has departed.\nChallenge from %s removed.\n',
+            (self.a.name, self.a.name))
         if self.variant_name == 'bughouse':
             assert(self.b.session.partner)
             self.b.session.partner.write_('\n%s, who was challenging your partner, has departed.\n',
@@ -632,10 +630,8 @@ class Challenge(Offer, MatchStringParser):
         Offer.decline_logout(self)
         self.b.write(_('Challenge from %s removed.\n') %
             (self.a.name,))
-        self.a.write_('\n%s, whom you were challenging, has departed.\n',
-            (self.b.name,))
-        self.a.write_('Challenge to %s withdrawn.\n',
-            (self.b.name,))
+        self.a.write_('\n%s, whom you were challenging, has departed.\nChallenge to %s withdrawn.',
+            (self.b.name, self.b.name))
         if self.variant_name == 'bughouse':
             assert(self.a.session.partner)
             self.a.session.partner.write_('\n%s, whom your partner was challenging, has departed.\n',
@@ -659,10 +655,8 @@ class Challenge(Offer, MatchStringParser):
         Offer.decline(self, notify=False)
         self.b.write(_('Challenge from %s removed.\n') %
             (self.a.name,))
-        self.a.write_('\n%s, whom you were challenging, has become unavailable for matches.\n',
-            (self.b.name,))
-        self.a.write_('Challenge to %s withdrawn.\n',
-            (self.b.name,))
+        self.a.write_('\n%s, whom you were challenging, has become unavailable for matches.\nChallenge to %s withdrawn.',
+            (self.b.name, self.b.name))
         if self.variant_name == 'bughouse':
             assert(self.a.session.partner)
             self.a.session.partner.write_('\n%s, whom your partner was challenging, has become unavailable for matches.\n',

@@ -821,12 +821,12 @@ class PlayedGame(Game):
         self.when_ended = datetime.datetime.utcnow()
         line = '\n{Game %d (%s vs. %s) %s} %s\n' % (self.number,
             self.white_name, self.black_name, msg, result_code)
-        self.white.write_nowrap(line)
-        self.black.write_nowrap(line)
+        self.white.write_nowrap(line, prompt=True)
+        self.black.write_nowrap(line, prompt=True)
         for u in self.observers:
-            u.write_nowrap(line)
+            u.write_nowrap(line, prompt=True)
         for u in global_.online.gin_var:
-            u.write_nowrap(line)
+            u.write_nowrap(line, prompt=True)
 
         self.clock.stop()
         self.is_active = False

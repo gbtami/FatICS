@@ -193,6 +193,7 @@ class TestIdlenotify(Test):
 
         # should handle disconnect gracefully
         t.close()
+        t2.write('bye\n')
         self.close(t2)
 
     def test_bad_idlenotify(self):

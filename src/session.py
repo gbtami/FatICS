@@ -106,6 +106,8 @@ class Session(object):
             u.write_("\nNotification: %s, whom you were idlenotifying, has departed.\n", (self.user.name,))
             u.session.idlenotifying.remove(self.user)
         self.idlenotified_by.clear()
+        for u in self.idlenotifying:
+            u.session.idlenotified_by.remove(self.user)
 
         if self.followed_by:
             for p in self.followed_by.copy():
