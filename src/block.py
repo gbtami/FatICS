@@ -19,9 +19,6 @@
 
 import re
 
-import timeseal
-import alias
-
 from block_codes import BLOCK_START, BLOCK_SEPARATOR, BLOCK_END, BLKCMD_ERROR_NOSEQUENCE
 
 
@@ -45,9 +42,6 @@ class Block(object):
     def end_block(self, identifier, code, conn):
         conn.buffer_output = False
         self.send_block(identifier, code, conn.output_buffer, conn)
-
-    def parse_args(self, s, param_str):
-        args = []
 
 block = Block()
 

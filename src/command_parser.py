@@ -28,8 +28,6 @@ class BadCommandError(Exception):
 import alias
 import utf8
 import trie
-import admin
-import timeseal
 import block
 import block_codes
 class CommandList(object):
@@ -125,9 +123,10 @@ class CommandParser(object):
                 ret = block_codes.BLKCMD_ERROR_BADCOMMAND
                 cmd.usage(conn)
             except Exception as e:
-                t = traceback.format_exc()
-                print(t)
+                #t = traceback.format_exc()
+                #print(t)
                 print('command that caused exception was: %s' % s)
+                raise
                 conn.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
                 conn.write_nowrap('Error info: exception %s; command was "%s"\n' % (str(e), s))
                 conn.loseConnection('exception')

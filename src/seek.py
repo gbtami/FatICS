@@ -18,7 +18,6 @@
 #
 
 import time
-import re
 
 import speed_variant
 import global_

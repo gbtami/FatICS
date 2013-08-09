@@ -16,8 +16,6 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import copy
-
 class GameList(object):
     def __init__(self):
         self.games = []

@@ -17,9 +17,13 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import examine
+import re
 
-from command import *
+import game
+import examine
+import user
+
+from .command import ics_command, Command
 
 @ics_command('examine', 'on')
 class Examine(Command):
@@ -91,7 +95,7 @@ class Backward(Command):
             return
         g.backward(n, conn)
 
-@ics_command('forward', 'p', admin.Level.user)
+@ics_command('forward', 'p')
 class Forward(Command):
     def run(self, args, conn):
         n = args[0] if args[0] is not None else 1

@@ -17,12 +17,10 @@
 #
 
 import random
-import time
 import datetime
 
 import user
 import rating
-import timeseal
 import speed_variant
 import clock
 import history

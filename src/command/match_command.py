@@ -24,7 +24,7 @@ import user
 import speed_variant
 import global_
 
-from command import Command, ics_command
+from .command import Command, ics_command
 
 @ics_command('match', 'wt', admin.Level.user)
 class Match(Command):

@@ -25,13 +25,11 @@ import command_parser
 import global_
 import admin
 import speed_variant
-import list_
 import channel
-import var
 from reload import reload
 
 from db import db
-from command import Command, ics_command, requires_registration
+from .command import Command, ics_command
 from command_parser import BadCommandError
 from config import config
 

@@ -28,7 +28,7 @@ import game
 import history
 import time_format
 
-from command import ics_command, Command
+from .command import ics_command, Command
 from command_parser import BadCommandError
 from db import db
 

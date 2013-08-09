@@ -24,8 +24,8 @@ import game
 import user
 
 from command_parser import BadCommandError
-from game_constants import *
-from command import Command, ics_command
+from game_constants import opp
+from .command import Command, ics_command
 
 @ics_command('seek', 't')
 class Seek(Command):

@@ -1,9 +1,7 @@
 import list_
-import user
 import admin
 
-from command import Command, ics_command, requires_registration
-from config import config
+from .command import Command, ics_command, requires_registration
 
 @ics_command('admin', '', admin.Level.admin)
 class Admin(Command):

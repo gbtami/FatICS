@@ -16,11 +16,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import re
-import time
-
 import global_
-import game
 
 def _find_free_slot():
     """ Find the next available offer number. """

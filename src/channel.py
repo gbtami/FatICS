@@ -16,8 +16,6 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys
-
 from datetime import datetime
 
 import list_

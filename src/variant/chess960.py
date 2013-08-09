@@ -22,7 +22,6 @@ http://www.dwheeler.com/essays/Fischer_Random_Chess.html
 """
 
 import re
-import copy
 import random
 from array import array
 

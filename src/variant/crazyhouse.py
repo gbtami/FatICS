@@ -21,8 +21,6 @@ import copy
 import random
 from array import array
 
-import time_format
-
 from game_constants import *
 from base_variant import BaseVariant, IllegalMoveError
 

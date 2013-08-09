@@ -17,13 +17,13 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from .command import *
+from .command import ics_command, Command
 
 import global_
 
 # TODO: make these commands accept a username parameter
 
-@ics_command('accept', 'n', admin.Level.user)
+@ics_command('accept', 'n')
 class Accept(Command):
     def run(self, args, conn):
         if args[0] is None:
@@ -47,7 +47,7 @@ class Accept(Command):
             # TODO: find by user
             pass
 
-@ics_command('decline', 'n', admin.Level.user)
+@ics_command('decline', 'n')
 class Decline(Command):
     def run(self, args, conn):
         if args[0] is None:
@@ -70,7 +70,7 @@ class Decline(Command):
             else:
                 o.decline()
 
-@ics_command('withdraw', 'n', admin.Level.user)
+@ics_command('withdraw', 'n')
 class Withdraw(Command):
     def run(self, args, conn):
         if args[0] is None:

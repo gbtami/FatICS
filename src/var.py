@@ -20,7 +20,6 @@ import copy
 import pytz
 import datetime
 
-import trie
 import lang
 import formula
 import global_

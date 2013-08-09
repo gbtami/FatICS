@@ -16,20 +16,10 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import re
-
-import user
-import trie
 import admin
-import game
-import history
-import speed_variant
-import time_format
 import channel
 import global_
 
-from server import server
-from db import db, DeleteError
 from config import config
 
 # parameter format (taken from Lasker)

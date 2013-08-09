@@ -20,11 +20,10 @@
 import os.path
 import re
 
-from command import ics_command, Command
+from .command import ics_command, Command
 import global_
 from server import server
 
-import admin
 import trie
 
 help_dir = 'help/'

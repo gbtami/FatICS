@@ -17,11 +17,11 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from command import *
+from .command import ics_command, Command, requires_registration
 
 import global_
 
-@ics_command('shout', 'S', admin.Level.user)
+@ics_command('shout', 'S')
 class Shout(Command):
     @requires_registration
     def run(self, args, conn):
@@ -44,7 +44,7 @@ class Shout(Command):
                         count += 1
             conn.write(ngettext("(shouted to %d player)\n", "(shouted to %d players)\n", count) % count)
 
-@ics_command('it', 'S', admin.Level.user)
+@ics_command('it', 'S')
 class It(Command):
     @requires_registration
     def run(self, args, conn):
@@ -68,7 +68,7 @@ class It(Command):
                         count += 1
             conn.write(ngettext("(it-shouted to %d player)\n", "(it-shouted to %d players)\n", count) % count)
 
-@ics_command('cshout', 'S', admin.Level.user)
+@ics_command('cshout', 'S')
 class Cshout(Command):
     @requires_registration
     def run(self, args, conn):

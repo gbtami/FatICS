@@ -19,7 +19,9 @@
 
 from game_command import GameMixin
 
-from command import *
+from .command import ics_command, Command
+
+import game
 
 class KibitzCommand(Command):
     def _do_kibitz(self, g, msg, conn):
@@ -70,7 +72,7 @@ class WhisperCommand(Command):
         conn.write(ngettext('(whispered to %d player)\n',
             '(whispered to %d players)\n', count) % count)
 
-@ics_command('kibitz', 'S', admin.Level.user)
+@ics_command('kibitz', 'S')
 class Kibitz(KibitzCommand, GameMixin):
     def run(self, args, conn):
         g = self._game_param(None, conn)
@@ -81,7 +83,7 @@ class Kibitz(KibitzCommand, GameMixin):
             return
         self._do_kibitz(g, args[0], conn)
 
-@ics_command('whisper', 'S', admin.Level.user)
+@ics_command('whisper', 'S')
 class Whisper(WhisperCommand, GameMixin):
     def run(self, args, conn):
         g = self._game_param(None, conn)

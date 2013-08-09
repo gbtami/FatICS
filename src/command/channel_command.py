@@ -17,7 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from command import ics_command, Command, requires_registration
+from .command import ics_command, Command, requires_registration
 
 import admin
 import channel

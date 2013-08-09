@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (C) 2010  Wil Mahan <wmahan+fatics@gmail.com>
+# Copyright (C) 2010-2013  Wil Mahan <wmahan+fatics@gmail.com>
 #
 # This file is part of FatICS.
 #
@@ -17,7 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from command import ics_command, Command
+from .command import ics_command, Command
 
 @ics_command('foo', '')
 class Foo(Command):

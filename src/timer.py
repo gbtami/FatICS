@@ -17,7 +17,6 @@
 #
 
 import time
-from gettext import ngettext
 
 import global_
 import game

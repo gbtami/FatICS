@@ -17,10 +17,9 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from command import Command, ics_command
+from .command import Command, ics_command
 
 import global_
-import admin
 import user
 
 from command_parser import BadCommandError

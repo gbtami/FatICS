@@ -18,10 +18,11 @@
 #
 
 import list_
+import trie
 
-from command import *
+from .command import ics_command, Command
 
-@ics_command('addlist', 'ww',  admin.Level.user)
+@ics_command('addlist', 'ww')
 class Addlist(Command):
     def run(self, args, conn):
         if conn.user.is_admin():
@@ -40,7 +41,7 @@ class Addlist(Command):
             except list_.ListError as e:
                 conn.write(e.reason)
 
-@ics_command('showlist', 'o', admin.Level.user)
+@ics_command('showlist', 'o')
 class Showlist(Command):
     def run(self, args, conn):
         if args[0] is None:
@@ -64,7 +65,7 @@ class Showlist(Command):
             except list_.ListError as e:
                 conn.write(e.reason)
 
-@ics_command('sublist', 'ww', admin.Level.user)
+@ics_command('sublist', 'ww')
 class Sublist(Command):
     def run(self, args, conn):
         if conn.user.is_admin():

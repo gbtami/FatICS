@@ -291,7 +291,7 @@ class BaseUser(object):
                 elif h['result_char'] == '*':
                     h['result'] = '*'
                 else:
-                    raise RuntimeError('unknown result char %s' % result_char)
+                    raise RuntimeError('unknown result char %s' % h['result_char'])
             else:
                 h['white_name'] = h['opp_name']
                 h['black_name'] = self.name
@@ -304,7 +304,7 @@ class BaseUser(object):
                 elif h['result_char'] == '*':
                     h['result'] = '*'
                 else:
-                    raise RuntimeError('unknown result char %s' % result_char)
+                    raise RuntimeError('unknown result char %s' % h['result_char'])
         else:
             conn.write(_('There is no history game %(num)d for %(name)s.\n') % {'num': num, 'name': self.name})
 

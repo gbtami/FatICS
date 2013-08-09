@@ -22,7 +22,6 @@ import time
 import time_format
 
 from game_constants import *
-from config import config
 
 clock_names = {}
 

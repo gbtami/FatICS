@@ -17,17 +17,14 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import var
 import user
 import partner
 import global_
 import speed_variant
-import game
-import global_
 
 from command_parser import BadCommandError
-from command import Command, ics_command
-from tell_command import ToldMixin
+from .command import Command, ics_command
+from .tell_command import ToldMixin
 
 @ics_command('partner', 'o')
 class Partner(Command):

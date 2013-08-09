@@ -17,11 +17,9 @@
 #
 
 import time
-import copy
 import traceback
 
 import var
-import game
 import timeseal
 import partner
 import channel
