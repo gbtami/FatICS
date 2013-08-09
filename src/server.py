@@ -19,41 +19,34 @@
 import time
 import subprocess
 
-class Server(object):
-    location = "Fremont, California, USA"
-    try:
-        #version = subprocess.check_output(["hg", "parents", "--template",
-        #    "r{rev} ({date|isodate})"])
-        version = subprocess.Popen(["hg", "parents", "--template",
-            "r{rev} ({date|isodate})"],
-            stdout=subprocess.PIPE).communicate()[0]
-    except:
-        raise
-        version = "unknown"
+location = "Fremont, California, USA"
+try:
+    #version = subprocess.check_output(["hg", "parents", "--template",
+    #    "r{rev} ({date|isodate})"])
+    version = subprocess.Popen(["hg", "parents", "--template",
+        "r{rev} ({date|isodate})"],
+        stdout=subprocess.PIPE).communicate()[0]
+except:
+    raise
+    version = "unknown"
 
-    def __init__(self):
-        self.start_time = time.time()
+start_time = time.time()
 
-    def get_copyright_notice(self):
-        return """Copyright (C) 2010-2013 Wil Mahan
+def get_copyright_notice():
+    return """Copyright (C) 2010-2013 Wil Mahan
 This server is free software licensed under the GNU Affero General Public
 License, version 3 or any later version.  Type "help license" for details.
 The source code for the version of the server you are using is
 available here: %s
 
-""" % self.get_server_link()
+""" % get_server_link()
 
 
-    def get_license(self):
-        f = open('COPYING', 'r')
-        return 'Copyright(C) 2010-2013 Wil Mahan\n\n%s\nThe source code for the version of the server you are using is available here:\n%s\n\n' % (f.read(), self.get_server_link())
+def get_license():
+    f = open('COPYING', 'r')
+    return 'Copyright(C) 2010-2013 Wil Mahan\n\n%s\nThe source code for the version of the server you are using is available here:\n%s\n\n' % (f.read(), get_server_link())
 
-    def get_server_link(self):
-        return 'https://bitbucket.org/wmahan/fatics'
-
-try:
-    server
-except NameError:
-    server = Server()
+def get_server_link():
+    return 'https://bitbucket.org/wmahan/fatics'
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

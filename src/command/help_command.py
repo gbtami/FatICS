@@ -22,7 +22,7 @@ import re
 
 from .command import ics_command, Command
 import global_
-from server import server
+import server
 
 import trie
 

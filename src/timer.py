@@ -20,7 +20,6 @@ import time
 
 import global_
 import game
-import connection
 
 from config import config
 

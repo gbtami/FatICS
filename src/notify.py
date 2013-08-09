@@ -16,7 +16,6 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import connection
 import global_
 
 from db import db

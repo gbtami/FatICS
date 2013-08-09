@@ -27,13 +27,12 @@ import admin
 import var
 import channel
 import notify
-import connection
 import rating
 import speed_variant
 import lang
 import global_
+import server
 
-from server import server
 from db import db
 from config import config
 

@@ -25,7 +25,7 @@ import game
 import formula
 
 from match import MatchStringParser, MatchError
-from game_constants import *
+from game_constants import WHITE,BLACK
 
 # Wait 90 seconds after a seek ends to reuse its seek number
 # (this is the value GICS uses; original FICS is likely the
@@ -127,10 +127,10 @@ class Seek(MatchStringParser):
         self.speed_variant = speed_variant.from_names(self.speed_name,
             self.variant_name)
 
-        variant_str = '' if self.variant_name == 'chess' else (
+        '''variant_str = '' if self.variant_name == 'chess' else (
             ' %s' % self.variant_name)
         clock_str = '' if self.clock_name == 'fischer' else (
-            ' %s' % self.clock_name)
+            ' %s' % self.clock_name)'''
 
     def _parse_args(self, args):
         """ Parse the args, including seek-specific parsing. """
@@ -277,7 +277,7 @@ class Seek(MatchStringParser):
         self.a = b
         try:
             if self.formula:
-                f = self.a.vars['formula']
+                #f = self.a.vars['formula']
                 if not formula.check_formula(self, self.b.vars['formula']):
                     return False
             return True

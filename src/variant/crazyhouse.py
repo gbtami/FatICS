@@ -997,7 +997,6 @@ class Position(object):
     decorator_re = re.compile(r'[\+#\?\!]+$')
     def move_from_san(self, s):
         s = self.decorator_re.sub('', s)
-        matched = False
         mv = None
 
         # examples: e4 e8=Q

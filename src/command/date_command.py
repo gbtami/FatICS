@@ -22,10 +22,9 @@ import pytz
 import time
 
 import time_format
+import server
 
 from .command import ics_command, Command
-
-from server import server
 
 @ics_command('date', '')
 class Date(Command):

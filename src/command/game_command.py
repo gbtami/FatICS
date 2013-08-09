@@ -25,7 +25,6 @@ from twisted.internet import defer
 import offer
 import game
 
-from command_parser import BadCommandError
 from .command import ics_command, Command
 from game_constants import opp
 from db import db
