@@ -147,5 +147,17 @@ class TestUserAlias(Test):
         self.assert_(int(m.group(1)) > 1)
         self.close(t)
 
+    def test_blank(self):
+        t = self.connect_as_guest()
+        t.write('$\n')
+        self.expect('fics% ', t)
+        t.write('$$\n')
+        self.expect('fics% ', t)
+        t.write('$$$\n')
+        self.expect('fics% ', t)
+        t.write('$$$$\n')
+        self.expect('$: Command not found', t)
+        self.close(t)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
 

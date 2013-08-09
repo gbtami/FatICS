@@ -258,7 +258,7 @@ class Seek(MatchStringParser):
                             and u.session.ivars['showownseek']):
                         continue
                     count += 1
-                    u.write(seek_str)
+                    u.write_nowrap(seek_str, prompt=True)
 
         # set the string for use in the "sought" display
         self._str = '%3d %4s %-17s %3d %3d %-7s %-10s%-9s %4d-%4d%s' % (

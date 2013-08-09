@@ -68,21 +68,24 @@ class CommandParser(object):
                     u.session.idlenotifying.remove(conn.user)
                 conn.session.idlenotified_by.clear()
 
-        if len(s) == 0:
+        if s.startswith('$'):
+            expand_aliases = False
+            s = s[1:].lstrip()
+        else:
+            expand_aliases = True
+
+        if not s:
             # ignore blank line
             return block_codes.BLKCMD_NULL
 
-        # Parse moves.  Note that this takes place before stripping any
-        # leading '$'.  Jin actually sends moves prefixed with '$', but
-        # I think that's unnecessary, and prefer to patch Jin to not
-        # do that.
+        # Parse moves.  Note that this happens before aliases are
+        # expanded, but leading $ are stripped (which Jin depends on).
+        # This behavior mimics the original FICS.
         if conn.session.game:
             if conn.session.game.parse_move(s.encode('ascii'), conn):
                 return block_codes.BLKCMD_GAME_MOVE
 
-        if s.startswith('$'):
-            s = s[1:].lstrip()
-        else:
+        if expand_aliases:
             try:
                 s = alias.alias.expand(s, alias.alias.system,
                     conn.user.aliases, conn.user)

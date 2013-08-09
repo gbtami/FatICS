@@ -259,14 +259,11 @@ class Connection(basic.LineReceiver):
         else:
             self.transport.write(s)
 
-    def write_nowrap(self, s, prompt=False):
+    def write_nowrap(self, s):
         if self.buffer_output:
             self.output_buffer += s
-            # XXX prompt
         else:
             self.transport.write(s, wrap=False)
-            if prompt:
-                self.user.write_prompt()
 
     def unpause(self):
         """ Resume logging in after a pause due to an incorrect

@@ -19,6 +19,9 @@
 
 import re
 
+from twisted.internet import defer
+#from twisted.python.log import err
+
 import offer
 import game
 
@@ -104,41 +107,42 @@ class Resign(Command, GameMixin):
 class Eco(Command, GameMixin):
     eco_pat = re.compile(r'[a-z][0-9][0-9][a-z]?')
     nic_pat = re.compile(r'[a-z][a-z]\.[0-9][0-9]')
+
+    @defer.inlineCallbacks
     def run(self, args, conn):
         g = None
         if args[1] is not None:
             assert(args[0] is not None)
-            def printEco(conn, rows):
-                for row in rows:
-                    if row['eco'] is None:
-                        row['eco'] = 'A00'
-                    if row['nic'] is None:
-                        row['nic'] = '-----'
-                    if row['long_'] is None:
-                        row['long_'] = 'Unknown / not matched'
-                    assert(row['fen'] is not None)
-                    conn.write('\n')
-                    conn.write('  ECO: %s\n' % row['eco'])
-                    conn.write('  NIC: %s\n' % row['nic'])
-                    conn.write(' LONG: %s\n' % row['long_'])
-                    conn.write('  FEN: %s\n' % row['fen'])
-                conn.user.write_prompt()
             rows = []
             if args[0] == 'e':
                 if not self.eco_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid ECO code.\n"))
                 else:
                     d = db.look_up_eco(args[1])
-                    d.addCallback(lambda rows: printEco(conn, rows))
-                    return d
+                    #d.addErrback(err, "err!")
+                    rows = yield d
             elif args[0] == 'n':
                 if not self.nic_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid NIC code.\n"))
                 else:
                     rows = db.look_up_nic(args[1])
             else:
-                raise BadCommandError()
-            printEco(conn, rows)
+                self.usage(conn)
+                return
+            for row in rows:
+                if row['eco'] is None:
+                    row['eco'] = 'A00'
+                if row['nic'] is None:
+                    row['nic'] = '-----'
+                if row['long_'] is None:
+                    row['long_'] = 'Unknown / not matched'
+                assert(row['fen'] is not None)
+                conn.write('\n')
+                conn.write('  ECO: %s\n' % row['eco'])
+                conn.write('  NIC: %s\n' % row['nic'])
+                conn.write(' LONG: %s\n' % row['long_'])
+                conn.write('  FEN: %s\n' % row['fen'])
+            conn.user.write_prompt()
         else:
             g = self._game_param(args[0], conn)
 
