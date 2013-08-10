@@ -25,7 +25,7 @@ import re
 import random
 from array import array
 
-from db import db
+import db
 from game_constants import *
 from variant.base_variant import BaseVariant, IllegalMoveError
 

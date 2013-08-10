@@ -21,7 +21,7 @@ import re
 
 import user
 import email
-from db import db
+import db
 
 from .command import Command, ics_command, requires_registration
 from parser import BadCommandError

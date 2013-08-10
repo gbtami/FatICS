@@ -27,9 +27,9 @@ import history
 import time_format
 import variant
 import global_
+import db
 
-from db import db
-from game_constants import *
+from game_constants import WHITE, BLACK, opp, PLAYED, EXAMINED, file
 
 def find_free_slot():
     """Find the first available game number."""

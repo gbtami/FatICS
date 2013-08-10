@@ -26,9 +26,9 @@ import global_
 import admin
 import speed_variant
 import channel
+import db
 from reload import reload
 
-from db import db
 from .command import Command, ics_command
 from parser import BadCommandError
 from config import config

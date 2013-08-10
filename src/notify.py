@@ -18,7 +18,7 @@
 
 import global_
 
-from db import db
+import db
 
 def notify_users(user, arrived):
     """ Send a message to all users notified about the given user. """

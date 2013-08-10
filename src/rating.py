@@ -20,7 +20,7 @@ import glicko2
 import speed_variant
 import datetime
 
-from db import db
+import db
 
 INITIAL_RATING = 1720
 INITIAL_RD = 350

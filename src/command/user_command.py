@@ -24,13 +24,14 @@ import calendar # for timegm
 import admin
 import rating
 import user
-import game
 import history
 import time_format
+import db
 
 from .command import ics_command, Command
 from parser import BadCommandError
-from db import db
+
+from game_constants import EXAMINED, PLAYED
 
 class LogMixin(object):
     def _display_log(self, log, conn):
@@ -83,9 +84,9 @@ class Finger(Command):
 
                 if u.session.game:
                     g = u.session.game
-                    if g.gtype == game.PLAYED:
+                    if g.gtype == PLAYED:
                         conn.write(_('(playing game %d: %s vs. %s)\n') % (g.number, g.white.name, g.black.name))
-                    elif g.gtype == game.EXAMINED:
+                    elif g.gtype == EXAMINED:
                         conn.write(_('(examining game %d)\n') % (g.number))
                     else:
                         assert(False)

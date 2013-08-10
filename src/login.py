@@ -19,9 +19,9 @@
 import user
 import filter_
 import global_
+import db
 
 from config import config
-from db import db
 
 class Login(object):
     # return a user object if one exists; otherwise make a

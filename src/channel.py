@@ -20,9 +20,8 @@ from datetime import datetime
 
 import list_
 import admin
+import db
 
-import db as dbmod
-from db import db
 from config import config
 
 USER_CHANNEL_START = 1024
@@ -174,7 +173,7 @@ class Channel(object):
         if not user.is_guest and self.is_user_owned():
             try:
                 db.channel_del_owner(self.id, user.id)
-            except dbmod.DeleteError:
+            except db.DeleteError:
                 # user was not an owner
                 pass
             else:

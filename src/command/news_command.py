@@ -16,10 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
+
 import admin
+import db
 
 from .command import ics_command, Command
-from db import db, DeleteError, UpdateError
 
 @ics_command('news', 'p', admin.Level.user)
 class News(Command):
@@ -51,7 +52,7 @@ class Cnewsd(Command):
         news_id = args[0]
         try:
             db.del_last_news_line(news_id)
-        except DeleteError:
+        except db.DeleteError:
             conn.write(A_('News item %d not found or already has no lines.\n') % news_id)
         else:
             conn.write(A_('Deleted last line of news item %d.\n') % news_id)
@@ -67,7 +68,7 @@ class Cnewse(Command):
             return
         try:
             db.delete_news(args[0])
-        except DeleteError:
+        except db.DeleteError:
             conn.write(A_('News item %d not found.\n') % args[0])
         else:
             conn.write(A_('Deleted news item %d.\n') % args[0])
@@ -95,7 +96,7 @@ class Cnewsp(Command):
     def run(self, args, conn):
         try:
             db.set_news_poster(args[0], conn.user)
-        except UpdateError:
+        except db.UpdateError:
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])
@@ -105,7 +106,7 @@ class Cnewst(Command):
     def run(self, args, conn):
         try:
             db.set_news_title(args[0], args[1])
-        except UpdateError:
+        except db.UpdateError:
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])

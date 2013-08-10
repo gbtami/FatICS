@@ -25,16 +25,16 @@ from twisted.internet import defer
 import offer
 import game
 import block_codes
+import db
 
 from .command import ics_command, Command
-from game_constants import opp
-from db import db
+from game_constants import opp, PLAYED
 
 
 class GameMixin(object):
     def _get_played_game(self, conn):
         g = conn.user.session.game
-        if not g or g.gtype != game.PLAYED:
+        if not g or g.gtype != PLAYED:
             g = None
             conn.write(_("You are not playing a game.\n"))
         return g
@@ -125,7 +125,8 @@ class Eco(Command, GameMixin):
                 if not self.nic_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid NIC code.\n"))
                 else:
-                    rows = db.look_up_nic(args[1])
+                    d = db.look_up_nic(args[1])
+                    rows = yield d
             else:
                 self.usage(conn)
                 defer.returnValue(block_codes.BLKCMD_ERROR_BADCOMMAND)
@@ -150,12 +151,12 @@ class Eco(Command, GameMixin):
             g = self._game_param(args[0], conn)
 
         if g:
-            (ply, eco, long) = g.get_eco()
+            (ply, eco, long_) = g.get_eco()
             (nicply, nic) = g.get_nic()
             conn.write(_('Eco for game %d (%s vs. %s):\n') % (g.number, g.white_name, g.black_name))
             conn.write(_(' ECO[%3d]: %s\n') % (ply, eco))
             conn.write(_(' NIC[%3d]: %s\n') % (nicply, nic))
-            conn.write(_('LONG[%3d]: %s\n') % (ply, long))
+            conn.write(_('LONG[%3d]: %s\n') % (ply, long_))
 
 @ics_command('moves', 'n')
 class Moves(Command, GameMixin):

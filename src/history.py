@@ -16,7 +16,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from db import db
+import db
 
 class History(object):
     def save_game(self, game, msg, result_code):

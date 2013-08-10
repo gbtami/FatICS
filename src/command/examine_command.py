@@ -19,9 +19,10 @@
 
 import re
 
-import game
 import examine
 import user
+
+from game_constants import EXAMINED
 
 from .command import ics_command, Command
 
@@ -29,7 +30,7 @@ from .command import ics_command, Command
 class Examine(Command):
     def run(self, args, conn):
         if conn.user.session.game:
-            if conn.user.session.game.gtype == game.EXAMINED:
+            if conn.user.session.game.gtype == EXAMINED:
                 conn.write(_("You are already examining a game.\n"))
             else:
                 conn.write(_("You are playing a game.\n"))
@@ -75,7 +76,7 @@ class Examine(Command):
 class Mexamine(Command):
     def run(self, args, conn):
         g = conn.user.session.game
-        if not g or g.gtype != game.EXAMINED:
+        if not g or g.gtype != EXAMINED:
             conn.write(_("You are not examining a game.\n"))
             return
 
@@ -90,7 +91,7 @@ class Backward(Command):
     def run(self, args, conn):
         n = args[0] if args[0] is not None else 1
         g = conn.user.session.game
-        if not g or g.gtype != game.EXAMINED:
+        if not g or g.gtype != EXAMINED:
             conn.write(_("You are not examining a game.\n"))
             return
         g.backward(n, conn)
@@ -100,7 +101,7 @@ class Forward(Command):
     def run(self, args, conn):
         n = args[0] if args[0] is not None else 1
         g = conn.user.session.game
-        if not g or g.gtype != game.EXAMINED:
+        if not g or g.gtype != EXAMINED:
             conn.write(_("You are not examining a game.\n"))
             return
         g.forward(n, conn)
@@ -109,7 +110,7 @@ class Forward(Command):
 class Unexamine(Command):
     def run(self, args, conn):
         g = conn.user.session.game
-        if not g or g.gtype != game.EXAMINED:
+        if not g or g.gtype != EXAMINED:
             conn.write(_("You are not examining a game.\n"))
             return
         g.leave(conn.user)

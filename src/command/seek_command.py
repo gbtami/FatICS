@@ -24,14 +24,14 @@ import game
 import user
 
 from parser import BadCommandError
-from game_constants import opp
+from game_constants import opp, EXAMINED
 from .command import Command, ics_command
 
 @ics_command('seek', 't')
 class Seek(Command):
     def run(self, args, conn):
         if conn.user.session.game:
-            if conn.user.session.game.gtype == game.EXAMINED:
+            if conn.user.session.game.gtype == EXAMINED:
                 conn.write(_('You are examining a game.\n'))
             else:
                 conn.write(_('You are playing a game.\n'))
@@ -106,7 +106,7 @@ class Unseek(Command):
 class Play(Command):
     def run(self, args, conn):
         if conn.user.session.game:
-            if conn.user.session.game.gtype == game.EXAMINED:
+            if conn.user.session.game.gtype == EXAMINED:
                 conn.write(_('You are examining a game.\n'))
             else:
                 conn.write(_('You are playing a game.\n'))

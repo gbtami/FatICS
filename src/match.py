@@ -26,10 +26,10 @@ import clock
 import parser
 import formula
 import global_
+import db
 
 from offer import Offer
-from game_constants import *
-from db import db
+from game_constants import WHITE, BLACK, side_to_str, EXAMINED
 
 
 shortcuts = {
@@ -351,7 +351,7 @@ class Challenge(Offer, MatchStringParser):
 
         # build the "Challenge:" string
         if self.side is not None:
-            side_str = ' [%s]' % game.side_to_str(self.side)
+            side_str = ' [%s]' % side_to_str(self.side)
         else:
             side_str = ''
 
@@ -521,7 +521,7 @@ class Challenge(Offer, MatchStringParser):
         if not b.vars['open']:
             raise MatchError(_("%s is not open to match requests.\n") % b.name)
         if b.session.game:
-            if b.session.game.gtype == game.EXAMINED:
+            if b.session.game.gtype == EXAMINED:
                 raise MatchError(_("%s is examining a game.\n") % b.name)
             else:
                 raise MatchError(_("%s is playing a game.\n") % b.name)

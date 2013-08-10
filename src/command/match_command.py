@@ -17,7 +17,6 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import game
 import match
 import admin
 import user
@@ -26,11 +25,13 @@ import global_
 
 from .command import Command, ics_command
 
+from game_constants import EXAMINED
+
 @ics_command('match', 'wt', admin.Level.user)
 class Match(Command):
     def run(self, args, conn):
         if conn.user.session.game:
-            if conn.user.session.game.gtype == game.EXAMINED:
+            if conn.user.session.game.gtype == EXAMINED:
                 conn.write(_("You can't challenge while you are examining a game.\n"))
             else:
                 conn.write(_("You can't challenge while you are playing a game.\n"))

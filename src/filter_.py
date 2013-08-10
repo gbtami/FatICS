@@ -20,8 +20,7 @@
 from netaddr import IPAddress, IPNetwork
 
 import list_
-
-from db import db
+import db
 
 def add_filter(pattern, conn):
     # Don't check whether this filter is a subset of any existing filter,

@@ -21,7 +21,7 @@ from test.test import *
 import random
 
 from pgn import Pgn
-from db import db
+import db
 
 class TestChess960(Test):
     def test_bad_idn(self):

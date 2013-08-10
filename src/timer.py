@@ -19,9 +19,10 @@
 import time
 
 import global_
-import game
 
 from config import config
+
+from game_constants import PLAYED
 
 heartbeat_timeout = 5
 def heartbeat():
@@ -45,7 +46,7 @@ def heartbeat():
 
     # forfeit games on time
     for g in global_.games.values():
-        if g.gtype == game.PLAYED and g.clock.is_ticking:
+        if g.gtype == PLAYED and g.clock.is_ticking:
             u = g.get_user_to_move()
             opp = g.get_opp(u)
             if opp.vars['autoflag']:

@@ -23,6 +23,8 @@ from .command import ics_command, Command
 
 import game
 
+from game_constants import EXAMINED
+
 class KibitzCommand(Command):
     def _do_kibitz(self, g, msg, conn):
         name = conn.user.get_display_name()
@@ -56,7 +58,7 @@ class WhisperCommand(Command):
         plist = g.observers.copy()
         if g.bug_link:
             plist |= g.bug_link.observers
-        if g.gtype == game.EXAMINED:
+        if g.gtype == EXAMINED:
             plist |= g.players
         for u in plist:
             if (u.vars['kiblevel'] and int(rat) < u.vars['kiblevel']

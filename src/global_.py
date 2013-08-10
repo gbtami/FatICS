@@ -20,7 +20,6 @@
 """ Server-wide global state. """
 
 import online
-import parser
 import trie
 import list_
 

@@ -28,9 +28,9 @@ import telnet
 import parser
 import lang
 import global_
+import db
 
 from config import config
-from db import db
 from timeseal import timeseal, TIMESEAL_PONG
 from session import Session
 from login import login

@@ -16,8 +16,6 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from twisted.internet import defer
-
 import time
 import re
 import traceback
@@ -34,7 +32,6 @@ import block
 import block_codes
 
 from command import *
-import global_
 
 _command_re = re.compile(r'^(\S+)(?:\s+(.*))?$')
 def _do_parse(s, conn):

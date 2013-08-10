@@ -21,7 +21,7 @@ import user
 import filter_
 import global_
 
-from db import db, DuplicateKeyError, DeleteError
+import db
 
 """ The list design is intentionally kept simple, at the cost of
 some repeated code, for example in the messages displayed to users.
@@ -92,7 +92,7 @@ class TitleList(SystemUserList):
 
             try:
                 u.add_title(self.id)
-            except DuplicateKeyError:
+            except db.DuplicateKeyError:
                 raise ListError(_('%(uname)s is already on the %(lname)s list.\n') %
                     {'uname': u.name, 'lname': self.name })
             self._notify_added(conn, u)
@@ -105,7 +105,7 @@ class TitleList(SystemUserList):
                 raise ListError(_("Only registered users may have titles.\n"))
             try:
                 u.remove_title(self.id)
-            except DeleteError:
+            except db.DeleteError:
                 raise ListError(_('%(uname)s is not on the %(lname)s list.\n') %
                     {'uname': u.name, 'lname': self.name })
             self._notify_removed(conn, u)

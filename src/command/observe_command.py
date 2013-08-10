@@ -24,6 +24,8 @@ import game
 import user
 import global_
 
+from game_constants import EXAMINED, PLAYED
+
 @ics_command('observe', 'i')
 class Observe(Command):
     def run(self, args, conn):
@@ -213,7 +215,7 @@ class Games(Command):
         # ratings
 
         for g in games:
-            if g.gtype == game.PLAYED:
+            if g.gtype == PLAYED:
                 rated_char = 'r' if g.rated else 'u'
                 line = "%3d %4s %-11.11s %4s %-10.10s [ %c%c%3d %3d]" % (
                     g.number, g.white_rating, g.white_name, g.black_rating,
@@ -225,8 +227,8 @@ class Games(Command):
                     g.variant.pos.material[1], g.variant.pos.material[0],
                     'W' if g.variant.get_turn() else 'B',
                     g.variant.pos.ply // 2 + 1)
-            elif g.gtype == game.EXAMINED:
-                if g.gtype == game.EXAMINED:
+            elif g.gtype == EXAMINED:
+                if g.gtype == EXAMINED:
                     gtype = "Exam."
                 else:
                     gtype = "Setup"

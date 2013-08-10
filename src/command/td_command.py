@@ -25,6 +25,7 @@ import game
 import speed_variant
 
 from parser import BadCommandError
+from game_constants import PLAYED
 
 @ics_command('rmatch', 'wwt')
 class Rmatch(Command):
@@ -133,7 +134,7 @@ class Getgi(Command):
             u = user.find_by_name_exact(args[0], online_only=True)
             if u and u.is_online and not u.is_guest:
                 g = u.session.game
-                if g and g.gtype == game.PLAYED:
+                if g and g.gtype == PLAYED:
                     conn.write('*getgi %s %s %s %d %d %d %d %d*\n' % (u.name,
                         g.white.name, g.black.name, g.number,
                         g.white_time, g.inc,

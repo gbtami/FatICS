@@ -32,8 +32,8 @@ import speed_variant
 import lang
 import global_
 import server
+import db
 
-from db import db
 from config import config
 
 class UsernameException(Exception):
@@ -852,7 +852,7 @@ def is_legal_passwd(passwd):
 
 def make_passwd():
     chars = string.letters + string.digits
-    passlen = random.choice(range(5, 8))
+    passlen = random.choice(list(range(5, 8)))
     ret = ''
     for i in range(passlen):
         ret = ret + random.choice(chars)
