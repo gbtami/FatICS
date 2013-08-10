@@ -36,6 +36,14 @@ class TestShout(Test):
         self.expect("admin(*) shouts: Test shout; please ignore", t2)
         self.expect_not("admin(*) shouts:", t3)
         self.expect("(shouted to ", t)
+
+        t.write('t ! this is another way to shout\n')
+        self.expect("admin(*) shouts: this is another way to shout", t)
+        self.expect("admin(*) shouts: this is another way to shout", t2)
+
+        t.write('t !\n')
+        self.expect('Usage:', t)
+
         self.close(t)
         self.close(t2)
         self.close(t3)
@@ -43,6 +51,8 @@ class TestShout(Test):
     def test_guest_shout(self):
         t = self.connect_as_guest()
         t.write('shout test shout\n')
+        self.expect("Only registered players can use the shout command.", t)
+        t.write('t ! test shout\n')
         self.expect("Only registered players can use the shout command.", t)
         self.close(t)
 
@@ -72,6 +82,14 @@ class TestCshout(Test):
         self.expect("admin(*) c-shouts: Test cshout; please ignore", t2)
         self.expect_not("admin(*) c-shouts:", t3)
         self.expect("(c-shouted to ", t)
+
+        t.write('t ^ this is another way to c-shout\n')
+        self.expect("admin(*) c-shouts: this is another way to c-shout", t)
+        self.expect("admin(*) c-shouts: this is another way to c-shout", t2)
+
+        t.write('t ^ \n')
+        self.expect('Usage:', t)
+
         self.close(t)
         self.close(t2)
         self.close(t3)
@@ -79,6 +97,8 @@ class TestCshout(Test):
     def test_guest_cshout(self):
         t = self.connect_as_guest()
         t.write('cshout test cshout\n')
+        self.expect("Only registered players can use the cshout command.", t)
+        t.write('t ^ test cshout\n')
         self.expect("Only registered players can use the cshout command.", t)
         self.close(t)
 

@@ -801,7 +801,8 @@ def find_by_prefix_for_user(name, conn, min_len=0, online_only=False):
         # but Babas uses this for private tells.
         if name.endswith('!'):
             name = name[:-1]
-            assert(len(name) > 0)
+            if not name:
+                raise UsernameException(name)
             return find_by_name_exact_for_user(name, conn,
                 min_len=min_len, online_only=online_only)
 

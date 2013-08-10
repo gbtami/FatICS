@@ -78,6 +78,7 @@ def requires_registration(f):
             f(self, args, conn)
     return check_reg
 
+MAX_ALIASES = 1024
 @ics_command('alias', 'oT', admin.Level.user)
 class Alias(Command):
     def run(self, args, conn):
@@ -107,6 +108,10 @@ class Alias(Command):
             else:
                 conn.write(_("%s -> %s\n") % (aname,
                     conn.user.aliases[aname]))
+            return
+
+        if len(conn.user.aliases) >= MAX_ALIASES:
+            conn.write(_('You may not have more than %d aliases.\n') % MAX_ALIASES)
             return
 
         # set alias value

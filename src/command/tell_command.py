@@ -41,7 +41,7 @@ class ToldMixin(object):
         else:
             conn.write(_("(told %s)\n") % u.name)
 
-class TellCommand(Command, ToldMixin):
+class TellCommand(Command, ToldMixin): #, ShoutMixin, CshoutMixin):
     def _do_tell(self, args, conn):
         if conn.user.is_muted:
             # mute now prevents *all* tells
@@ -64,6 +64,12 @@ class TellCommand(Command, ToldMixin):
             ch = conn.session.last_tell_ch
             if not ch:
                 conn.write(_('No previous channel.\n'))
+        elif args[0] == '!':
+            global_.commands['shout'].run(args[1:], conn)
+            return (None, None)
+        elif args[0] == '^':
+            global_.commands['cshout'].run(args[1:], conn)
+            return (None, None)
         else:
             if type(args[0]) in [int, long]:
                 try:
@@ -105,7 +111,7 @@ class Tell(TellCommand):
         (u, ch) = self._do_tell(args, conn)
         if u is not None:
             conn.session.last_tell_user = u
-        else:
+        elif ch is not None:
             conn.session.last_tell_ch = ch
 
 @ics_command('xtell', 'nS', admin.Level.user)
