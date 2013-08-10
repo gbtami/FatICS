@@ -20,6 +20,8 @@ import time
 import re
 import traceback
 
+from twisted.internet import defer
+
 class InternalException(Exception):
     pass
 class BadCommandError(Exception):
@@ -35,13 +37,14 @@ from command import *
 
 _command_re = re.compile(r'^(\S+)(?:\s+(.*))?$')
 def _do_parse(s, conn):
+    """ Returns a deferred. """
     assert(conn.user.is_online)
     s = s.strip()
 
     if not utf8.check_user_utf8(s):
         conn.write(_("Command ignored: invalid characters.\n"))
         # no exact code for this situation
-        return block_codes.BLKCMD_ERROR_BADCOMMAND
+        return defer.succeed(block_codes.BLKCMD_ERROR_BADCOMMAND)
 
     # for testing unicode cleanliness
     #s = s.decode('utf-8')
@@ -70,14 +73,14 @@ def _do_parse(s, conn):
 
     if not s:
         # ignore blank line
-        return block_codes.BLKCMD_NULL
+        return defer.succeed(block_codes.BLKCMD_NULL)
 
     # Parse moves.  Note that this happens before aliases are
     # expanded, but leading $ are stripped (which Jin depends on).
     # This behavior mimics the original FICS.
     if conn.session.game:
         if conn.session.game.parse_move(s.encode('ascii'), conn):
-            return block_codes.BLKCMD_GAME_MOVE
+            return defer.succeed(block_codes.BLKCMD_GAME_MOVE)
 
     if expand_aliases:
         try:
@@ -86,7 +89,7 @@ def _do_parse(s, conn):
         except alias.AliasError:
             conn.write(_("Command failed: There was an error expanding aliases.\n"))
             # no exact code
-            return block_codes.BLKCMD_ERROR_BADCOMMAND
+            return defer.succeed(block_codes.BLKCMD_ERROR_BADCOMMAND)
 
     cmd = None
     d = None
@@ -127,30 +130,28 @@ def _do_parse(s, conn):
             ret = block_codes.BLKCMD_ERROR_BADCOMMAND
         else:
             ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper(), block_codes.BLKCMD_SUCCESS)
-
-    return [d, ret]
+    if d:
+        d.addCallback(lambda d: ret)
+        return d
+    else:
+        return defer.succeed(ret)
 
 def parse(s, conn):
     if not conn.session.ivars['block']:
-        r = _do_parse(s, conn)
-        if isinstance(r, list):
-            (d, ret) = r
-            return d
+        d = _do_parse(s, conn)
     else:
-        (identifier, s) = block.block.start_block(s, conn)
+        (identifier, s) = block.start_block(s, conn)
         if identifier is not None:
-            r = _do_parse(s, conn)
-            if isinstance(r, list):
-                (d, code) = r
-                if d:
-                    def endblock(d):
-                        if conn.user.is_online:
-                            block.block.end_block(identifier, code, conn)
-                    d.addCallback(endblock)
-                    return d
-                else:
-                    if conn.user.is_online:
-                        block.block.end_block(identifier, code, conn)
+            d = _do_parse(s, conn)
+            def finish_block(code):
+                # XXX maybe the user shouldn't ever quit
+                # before the end of the block is sent
+                if conn.user.is_online:
+                    block.end_block(identifier, code, conn)
+            d.addCallback(finish_block)
+        else:
+            d = defer.succeed(block_codes.BLKCMD_ERROR_NOSEQUENCE)
+    return d
 
 def parse_args(s, param_str):
     args = []

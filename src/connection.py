@@ -201,20 +201,20 @@ class Connection(basic.LineReceiver):
             return
 
         lang.langs[self.user.vars['lang']].install(names=['ngettext'])
-        self.d = parser.parse(line, self)
-        if self.d:
+        d = parser.parse(line, self)
+        #if self.user.is_online:
+        if self.state == 'prompt':
             self.pauseProducing()
             def resume(d):
-                self.user.write_prompt()
+                if self.user:
+                    self.user.write_prompt()
                 self.resumeProducing()
-            self.d.addCallback(resume)
+            d.addCallback(resume)
             def err(e):
-                self.loseConnection()
-            self.d.addErrback(err)
-            #self.buffer_input = True
-        else:
-            if self.user:
-                self.user.write_prompt()
+                e.printTraceback()
+                print('error: %s' % e)
+                self.loseConnection('error')
+            d.addErrback(err)
 
     def loseConnection(self, reason):
         self.state = 'quitting'
