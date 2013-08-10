@@ -22,7 +22,7 @@ import partner
 import global_
 import speed_variant
 
-from command_parser import BadCommandError
+from parser import BadCommandError
 from .command import Command, ics_command
 from .tell_command import ToldMixin
 

@@ -45,9 +45,9 @@ class Help(Command):
         # non-admins should not be able to see/view documentation for
         # admin commands.
         if conn.user.is_admin():
-            cmds = global_.command_list.admin_cmds
+            cmds = global_.admin_commands
         else:
-            cmds = global_.command_list.cmds
+            cmds = global_.commands
 
         if args[0] == 'commands':
             help_cmds = [c.name for c in cmds.itervalues()]

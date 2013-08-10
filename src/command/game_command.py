@@ -24,6 +24,7 @@ from twisted.internet import defer
 
 import offer
 import game
+import block_codes
 
 from .command import ics_command, Command
 from game_constants import opp
@@ -104,7 +105,7 @@ class Resign(Command, GameMixin):
 
 @ics_command('eco', 'oo')
 class Eco(Command, GameMixin):
-    eco_pat = re.compile(r'[a-z][0-9][0-9][a-z]?')
+    eco_pat = re.compile(r'[a-e][0-9][0-9][a-z]?')
     nic_pat = re.compile(r'[a-z][a-z]\.[0-9][0-9]')
 
     @defer.inlineCallbacks
@@ -127,8 +128,13 @@ class Eco(Command, GameMixin):
                     rows = db.look_up_nic(args[1])
             else:
                 self.usage(conn)
-                return
+                defer.returnValue(block_codes.BLKCMD_ERROR_BADCOMMAND)
+            first = True
             for row in rows:
+                if not first:
+                    conn.write('\n')
+                else:
+                    first = False
                 if row['eco'] is None:
                     row['eco'] = 'A00'
                 if row['nic'] is None:
@@ -136,12 +142,10 @@ class Eco(Command, GameMixin):
                 if row['long_'] is None:
                     row['long_'] = 'Unknown / not matched'
                 assert(row['fen'] is not None)
-                conn.write('\n')
                 conn.write('  ECO: %s\n' % row['eco'])
                 conn.write('  NIC: %s\n' % row['nic'])
                 conn.write(' LONG: %s\n' % row['long_'])
                 conn.write('  FEN: %s\n' % row['fen'])
-            conn.user.write_prompt()
         else:
             g = self._game_param(args[0], conn)
 

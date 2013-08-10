@@ -39,9 +39,9 @@ class Command(object):
         self.name = name
         self.param_str = param_str
         self.admin_level = admin_level
-        global_.command_list.admin_cmds[name] = self
+        global_.admin_commands[name] = self
         if admin_level <= admin.Level.user:
-            global_.command_list.cmds[name] = self
+            global_.commands[name] = self
 
     def help(self, conn):
         conn.write("help for %s\n" % self.name)

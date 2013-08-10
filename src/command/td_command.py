@@ -24,7 +24,7 @@ import user
 import game
 import speed_variant
 
-from command_parser import BadCommandError
+from parser import BadCommandError
 
 @ics_command('rmatch', 'wwt')
 class Rmatch(Command):

@@ -23,7 +23,7 @@ import copy
 import game
 import speed_variant
 import clock
-import command_parser
+import parser
 import formula
 import global_
 
@@ -55,47 +55,47 @@ class MatchStringParser(object):
     def _set_rated(self, val):
         assert(val in [True, False])
         if self.rated is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.rated = val
 
     def _set_side(self, val):
         assert(val in [WHITE, BLACK])
         if self.side is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.side = val
 
     def _set_variant_name(self, val):
         if self.variant_name is not None:
             # conflicting variants
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.variant_name = val
 
     def _set_clock_name(self, val):
         if self.clock_name is not None:
             # conflicting clock types
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.clock_name = val
 
     def _set_time(self, val):
         if self.time is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         assert(val >= 0)
         self.time = val
 
     def _set_inc(self, val):
         if self.inc is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         assert(val >= 0)
         self.inc = val
 
     def _set_manual(self, val):
         if self.manual is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.manual = val
 
     def _set_formula(self, val):
         if self.formula is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.formula = val
 
     _idn_re = re.compile(r'idn=(\d+)')
@@ -164,7 +164,7 @@ class MatchStringParser(object):
                 if m:
                     # TODO: self._set_idn
                     if self.idn is not None:
-                        raise command_parser.BadCommandError
+                        raise parser.BadCommandError
                     self.idn = int(m.group(1))
                     if self.idn < -1 or self.idn > 959:
                         raise MatchError(_('An idn must be between 0 and 959.\n'))
@@ -190,11 +190,11 @@ class MatchStringParser(object):
                     continue
 
                 #print('got unknown keyword "%s"' % w)
-                raise command_parser.BadCommandError
+                raise parser.BadCommandError
 
         if len(times) > 2:
             # time odds not supported
-            raise command_parser.BadCommandError
+            raise parser.BadCommandError
         elif len(times) == 2:
             self._set_time(times[0])
             self._set_inc(times[1])

@@ -65,6 +65,7 @@ class TelnetTransport(protocol.Protocol):
     encoder = None
     send_IAC = True
     _wrapper = None
+    paused = False
 
     def __init__(self, protocolFactory=None, *a, **kw):
         self.commandMap = {
@@ -203,6 +204,14 @@ class TelnetTransport(protocol.Protocol):
                 self.protocol.factory = factory
             self.protocol.makeConnection(self)
 
+    def pauseProducing(self):
+        self.transport.pauseProducing()
+        self.paused = True
+
+    def resumeProducing(self):
+        self.paused = False
+        self.transport.resumeProducing()
+
     def connectionLost(self, reason):
         if self.protocol is not None:
             try:
@@ -211,6 +220,7 @@ class TelnetTransport(protocol.Protocol):
                 del self.protocol
 
     def applicationDataReceived(self, bytes):
+        assert(not self.paused)
         self.protocol.dataReceived(bytes)
 
     def _escape(self, data):

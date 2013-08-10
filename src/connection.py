@@ -25,8 +25,9 @@ from twisted.internet import reactor
 from zope.interface import implements
 
 import telnet
-import command_parser
+import parser
 import lang
+import global_
 
 from config import config
 from db import db
@@ -46,8 +47,6 @@ class Connection(basic.LineReceiver):
     buffer_output = False
     ivar_pat = re.compile(r'%b([01]{32})')
     timeout_check = None
-    _paused = False
-    _pause_buffer = []
 
     def connectionMade(self):
         lang.langs['en'].install(names=['ngettext'])
@@ -73,7 +72,9 @@ class Connection(basic.LineReceiver):
         self.loseConnection('idle timeout')
 
     def login(self):
+        """ Enter the login state, waiting for a username. """
         self.state = 'login'
+        self.claimed_user = None
         self.write(db.get_server_message('login'))
         if self.transport.compatibility:
             # the string "freechess.org" must appear somewhere in this message;
@@ -83,9 +84,7 @@ class Connection(basic.LineReceiver):
 
     def lineReceived(self, line):
         #print '((%s,%s))\n' % (self.state, repr(line))
-        if self._paused:
-            self._pause_buffer.append(line)
-            return
+        assert(not self.transport.paused)
 
         if self.session.use_timeseal:
             (t, dline) = timeseal.decode_timeseal(line)
@@ -175,15 +174,24 @@ class Connection(basic.LineReceiver):
                 print('wrong password from %s for user %s' % (self.ip,
                     self.claimed_user.name))
                 self.write('\n**** Invalid password! ****\n\n')
-                self._paused = True
-                reactor.callLater(3, self.unpause)
+                self.pauseProducing()
+                def resume():
+                    self.login()
+                    self.resumeProducing()
+                reactor.callLater(3, resume)
 
     def prompt(self):
+        """ Enter the prompt state, running commands from the client. """
         self.timeout_check.cancel()
         self.timeout_check = None
         self.user = self.claimed_user
         self.user.log_on(self)
         assert(self.user.is_online)
+        if self.user.is_admin():
+            self.session.commands = global_.admin_commands
+        else:
+            self.session.commands = global_.commands
+
         self.state = 'prompt'
         self.user.write_prompt()
 
@@ -193,9 +201,20 @@ class Connection(basic.LineReceiver):
             return
 
         lang.langs[self.user.vars['lang']].install(names=['ngettext'])
-        command_parser.parser.parse(line, self)
-        if self.user:
-            self.user.write_prompt()
+        self.d = parser.parse(line, self)
+        if self.d:
+            self.pauseProducing()
+            def resume(d):
+                self.user.write_prompt()
+                self.resumeProducing()
+            self.d.addCallback(resume)
+            def err(e):
+                self.loseConnection()
+            self.d.addErrback(err)
+            #self.buffer_input = True
+        else:
+            if self.user:
+                self.user.write_prompt()
 
     def loseConnection(self, reason):
         self.state = 'quitting'
@@ -264,16 +283,6 @@ class Connection(basic.LineReceiver):
             self.output_buffer += s
         else:
             self.transport.write(s, wrap=False)
-
-    def unpause(self):
-        """ Resume logging in after a pause due to an incorrect
-        password. """
-        self._paused = False
-        self.login()
-        for line in self._pause_buffer:
-            self.lineReceived(line)
-        self._pause_buffer = []
-
 
     def log(self, s):
         # log to stdout

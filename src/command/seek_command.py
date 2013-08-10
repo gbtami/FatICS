@@ -23,7 +23,7 @@ import match
 import game
 import user
 
-from command_parser import BadCommandError
+from parser import BadCommandError
 from game_constants import opp
 from .command import Command, ics_command
 

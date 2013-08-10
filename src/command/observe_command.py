@@ -18,7 +18,7 @@
 #
 
 from .command import ics_command, Command
-from command_parser import BadCommandError
+from parser import BadCommandError
 
 import game
 import user

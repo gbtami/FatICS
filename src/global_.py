@@ -20,7 +20,7 @@
 """ Server-wide global state. """
 
 import online
-import command_parser
+import parser
 import trie
 import list_
 
@@ -45,12 +45,14 @@ except NameError:
     seeks = {}
 
     # commands
-    command_list = command_parser.CommandList()
+    commands  = trie.Trie()
+    admin_commands = trie.Trie()
 
     # player variables and ivariables
     vars_ = trie.Trie()
     ivars = trie.Trie()
 
+    # lists
     lists = trie.Trie()
     admin_lists = trie.Trie()
     list_.init_lists()

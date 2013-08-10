@@ -1,0 +1,231 @@
+# Copyright (C) 2010  Wil Mahan <wmahan+fatics@gmail.com>
+#
+# This file is part of FatICS.
+#
+# FatICS is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# FatICS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+from twisted.internet import defer
+
+import time
+import re
+import traceback
+
+class InternalException(Exception):
+    pass
+class BadCommandError(Exception):
+    pass
+
+import alias
+import utf8
+import trie
+import block
+import block_codes
+
+from command import *
+import global_
+
+_command_re = re.compile(r'^(\S+)(?:\s+(.*))?$')
+def _do_parse(s, conn):
+    assert(conn.user.is_online)
+    s = s.strip()
+
+    if not utf8.check_user_utf8(s):
+        conn.write(_("Command ignored: invalid characters.\n"))
+        # no exact code for this situation
+        return block_codes.BLKCMD_ERROR_BADCOMMAND
+
+    # for testing unicode cleanliness
+    #s = s.decode('utf-8')
+
+    # previously the prefix '$' was used to not expand aliases
+    # and '$$' was used to not update the idle time.  But these
+    # options should really be orthogonal, so I made '$$' alone
+    # expand aliaes. Now if you want the old behavior of neither
+    # expanding aliases nor updating idle time, use '$$$'.
+    if s.startswith('$$'):
+        s = s[2:].lstrip()
+    else:
+        conn.session.last_command_time = time.time()
+        if conn.session.idlenotified_by:
+            for u in conn.session.idlenotified_by:
+                u.write_('\nNotification: %s has unidled.\n',
+                    (conn.user.name,))
+                u.session.idlenotifying.remove(conn.user)
+            conn.session.idlenotified_by.clear()
+
+    if s.startswith('$'):
+        expand_aliases = False
+        s = s[1:].lstrip()
+    else:
+        expand_aliases = True
+
+    if not s:
+        # ignore blank line
+        return block_codes.BLKCMD_NULL
+
+    # Parse moves.  Note that this happens before aliases are
+    # expanded, but leading $ are stripped (which Jin depends on).
+    # This behavior mimics the original FICS.
+    if conn.session.game:
+        if conn.session.game.parse_move(s.encode('ascii'), conn):
+            return block_codes.BLKCMD_GAME_MOVE
+
+    if expand_aliases:
+        try:
+            s = alias.alias.expand(s, alias.alias.system,
+                conn.user.aliases, conn.user)
+        except alias.AliasError:
+            conn.write(_("Command failed: There was an error expanding aliases.\n"))
+            # no exact code
+            return block_codes.BLKCMD_ERROR_BADCOMMAND
+
+    cmd = None
+    d = None
+    m = _command_re.match(s)
+    assert(m)
+    word = m.group(1).lower()
+    cmds = conn.session.commands
+    try:
+        cmd = cmds[word]
+    except KeyError:
+        conn.write(_("%s: Command not found.\n") % word)
+        ret = block_codes.BLKCMD_ERROR_BADCOMMAND
+    except trie.NeedMore:
+        matches = cmds.all_children(word)
+        assert(len(matches) > 0)
+        if len(matches) == 1:
+            cmd = matches[0]
+        else:
+            conn.write(_("""Ambiguous command "%(cmd)s". Matches: %(matches)s\n""")
+                % {'cmd': word, 'matches':
+                    ' '.join([c.name for c in matches])})
+            ret = block_codes.BLKCMD_ERROR_AMBIGUOUS
+    if cmd:
+        try:
+            args = parse_args(m.group(2), cmd.param_str)
+            d = cmd.run(args, conn)
+        except BadCommandError:
+            ret = block_codes.BLKCMD_ERROR_BADCOMMAND
+            cmd.usage(conn)
+        except Exception as e:
+            #t = traceback.format_exc()
+            #print(t)
+            print('command that caused exception was: %s' % s)
+            raise
+            conn.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
+            conn.write_nowrap('Error info: exception %s; command was "%s"\n' % (str(e), s))
+            conn.loseConnection('exception')
+            ret = block_codes.BLKCMD_ERROR_BADCOMMAND
+        else:
+            ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper(), block_codes.BLKCMD_SUCCESS)
+
+    return [d, ret]
+
+def parse(s, conn):
+    if not conn.session.ivars['block']:
+        r = _do_parse(s, conn)
+        if isinstance(r, list):
+            (d, ret) = r
+            return d
+    else:
+        (identifier, s) = block.block.start_block(s, conn)
+        if identifier is not None:
+            r = _do_parse(s, conn)
+            if isinstance(r, list):
+                (d, code) = r
+                if d:
+                    def endblock(d):
+                        if conn.user.is_online:
+                            block.block.end_block(identifier, code, conn)
+                    d.addCallback(endblock)
+                    return d
+                else:
+                    if conn.user.is_online:
+                        block.block.end_block(identifier, code, conn)
+
+def parse_args(s, param_str):
+    args = []
+    for c in param_str:
+        if c in ['d', 'i', 'w', 'W', 'f']:
+            # required argument
+            if s is None:
+                raise BadCommandError()
+            else:
+                s = s.lstrip()
+                m = re.split(r'\s', s, 1)
+                assert(len(m) > 0)
+                param = m[0]
+                if len(param) == 0:
+                    raise BadCommandError()
+                if c == c.lower():
+                    param = param.lower()
+                if c in ['i', 'd']:
+                    # integer or word
+                    try:
+                        param = int(param, 10)
+                    except ValueError:
+                        if c == 'd':
+                            raise BadCommandError()
+                elif c == 'f':
+                    try:
+                        param = float(param)
+                    except ValueError:
+                        raise BadCommandError()
+                s = m[1] if len(m) > 1 else None
+        elif c in ['o', 'n', 'p']:
+            # optional argument
+            if s is None:
+                param = None
+            else:
+                s = s.lstrip()
+                m = re.split(r'\s', s, 1)
+                assert(len(m) > 0)
+                param = m[0].lower()
+                if len(param) == 0:
+                    param = None
+                    assert(len(m) == 1)
+                elif c in ['n', 'p']:
+                    try:
+                        param = int(param, 10)
+                    except ValueError:
+                        if c == 'p':
+                            raise BadCommandError()
+                s = m[1] if len(m) > 1 else None
+        elif c == 'S':
+            # string to end
+            if s is None or len(s) == 0:
+                raise BadCommandError()
+            param = s
+            s = None
+        elif c == 'T' or c == 't':
+            # optional string to end
+            if s is None or len(s) == 0:
+                param = None
+            else:
+                param = s
+                if c == 't':
+                    param = param.lower()
+            s = None
+        else:
+            raise InternalException()
+        args.append(param)
+
+    if not (s is None or re.match(r'^\s*$', s)):
+        # extraneous data at the end
+        raise BadCommandError()
+
+    return args
+
+# vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

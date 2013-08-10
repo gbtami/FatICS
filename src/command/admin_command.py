@@ -21,7 +21,7 @@ import datetime
 from twisted.internet import reactor
 
 import user
-import command_parser
+import parser
 import global_
 import admin
 import speed_variant
@@ -30,7 +30,7 @@ from reload import reload
 
 from db import db
 from .command import Command, ics_command
-from command_parser import BadCommandError
+from parser import BadCommandError
 from config import config
 
 @ics_command('aclearhistory', 'w', admin.Level.admin)
@@ -109,6 +109,11 @@ class Asetadmin(Command):
                 conn.write('''Admin level of %s set to %d.\n''' %
                     (u.name, level))
                 if u.is_online:
+                    # update user's command list
+                    if u.is_admin():
+                        u.session.commands = global_.admin_commands
+                    else:
+                        u.session.commands = global_.commands
                     u.write(A_('''\n\n%s has set your admin level to %d.\n\n''') % (conn.user.name, level))
 
 @ics_command('asetmaxplayer', 'p', admin.Level.admin)
@@ -271,7 +276,7 @@ class Pose(Command):
                 conn.write(A_('Command issued as %s.\n') % u2.name)
                 u2.write_('%s has issued the following command on your behalf: %s\n', (conn.user.name, args[1]))
                 # XXX set u2.session.timeseal_last_timestamp?
-                command_parser.parser.parse(args[1], u2.session.conn)
+                parser.parse(args[1], u2.session.conn)
 
 @ics_command('asetv', 'www', admin.Level.admin)
 class Asetv(Command):
