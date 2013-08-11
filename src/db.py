@@ -57,7 +57,8 @@ if 1:
             # the connection may have timed out, so try again
             cursor.close()
             db.close()
-            connect()
+            adb.close()
+            _init()
             # the new cursor needs to be the same type as the old one
             cursor = db.cursor(cursor.__class__)
             cursor.execute(*args)
@@ -74,6 +75,22 @@ if 1:
         row = cursor.fetchone()
         cursor.close()
         return row
+
+    def user_get_async(name):
+        d = adb.runQuery("""SELECT
+                user_id,user_name,user_passwd,user_first_login,user_last_logout,
+                user_admin_level, user_email,user_real_name,user_banned,
+                user_muzzled,user_cmuzzled,user_muted,user_notebanned,
+                user_ratedbanned,user_playbanned,user_total_time_online
+            FROM user WHERE user_name=%s""", (name,))
+        def gotRows(rows):
+            if rows:
+                assert(len(rows) == 1)
+                return rows[0]
+            else:
+                return None
+        d.addCallback(gotRows)
+        return d
 
     def user_get_vars(user_id, vnames):
         cursor = db.cursor(cursors.DictCursor)

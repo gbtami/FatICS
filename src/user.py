@@ -34,6 +34,9 @@ import global_
 import server
 import db
 
+from twisted.python.log import err
+from twisted.internet import defer
+
 from config import config
 
 class UsernameException(Exception):
@@ -737,12 +740,13 @@ def _check_name(name, min_len):
     """ Check whether a string is a valid user name. """
     if len(name) < min_len:
         raise UsernameException(_('Names should be at least %d characters long.  Try again.\n') % min_len)
-    elif len(name) > 17:
-        raise UsernameException(_('Names should be at most %d characters long.  Try again.\n') % 17)
+    elif len(name) > config.max_login_name_len:
+        raise UsernameException(_('Names should be at most %d characters long.  Try again.\n') % config.max_login_name_len)
     elif not username_re.match(name):
         raise UsernameException(_('Names should only consist of lower and upper case letters.  Try again.\n'))
 
 username_re = re.compile('^[a-zA-Z]+$')
+
 def find_by_name_exact(name,
         min_len=config.min_login_name_len, online_only=False):
     """Find a user, accepting only exact matches. """
@@ -756,8 +760,40 @@ def find_by_name_exact(name,
             u = RegUser(dbu)
     return u
 
+def find_by_name_exact_for_user(name, conn, min_len=config.min_login_name_len,
+        online_only=False):
+    """ Like find_by_name_exact, but writes an error message
+    on failure. """
+    u = None
+    try:
+        u = find_by_name_exact(name, min_len=min_len, online_only=online_only)
+    except UsernameException:
+        conn.write(_('"%s" is not a valid handle.\n') % name)
+    else:
+        if not u:
+            conn.write(_('There is no player matching the name "%s".\n') % name)
+    return u
+
+def find_exact(name):
+    """ async version of find_by_name_exact() """
+    _check_name(name, config.min_login_name_len)
+    u = global_.online.find_exact(name)
+    if u:
+        assert(u.is_online)
+        d = defer.succeed(u)
+    else:
+        d = db.user_get_async(name)
+        def gotRow(dbu):
+            if dbu:
+                return RegUser(dbu)
+            else:
+                return None
+        d.addCallback(gotRow)
+        d.addErrback(err, "failed to look up user")
+    return d
+
 def _find_by_prefix(name, online_only=False):
-    """ Find a user but allow the name to abbreviated if
+    """ Find a user but allow the name to be abbreviated if
     it is unambiguous; if the name is not an exact match, prefer
     online users to offline. """
     u = None
@@ -825,19 +861,20 @@ def find_by_prefix_for_user(name, conn, min_len=0, online_only=False):
             (name, ' '.join(e.names)))
     return u
 
-def find_by_name_exact_for_user(name, conn, min_len=config.min_login_name_len,
-        online_only=False):
-    """ Like find_by_name_exact, but writes an error message
-    on failure. """
-    u = None
+def find_exact_for_user(name, conn):
+    """ Like find_exact(), but writes an error message on failure. """
     try:
-        u = find_by_name_exact(name, min_len=min_len, online_only=online_only)
+        d = find_exact(name)
     except UsernameException:
         conn.write(_('"%s" is not a valid handle.\n') % name)
-    else:
+        d = defer.succeed(None)
+    def gotUser(u):
         if not u:
             conn.write(_('There is no player matching the name "%s".\n') % name)
-    return u
+        return u
+    d.addCallback(gotUser)
+    d.addErrback(err, "failed to look up user")
+    return d
 
 # test whether a string meets the requirements for a password
 def is_legal_passwd(passwd):

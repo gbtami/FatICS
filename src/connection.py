@@ -29,11 +29,11 @@ import parser
 import lang
 import global_
 import db
+import login
 
 from config import config
 from timeseal import timeseal, TIMESEAL_PONG
 from session import Session
-from login import login
 
 class Connection(basic.LineReceiver):
     implements(twisted.internet.interfaces.IProtocol)
@@ -145,15 +145,28 @@ class Connection(basic.LineReceiver):
             self.session.set_ivars_from_str(m.group(1))
             return
         name = line.strip()
-        # hide password
-        self.transport.will(telnet.ECHO)
-        self.claimed_user = login.get_user(name, self)
-        if self.claimed_user:
-            self.state = 'passwd'
-        else:
+        d = login.get_user(name, self)
+        self.pauseProducing()
+        def lookedUpUser(u):
             if self.state != 'quitting':
-                self.transport.wont(telnet.ECHO)
-                self.write("\nlogin: ")
+                if self.state != 'login':
+                    print('expected login state, but got %s' % self.state)
+                assert(self.state == 'login')
+                if u:
+                    self.claimed_user = u
+                    self.state = 'passwd'
+                    # hide password
+                    self.transport.will(telnet.ECHO)
+                else:
+                    self.write("\nlogin: ")
+                self.resumeProducing()
+        d.addCallback(lookedUpUser)
+        def err(e):
+            e.printTraceback()
+            print('error: %s' % e)
+            assert(False)
+            self.loseConnection('error')
+        d.addErrback(err)
 
     def handleLine_passwd(self, line):
         self.timeout_check.cancel()
@@ -206,13 +219,16 @@ class Connection(basic.LineReceiver):
         if self.state == 'prompt':
             self.pauseProducing()
             def resume(d):
-                if self.user:
-                    self.user.write_prompt()
-                self.resumeProducing()
+                if self.state != 'quitting':
+                    assert(self.user)
+                    self.resumeProducing()
+                    if self.user:
+                        self.user.write_prompt()
             d.addCallback(resume)
             def err(e):
                 e.printTraceback()
                 print('error: %s' % e)
+                assert(False)
                 self.loseConnection('error')
             d.addErrback(err)
 
@@ -252,6 +268,7 @@ class Connection(basic.LineReceiver):
                 # abrupt disconnection
                 self.user.log_off()
                 self.user = None
+                self.state = 'quitting'
         self.factory.connections.remove(self)
 
     def write_paged(self, s):
@@ -273,6 +290,7 @@ class Connection(basic.LineReceiver):
         self.write(s)
 
     def write(self, s):
+        # XXX check that we are connected?
         if self.buffer_output:
             self.output_buffer += s
         else:

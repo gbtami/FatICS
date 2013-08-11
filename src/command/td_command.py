@@ -23,6 +23,7 @@ import match
 import user
 import game
 import speed_variant
+import global_
 
 from parser import BadCommandError
 from game_constants import PLAYED
@@ -100,7 +101,7 @@ class Getpi(Command):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
         try:
-            u = user.find_by_name_exact(args[0], online_only=True)
+            u = global_.online.find_exact(args[0])
             if u and u.is_online:
                 if u.is_guest:
                     # it's not clear why the lasker server only prints
@@ -131,7 +132,7 @@ class Getgi(Command):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
         try:
-            u = user.find_by_name_exact(args[0], online_only=True)
+            u = global_.online.find_exact(args[0])
             if u and u.is_online and not u.is_guest:
                 g = u.session.game
                 if g and g.gtype == PLAYED:

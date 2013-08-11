@@ -71,16 +71,20 @@ class CommandTest(Test):
         t = self.connect_as_admin()
 
         t.write('nuke 123\n')
-        self.expect('not a valid handle', t)
+        self.expect('No player named', t)
 
         t.write('nuke guesttest\n')
-        self.expect('no player matching', t)
+        self.expect('No player named', t)
 
         t2 = self.connect_as_guest('GuestTest')
         t.write('nuke guesttest\n')
         self.expect('You have been kicked out', t2)
+        self.expect_EOF(t2)
         self.expect('Nuked: GuestTest', t)
         t2.close()
+
+        t.write('nuke guesttest\n')
+        self.expect('No player named "guesttest" is online.', t)
 
         t2 = self.connect_as_guest('GuestTest')
         t.write('asetadmin guesttest 100\n')
@@ -295,6 +299,31 @@ class CommandTest(Test):
 
         self.close(t)
 
+    def test_asetv(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestABCD')
+
+        t.write('asetv guestabcd pin\n')
+        self.expect('Usage:', t)
+
+        t.write('asetv doesnotexist pin 1\n')
+        self.expect('There is no player matching the name "doesnotexist".', t)
+
+        t.write('asetv guestabcd pin foo\n')
+        self.expect('Bad value', t)
+
+        t.write('asetv guestabcd t foo\n')
+        self.expect('Ambiguous', t)
+
+        t.write('asetv guestabcd pin 1\n')
+        self.expect('Command issued as GuestABCD', t)
+        self.expect('You will now hear logins/logouts.', t2)
+        self.close(t)
+
+        self.expect('[admin has disconnected.]', t2)
+
+        self.close(t2)
+
 class PermissionsTest(Test):
     def test_permissions(self):
         t = self.connect_as_guest()
@@ -310,9 +339,12 @@ class CommentTest(Test):
         t.write('showcomment testplayer\n')
         self.expect('There are no comments for TestPlayer.', t)
 
-        t.write('addcomment testplay This is a test comment.\n')
+        t.write('addcomment testplayer This is a test comment.\n')
         self.expect('Comment added for TestPlayer.', t)
         time.sleep(1)
+        t.write('addcomment testplay Partial names not accepted.\n')
+        self.expect('no player matching the name', t)
+
         t.write('addcomment testplayer Comment #2\n')
         self.expect('Comment added for TestPlayer.', t)
 

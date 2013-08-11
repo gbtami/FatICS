@@ -29,6 +29,7 @@ class Config(object):
     # login timout in seconds
     login_timeout = 30
     min_login_name_len = 3
+    max_login_name_len = 17
 
     # max idle time in seconds
     idle_timeout = 60 * 60

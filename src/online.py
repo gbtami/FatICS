@@ -70,6 +70,12 @@ class Online(object):
             u = None
         return u
 
+    def find_exact_for_user(self, name, conn):
+        u = self.find_exact(name)
+        if not u:
+            conn.write(_('No player named "%s" is online.\n') % name)
+        return u
+
     def find_part(self, prefix):
         assert(not self.is_online(prefix))
         prefix = prefix.lower()

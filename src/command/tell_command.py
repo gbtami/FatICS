@@ -41,7 +41,7 @@ class ToldMixin(object):
         else:
             conn.write(_("(told %s)\n") % u.name)
 
-class TellCommand(Command, ToldMixin): #, ShoutMixin, CshoutMixin):
+class TellCommand(Command, ToldMixin):
     def _do_tell(self, args, conn):
         if conn.user.is_muted:
             # mute now prevents *all* tells
@@ -138,15 +138,12 @@ class Qtell(Command):
                 ch.qtell(msg)
         else:
             # qtell user
-            try:
-                u = user.find_by_name_exact(args[0])
-                if not u or not u.is_online:
-                    ret = 1
-                else:
-                    args[0] = u.name
-                    u.write(msg)
-            except user.UsernameException:
+            u = global_.online.find_exact(args[0])
+            if not u:
                 ret = 1
+            else:
+                args[0] = u.name
+                u.write(msg)
         conn.write('*qtell %s %d*\n' % (args[0], ret))
 
 @ics_command('say', 'S')
