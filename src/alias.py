@@ -19,7 +19,8 @@
 import re
 
 class AliasError(Exception):
-    pass
+    def __init__(self, reason=None):
+        self.reason = reason
 
 class Alias(object):
     system = {
@@ -217,7 +218,10 @@ class Alias(object):
             if alias_str[i] == '$':
                 i += 1
                 # raises an error if beyond the end
-                char = alias_str[i]
+                try:
+                    char = alias_str[i]
+                except IndexError:
+                    raise AliasError
                 if char == '@':
                     ret += rest if rest is not None else ''
                 elif char == '-':
@@ -254,13 +258,13 @@ class Alias(object):
                     # XXX
                     pass
                 elif char == '.':
-                    if user.last_tell_user is None:
-                        raise AliasError()
-                    ret += user.last_tell_user.name
+                    if user.session.last_tell_user is None:
+                        raise AliasError(_('No previous tell.\n'))
+                    ret += user.session.last_tell_user.name
                 elif char == ',':
-                    if user.last_tell_ch is None:
-                        raise AliasError()
-                    ret += '%s' % user.last_tell_ch
+                    if user.session.last_tell_ch is None:
+                        raise AliasError(_('No previous channel.\n'))
+                    ret += '%s' % user.session.last_tell_ch.id
                 elif char == '_':
                     # from help new_features: $_ in an alias goes to -,
                     # this allows handling of '$2-' vs '$2'-

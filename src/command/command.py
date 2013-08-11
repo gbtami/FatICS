@@ -98,7 +98,7 @@ class Alias(Command):
             conn.write(_("Alias names may not be more than 15 characters long.\n"))
             return
 
-        if aname in ['quit', 'unalias']:
+        if aname in ['quit', 'alias', 'unalias', 'tell']:
             conn.write(_('You cannot use "%s" as an alias.\n') % aname)
 
         if args[1] is None:

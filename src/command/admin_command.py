@@ -57,7 +57,7 @@ class Addplayer(Command):
             conn.write(_('"%s" is not a valid handle.\n') % name)
             return
         if u:
-            conn.write(A_('A player named %s is already registered.\n',)
+            conn.write(A_('A player named %s is already registered.\n')
                 % u.name)
         else:
             passwd = user.make_passwd()
@@ -293,7 +293,6 @@ class Pose(Command):
 class Asetv(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
-        assert(conn.user)
         adminuser = conn.user
         u = yield user.find_exact_for_user(args[0], conn)
         if not u:

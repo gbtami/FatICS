@@ -76,7 +76,7 @@ class TestUserAlias(Test):
         self.expect('Alias "foo" changed.', t)
         t.write('foo admin\n')
         self.expect('Finger of admin', t)
-       
+
         # numeric parameters
         t.write('alias foo tell $m $2 $1 jkl\n')
         self.expect('Alias "foo" changed.', t)
@@ -85,7 +85,34 @@ class TestUserAlias(Test):
 
         t.write('unalias foo\n')
         self.expect('Alias "foo" unset.', t)
-        
+
+        # $.
+        t.write('alias bar tell $. $@\n')
+        self.expect('Alias "bar" set.', t)
+        t.write('bar last tell player\n')
+        self.expect(' tells you: last tell player', t)
+
+        # $,
+        t.write('alias bar tell $, $@\n')
+        self.expect('Alias "bar" changed.', t)
+        t.write('bar last tell channel\n')
+        self.expect("No previous channel", t)
+        t.write('t 4 channel test\n')
+        self.expect('(4): channel test', t)
+        t.write('bar another channel test\n')
+        self.expect('(4): another channel test', t)
+
+        # bare $
+        t.write('alias bar finger $\n')
+        self.expect('Alias "bar" changed.', t)
+        t.write('bar\n')
+        self.expect('error expanding aliases', t)
+
+        t.write('alias bar finger $z\n')
+        self.expect('Alias "bar" changed.', t)
+        t.write('bar\n')
+        self.expect('error expanding aliases', t)
+
         t.write('unalias nosuchvar\n')
         self.expect('You have no alias "nosuchvar".', t)
 

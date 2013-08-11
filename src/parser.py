@@ -86,8 +86,11 @@ def _do_parse(s, conn):
         try:
             s = alias.alias.expand(s, alias.alias.system,
                 conn.user.aliases, conn.user)
-        except alias.AliasError:
-            conn.write(_("Command failed: There was an error expanding aliases.\n"))
+        except alias.AliasError as e:
+            if e.reason:
+                conn.write(e.reason)
+            else:
+                conn.write(_("Command failed: There was an error expanding aliases.\n"))
             # no exact code
             return defer.succeed(block_codes.BLKCMD_ERROR_BADCOMMAND)
 
