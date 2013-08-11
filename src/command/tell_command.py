@@ -168,7 +168,6 @@ class Say(Command, ToldMixin):
                 else:
                     conn.write(_('%s is no longer online.\n') % name)
             else:
-                # All other players have logged out after a bug game
                 conn.write(_("I don't know whom to say that to.\n"))
         if say_to:
             g = conn.user.session.game

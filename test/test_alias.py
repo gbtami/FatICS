@@ -61,7 +61,7 @@ class TestUserAlias(Test):
 
         t.write('alias foo\n')
         self.expect('You have no alias named "foo"', t)
-        
+
         t.write('alias foo finger\n')
         self.expect('Alias "foo" set.', t)
         t.write('foo\n')
@@ -118,6 +118,38 @@ class TestUserAlias(Test):
 
         self.close(t)
 
+    def test_alias_o_p(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        # opponent
+        t.write('match guestefgh 1 0\n')
+        self.expect('Challenge: ', t2)
+        t2.write('a\n')
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+        t.write('abo\n')
+        self.expect('aborted', t2)
+
+        t.write('alias gg tell $o gg $o!\n')
+        t.write('gg\n')
+        self.expect('(told GuestEFGH)', t)
+        self.expect('GuestABCD(U) tells you: gg GuestEFGH!', t2)
+
+        # partner
+        t.write('set bugo 1\n')
+        self.expect('open for bughouse', t)
+        t2.write('part guestabcd\n')
+        self.expect('GuestEFGH offers to be your bughouse partner', t)
+        t.write('a\n')
+        self.expect('GuestABCD accepts your partnership request', t2)
+        t.write('alias fm xtell $p feed me $p!\n')
+        t.write('fm\n')
+        self.expect('GuestABCD(U) tells you: feed me GuestEFGH!', t2)
+
+        self.close(t)
+        self.close(t2)
+
     def test_user_alias(self):
         t = self.connect_as_admin()
 
@@ -161,6 +193,7 @@ class TestUserAlias(Test):
         self.close(t)
 
     def test_unidle(self):
+        self._skip('semi-slow test')
         t = self.connect_as_guest()
         time.sleep(2)
         t.write('fi\n')

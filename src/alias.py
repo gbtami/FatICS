@@ -252,11 +252,21 @@ class Alias(object):
                 elif char == 'm':
                     ret += user.name
                 elif char == 'o':
-                    # XXX
-                    pass
+                    say_to = user.session.say_to
+                    if not say_to:
+                        raise AliasError(_("I don't know whom to say that to.\n"))
+                    elif len(say_to) > 1:
+                        raise AliasError(_('You cannot use $o in an alias after a bughouse game.\n'))
+                    else:
+                        # note the user may be offline, but we can still
+                        # use the name in an alias
+                        ret += list(say_to)[0].name
                 elif char == 'p':
-                    # XXX
-                    pass
+                    p = user.session.partner
+                    if not p:
+                        raise AliasError(_('You do not have a partner at present.\n'))
+                    else:
+                        ret += p.name
                 elif char == '.':
                     if user.session.last_tell_user is None:
                         raise AliasError(_('No previous tell.\n'))

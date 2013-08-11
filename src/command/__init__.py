@@ -17,6 +17,7 @@
 #
 
 __all__ = ['admin_command',
+'alias_command',
 'bug_command', 'channel_command', 'command',
 'date_command', 'examine_command',
 'game_command',
