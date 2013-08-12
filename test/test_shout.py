@@ -25,17 +25,16 @@ class TestShout(Test):
         t3 = self.connect_as_guest()
 
         t.write('set shout 1\n')
-        t.read_until('fics%', 2)
+        self.expect('now hear shouts', t)
         t2.write('set shout 1\n')
-        t2.read_until('fics%', 2)
+        self.expect('now hear shouts', t2)
         t3.write('set shout 0\n')
-        t3.read_until('fics%', 2)
+        self.expect('not hear shouts', t3)
 
         t.write('shout Test shout; please ignore\n')
-        self.expect("admin(*) shouts: Test shout; please ignore", t)
-        self.expect("admin(*) shouts: Test shout; please ignore", t2)
+        self.expect("fics% admin(*) shouts: Test shout; please ignore\r\n(shouted to", t)
+        self.expect("fics% \r\nadmin(*) shouts: Test shout; please ignore\r\nfics% ", t2)
         self.expect_not("admin(*) shouts:", t3)
-        self.expect("(shouted to ", t)
 
         t.write('t ! this is another way to shout\n')
         self.expect("admin(*) shouts: this is another way to shout", t)
@@ -71,17 +70,16 @@ class TestCshout(Test):
         t3 = self.connect_as_guest()
 
         t.write('set cshout 1\n')
-        t.read_until('fics%', 2)
+        self.expect('now hear cshouts', t)
         t2.write('set cshout 1\n')
-        t2.read_until('fics%', 2)
+        self.expect('now hear cshouts', t2)
         t3.write('set cshout 0\n')
-        t3.read_until('fics%', 2)
+        self.expect('not hear cshouts', t3)
 
         t.write('cshout Test cshout; please ignore\n')
-        self.expect("admin(*) c-shouts: Test cshout; please ignore", t)
-        self.expect("admin(*) c-shouts: Test cshout; please ignore", t2)
+        self.expect("fics% admin(*) c-shouts: Test cshout; please ignore\r\n(c-shouted to", t)
+        self.expect("fics% \r\nadmin(*) c-shouts: Test cshout; please ignore\r\nfics% ", t2)
         self.expect_not("admin(*) c-shouts:", t3)
-        self.expect("(c-shouted to ", t)
 
         t.write('t ^ this is another way to c-shout\n')
         self.expect("admin(*) c-shouts: this is another way to c-shout", t)
@@ -119,9 +117,8 @@ class TestIt(Test):
         self.expect('Only registered players', t2)
 
         t.write('it is testing; please ignore\n')
-        self.expect('--> admin(*) is testing; please ignore\r\n', t)
-        self.expect('--> admin(*) is testing; please ignore\r\n', t2)
-        self.expect('(it-shouted to ', t)
+        self.expect('fics% --> admin(*) is testing; please ignore\r\n(it-shouted', t)
+        self.expect('fics% \r\n--> admin(*) is testing; please ignore\r\n', t2)
 
         t2.write('set shout 0\n')
         self.expect('You will not hear', t2)

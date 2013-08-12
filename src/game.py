@@ -728,20 +728,22 @@ class PlayedGame(Game):
             moved_side = opp(self.variant.get_turn())
             if self.clock.is_ticking:
                 if conn.user.has_timeseal():
-                    if conn.session.move_sent_timestamp is None:
-                        conn.write('timeseal error: your timeseal did not reply to the server ping\n')
-                        print('client of %s failed to reply to timeseal ping' % conn.user.name)
-                        conn.loseConnection('timeseal error')
-                        return
-                    elapsed_ms = (conn.session.timeseal_last_timestamp -
-                        conn.session.move_sent_timestamp)
-                    time = self.clock.got_move(moved_side,
-                        self.variant.pos.ply, elapsed_ms / 1000.0)
+                    elapsed_ms = conn.session.get_timeseal_move_time()
+                    elapsed = elapsed_ms / 1000.0
+                else:
+                    # no timeseal; use the wall-clock timer
+                    elapsed = None
+                time = self.clock.got_move(moved_side,
+                    self.variant.pos.ply, elapsed, self.minmovetime)
+                if conn.user.has_timeseal():
                     mv.lag = int(round(1000.0 * self.clock.real_elapsed -
                         elapsed_ms))
-                else:
-                    time = self.clock.got_move(moved_side,
-                        self.variant.pos.ply)
+                    if self.variant.name == 'bughouse':
+                        # add lag compensation time to crossopp's clock
+                        lag_secs = self.clock.real_elapsed - elapsed
+                        print('adding %f secs to the clock of %s' %
+                            (lag_secs, self.bug_link.get_side_user(moved_side)))
+                        self.bug_link.clock.moretime(moved_side, lag_secs)
             if self.get_user_to_move().vars['autoflag']:
                 self.clock.check_flag(self, moved_side)
             if self.is_active:

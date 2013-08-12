@@ -117,8 +117,10 @@ class BaseUser(object):
     def translate(self, s, args={}):
         return lang.langs[self.vars['lang']].gettext(s) % args
 
-    def write_prompt(self):
+    def write_prompt(self, s=None):
         assert(self.is_online)
+        if s:
+            self.session.conn.write(s)
         # XXX maybe we shouldn't check this for every line,
         # but instead prevent changing the prompt value when
         # defprompt is set

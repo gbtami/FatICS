@@ -21,7 +21,7 @@ import time
 
 import time_format
 
-from game_constants import *
+from game_constants import WHITE, BLACK
 
 clock_names = {}
 
@@ -61,7 +61,7 @@ class Clock(object):
         else:
             self._black_time += secs
 
-    def got_move(self, side, ply, elapsed=None):
+    def got_move(self, side, ply, elapsed, minmovetime):
         """ Stop the clock, and record the time remaining for the player
         whose clock was ticking.  Returns the time taken for the move.
         If elapsed is supplied, it is used as the time taken instead
@@ -74,6 +74,9 @@ class Clock(object):
         if elapsed is None:
             # no timeseal, so use our own timer
             elapsed = self.real_elapsed
+
+        if minmovetime:
+            elapsed = max(elapsed, 0.1)
 
         if side == WHITE:
             self._white_time -= elapsed
@@ -130,8 +133,9 @@ class BronsteinClock(Clock):
         super(BronsteinClock, self).__init__(g, white_time, black_time)
         self.last_elapsed = None
 
-    def got_move(self, side, ply, elapsed=None):
-        elapsed = super(BronsteinClock, self).got_move(side, ply, elapsed)
+    def got_move(self, side, ply, elapsed, minmovetime):
+        elapsed = super(BronsteinClock, self).got_move(side, ply, elapsed,
+            minmovetime)
         self.last_elapsed = elapsed
         return elapsed
 
@@ -150,8 +154,9 @@ class HourglassClock(Clock):
         super(HourglassClock, self).__init__(g, white_time, black_time)
         assert(not g.inc)
 
-    def got_move(self, side, ply, elapsed=None):
-        elapsed = super(HourglassClock, self).got_move(side, ply, elapsed)
+    def got_move(self, side, ply, elapsed, minmovetime):
+        elapsed = super(HourglassClock, self).got_move(side, ply, elapsed,
+            minmovetime)
 
         # add the time to the opp of the player who moved
         if side == WHITE:
@@ -171,8 +176,9 @@ class OvertimeClock(Clock):
         self.overtime_move_num = g.overtime_move_num
         self.overtime_bonus = 60.0 * g.overtime_bonus
 
-    def got_move(self, side, ply, elapsed=None):
-        elapsed = super(OvertimeClock, self).got_move(side, ply, elapsed)
+    def got_move(self, side, ply, elapsed, minmovetime):
+        elapsed = super(OvertimeClock, self).got_move(side, ply, elapsed,
+            minmovetime)
 
         # check whether the time control has been reached
         if side == WHITE:
@@ -198,7 +204,7 @@ class UntimedClock(Clock):
         self._white_time = 0
         self._black_time = 0
 
-    def got_move(self, side, ply, elapsed=None):
+    def got_move(self, side, ply, elapsed, minmovetime):
         pass
 
     def as_str(self):

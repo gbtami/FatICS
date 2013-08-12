@@ -187,4 +187,16 @@ class Session(object):
         if for_move:
             self.move_sent_timestamp = t
 
+
+    def get_timeseal_move_time(self):
+        if self.move_sent_timestamp is None:
+            self.conn.write('timeseal error: your timeseal did not reply to the server ping\n')
+            print('client of %s failed to reply to timeseal ping for move' % self.conn.user.name)
+            self.conn.loseConnection('timeseal error')
+            return
+        elapsed_ms = (self.timeseal_last_timestamp -
+            self.move_sent_timestamp)
+        return elapsed_ms
+
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

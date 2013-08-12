@@ -246,7 +246,7 @@ class NocolorSymbol(Symbol):
         return (chal.side not in [WHITE, BLACK]) if chal else None
 
 @Token(['slow'])
-class StandardSymbol(Symbol):
+class SlowSymbol(Symbol):
     lbp = 0
     def nud(self):
         return chal.speed_name == 'slow' if chal else None
