@@ -84,7 +84,6 @@ class Connection(basic.LineReceiver):
 
     def lineReceived(self, line):
         #print '((%s,%s))\n' % (self.state, repr(line))
-        assert(not self.transport.paused)
 
         if self.session.use_timeseal:
             (t, dline) = timeseal.decode_timeseal(line)
@@ -181,17 +180,29 @@ class Connection(basic.LineReceiver):
             passwd = line.strip()
             if len(passwd) == 0:
                 self.login()
-            elif self.claimed_user.check_passwd(passwd):
-                self.prompt()
             else:
-                print('wrong password from %s for user %s' % (self.ip,
-                    self.claimed_user.name))
-                self.write('\n**** Invalid password! ****\n\n')
+                d = self.claimed_user.check_passwd(passwd)
                 self.pauseProducing()
-                def resume():
-                    self.login()
-                    self.resumeProducing()
-                reactor.callLater(3, resume)
+                def gotValue(ret):
+                    if ret:
+                        # password was correct
+                        self.prompt()
+                        self.resumeProducing()
+                    else:
+                        print('wrong password from %s for user %s' % (self.ip,
+                            self.claimed_user.name))
+                        self.write('\n**** Invalid password! ****\n\n')
+                        def resume():
+                            self.login()
+                            self.resumeProducing()
+                        reactor.callLater(3, resume)
+                d.addCallback(gotValue)
+                def err(e):
+                    e.printTraceback()
+                    print('error: %s' % e)
+                    assert(False)
+                    self.loseConnection('error')
+                d.addErrback(err)
 
     def prompt(self):
         """ Enter the prompt state, running commands from the client. """
@@ -260,7 +271,7 @@ class Connection(basic.LineReceiver):
 
     def connectionLost(self, reason):
         basic.LineReceiver.connectionLost(self, reason)
-        if self.user: # and self.user.is_online:
+        if self.user:
             assert(self.user.is_online)
             if self.logged_in_again:
                 self.logged_in_again = False

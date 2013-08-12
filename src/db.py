@@ -192,10 +192,9 @@ if 1:
         return user_id
 
     def user_set_passwd(uid, passwd):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE user SET user_passwd=%s
+        d = adb.runQuery("""UPDATE user SET user_passwd=%s
             WHERE user_id=%s""", (passwd, uid))
-        cursor.close()
+        return d
 
     def user_set_admin_level(uid, level):
         cursor = db.cursor()

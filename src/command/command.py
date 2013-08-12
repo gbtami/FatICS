@@ -20,6 +20,8 @@ import admin
 import channel
 import global_
 
+from twisted.internet import defer
+
 from config import config
 
 # parameter format (taken from Lasker)
@@ -91,15 +93,17 @@ class Limits(Command):
 
 @ics_command('password', 'WW')
 class Password(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.is_guest:
             conn.write(_("Setting a password is only for registered players.\n"))
         else:
             [oldpass, newpass] = args
-            if not conn.user.check_passwd(oldpass):
+            passed = yield conn.user.check_passwd(oldpass)
+            if not passed:
                 conn.write(_("Incorrect password; password not changed!\n"))
             else:
-                conn.user.set_passwd(newpass)
+                yield conn.user.set_passwd(newpass)
                 conn.write(_("Password changed to %s.\n") % ('*' * len(newpass)))
 
 @ics_command('quit', '', admin.Level.user)

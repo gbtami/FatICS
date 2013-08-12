@@ -35,7 +35,7 @@ import server
 import db
 
 from twisted.python.log import err
-from twisted.internet import defer
+from twisted.internet import reactor, defer, threads
 
 from config import config
 
@@ -483,20 +483,28 @@ class RegUser(BaseUser):
     def get_log(self):
         return db.user_get_log(self.name)
 
-    def set_passwd(self, passwd):
-        self.passwd_hash = bcrypt.hashpw(passwd, bcrypt.gensalt())
-        db.user_set_passwd(self.id, self.passwd_hash)
-
     def set_admin_level(self, level):
         BaseUser.set_admin_level(self, level)
         db.user_set_admin_level(self.id, level)
 
+    @defer.inlineCallbacks
+    def set_passwd(self, passwd):
+        self.passwd_hash = yield bcrypt.hashpw(passwd, bcrypt.gensalt())
+        yield db.user_set_passwd(self.id, self.passwd_hash)
+
+    def _check_passwd_thread(self, passwd):
+        bhash = bcrypt.hashpw(passwd, self.passwd_hash)
+        return (bhash == self.passwd_hash)
+
     # check if an unencrypted password is correct
+    @defer.inlineCallbacks
     def check_passwd(self, passwd):
         # don't perform expensive computation on arbitrarily long data
         if not is_legal_passwd(passwd):
-            return False
-        return bcrypt.hashpw(passwd, self.passwd_hash) == self.passwd_hash
+            defer.returnValue(False)
+        else:
+            ret = yield threads.deferToThread(self._check_passwd_thread, passwd)
+        defer.returnValue(ret)
 
     def remove(self):
         return db.user_delete(self.id)
