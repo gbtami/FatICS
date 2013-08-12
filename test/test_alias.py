@@ -113,6 +113,12 @@ class TestUserAlias(Test):
         t.write('bar\n')
         self.expect('error expanding aliases', t)
 
+        # $-n
+        t.write("alias ' tell $m [ $-3 ] $m\n")
+        self.expect('Alias "\'" set.', t)
+        t.write("'foo bar baz qux\n")
+        self.expect('tells you: [ foo bar baz ] Guest', t)
+
         t.write('unalias nosuchvar\n')
         self.expect('You have no alias "nosuchvar".', t)
 

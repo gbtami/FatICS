@@ -436,5 +436,3 @@ class TestMinmovetime(Test):
         self.close(t2)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
-
-# vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

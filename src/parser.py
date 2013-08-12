@@ -84,7 +84,7 @@ def _do_parse(s, conn):
 
     if expand_aliases:
         try:
-            s = alias.alias.expand(s, alias.alias.system,
+            s = alias.expand(s, alias.system,
                 conn.user.aliases, conn.user)
         except alias.AliasError as e:
             if e.reason:
