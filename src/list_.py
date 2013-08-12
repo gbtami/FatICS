@@ -94,7 +94,7 @@ class TitleList(SystemUserList):
                 u.add_title(self.id)
             except db.DuplicateKeyError:
                 raise ListError(_('%(uname)s is already on the %(lname)s list.\n') %
-                    {'uname': u.name, 'lname': self.name })
+                    {'uname': u.name, 'lname': self.name})
             self._notify_added(conn, u)
 
     def sub(self, item, conn):
@@ -107,7 +107,7 @@ class TitleList(SystemUserList):
                 u.remove_title(self.id)
             except db.DeleteError:
                 raise ListError(_('%(uname)s is not on the %(lname)s list.\n') %
-                    {'uname': u.name, 'lname': self.name })
+                    {'uname': u.name, 'lname': self.name})
             self._notify_removed(conn, u)
 
     def _get_names(self):

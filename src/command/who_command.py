@@ -180,7 +180,8 @@ class Who(Command):
                 count = count + 1
             conn.write('\n')
 
-            conn.write(ngettext('%d player displayed.\n\n', '%d players displayed.\n\n', count) % count)
+            conn.write(ngettext('%d player displayed.\n\n',
+                '%d players displayed.\n\n', count) % count)
         else:
             conn.write('TODO: unsupposted format\n')
 

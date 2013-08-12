@@ -198,7 +198,7 @@ class Channel(object):
                 owner.write(_("You cannot kick out an admin.\n"))
                 return
         else:
-            if not admin.checker.check_user_operation(owner, u):
+            if not admin.check_user_operation(owner, u):
                 owner.write(A_('You need a higher adminlevel to do that.\n'))
                 return
             if not u.is_guest and db.channel_is_owner(self.id, u.id):

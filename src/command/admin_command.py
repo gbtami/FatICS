@@ -107,9 +107,9 @@ class Asetadmin(Command):
             if u == adminuser:
                 conn.write(A_("You can't change your own adminlevel.\n"))
                 return
-            if not admin.checker.check_user_operation(adminuser, u):
+            if not admin.check_user_operation(adminuser, u):
                 conn.write(A_('You can only set the adminlevel for players below your adminlevel.\n'))
-            elif not admin.checker.check_level(adminuser.admin_level, level):
+            elif not admin.check_level(adminuser.admin_level, level):
                 conn.write('''You can't promote someone to or above your adminlevel.\n''')
             else:
                 u.set_admin_level(level)
@@ -163,7 +163,7 @@ class Asetpasswd(Command):
         if u:
             if u.is_guest:
                 conn.write('You cannot set the password of an unregistered player!\n')
-            elif not admin.checker.check_user_operation(adminuser, u):
+            elif not admin.check_user_operation(adminuser, u):
                 conn.write('You can only set the password of players below your adminlevel.\n')
             elif not user.is_legal_passwd(passwd):
                 conn.write('"%s" is not a valid password.\n' % passwd)
@@ -209,7 +209,7 @@ class Asetemail(Command):
         adminuser = conn.user
         u = yield user.find_exact_for_user(args[0], conn)
         if u:
-            if not admin.checker.check_user_operation(adminuser, u):
+            if not admin.check_user_operation(adminuser, u):
                 conn.write("You need a higher adminlevel to change the email address of %s.\n" % u.name)
                 return
             if u.is_guest:
@@ -241,7 +241,7 @@ class Asetrealname(Command):
         adminuser = conn.user
         u = yield user.find_exact_for_user(args[0], conn)
         if u:
-            if not admin.checker.check_user_operation(adminuser, u):
+            if not admin.check_user_operation(adminuser, u):
                 conn.write("You need a higher adminlevel to change the real name of %s.\n" % u.name)
                 return
             if u.is_guest:
@@ -267,7 +267,7 @@ class Nuke(Command):
     def run(self, args, conn):
         u = global_.online.find_exact_for_user(args[0], conn)
         if u:
-            if not admin.checker.check_user_operation(conn.user, u):
+            if not admin.check_user_operation(conn.user, u):
                 conn.write("You need a higher adminlevel to nuke %s!\n" % u.name)
             else:
                 u.write_('\n\n**** You have been kicked out by %s! ****\n\n', (conn.user.name,))
@@ -282,7 +282,7 @@ class Pose(Command):
         adminuser = conn.user
         u2 = global_.online.find_exact_for_user(args[0], conn)
         if u2:
-            if not admin.checker.check_user_operation(adminuser, u2):
+            if not admin.check_user_operation(adminuser, u2):
                 conn.write(A_('You can only pose as players below your adminlevel.\n'))
             else:
                 conn.write(A_('Command issued as %s.\n') % u2.name)
@@ -300,7 +300,7 @@ class Asetv(Command):
         if u == adminuser:
             conn.write(A_("You can't asetv yourself.\n"))
             return
-        if not admin.checker.check_user_operation(adminuser, u):
+        if not admin.check_user_operation(adminuser, u):
             conn.write(A_('You can only asetv players below your adminlevel.\n'))
             return
         try:
@@ -323,7 +323,7 @@ class Remplayer(Command):
         adminuser = conn.user
         u = yield d
         if u:
-            if not admin.checker.check_user_operation(adminuser, u):
+            if not admin.check_user_operation(adminuser, u):
                 conn.write(A_('''You can't remove an admin with a level higher than or equal to yourself.\n'''))
             elif u.is_online:
                 conn.write(A_("%s is logged in.\n") % u.name)

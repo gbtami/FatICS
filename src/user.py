@@ -255,7 +255,7 @@ class BaseUser(object):
         entry = {'game_id': game_id, 'num': num, 'result_char': result_char,
             'user_rating': user_rating, 'color_char': color_char,
             'opp_name': opp_name, 'opp_rating': opp_rating, 'eco': eco,
-            'flags' : flags, 'time': initial_time, 'inc' : inc,
+            'flags': flags, 'time': initial_time, 'inc': inc,
             'result_reason': result_reason, 'when_ended': when_ended,
             'movetext': movetext, 'idn': idn
         }

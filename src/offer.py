@@ -92,7 +92,7 @@ class Offer(object):
             self.a.write(_("Withdrawing your %(offer)s to %(pname)s.\n") %
                 {'offer': self.name, 'pname': self.b.name})
             self.b.write_("\n%(pname)s withdraws the %(offer)s.\n",
-                {'pname' : self.a.name, 'offer': self.name})
+                {'pname': self.a.name, 'offer': self.name})
             if self.game:
                 for p in self.game.observers:
                     p.write_("\nGame %(num)d: %(pname)s withdraws the %(offer)s.\n",
