@@ -32,6 +32,8 @@ of formulas, which I tried to emulate.
 """
 import re
 
+from game_constants import WHITE, BLACK
+
 all_tokens = {}
 
 class FormulaError(Exception):

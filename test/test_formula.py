@@ -129,4 +129,79 @@ class TestFormula(Test):
         t.write('set formula inc=0 && time=3 && !private && rating>1500 && 1850>rating\n')
         self.close(t)'''
 
+    @with_player('TestAbuser', ['abuser'])
+    def test_formula_abuser(self):
+        t = self.connect_as_guest()
+        t2 = self.connect_as('TestAbuser')
+
+        t.write('set formula abuser || !abuser\n')
+        self.expect('formula set', t)
+
+        t2.write('seek 1 0 u\n')
+        self.expect('Your seek has been posted', t2)
+        self.expect('TestAbuser (----) seeking', t)
+        t2.write('uns\n')
+        self.expect('Your seeks have been removed', t2)
+
+        t.write('set formula !abuser\n')
+        self.expect('formula set', t)
+        t2.write('seek 1 0 u\n')
+        self.expect('Your seek has been posted', t2)
+        self.expect_not('TestAbuser (----) seeking', t)
+
+        self.close(t)
+        self.close(t2)
+
+    def test_formula_color(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        # white
+        t.write('set formula white\n')
+        self.expect('formula set', t)
+        t2.write('match guestabcd 1 0\n')
+        self.expect('Ignoring (formula)', t)
+        self.expect('Match request does not meet formula', t2)
+        t2.write('match guestabcd 1 0 black\n')
+        self.expect('Ignoring (formula)', t)
+        self.expect('Match request does not meet formula', t2)
+        t2.write('match guestabcd 1 0 white\n')
+        self.expect('Challenge:', t)
+        self.expect('Issuing:', t2)
+        t2.write('wi\n')
+        self.expect('withdraws', t)
+
+        # black
+        t.write('set formula black\n')
+        self.expect('formula set', t)
+        t2.write('match guestabcd 1 0\n')
+        self.expect('Ignoring (formula)', t)
+        self.expect('Match request does not meet formula', t2)
+        t2.write('match guestabcd 1 0 white\n')
+        self.expect('Ignoring (formula)', t)
+        self.expect('Match request does not meet formula', t2)
+        t2.write('match guestabcd 1 0 black\n')
+        self.expect('Challenge:', t)
+        self.expect('Issuing:', t2)
+        t2.write('wi\n')
+        self.expect('withdraws', t)
+
+        # nocolor
+        t.write('set formula nocolor\n')
+        self.expect('formula set', t)
+        t2.write('match guestabcd 1 0 white\n')
+        self.expect('Ignoring (formula)', t)
+        self.expect('Match request does not meet formula', t2)
+        t2.write('match guestabcd 1 0 black\n')
+        self.expect('Ignoring (formula)', t)
+        self.expect('Match request does not meet formula', t2)
+        t2.write('match guestabcd 1 0\n')
+        self.expect('Challenge:', t)
+        self.expect('Issuing:', t2)
+        t2.write('wi\n')
+        self.expect('withdraws', t)
+
+        self.close(t)
+        self.close(t2)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
