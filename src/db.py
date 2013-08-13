@@ -181,6 +181,18 @@ if 1:
         cursor.close()
         return rows
 
+    def user_get_by_prefix(prefix, limit=8):
+        d = adb.runQuery("""SELECT user_id,user_name,user_passwd,
+                user_first_login,user_last_logout,user_admin_level,
+                user_email,user_real_name,
+                user_banned,user_muzzled,user_cmuzzled,user_muted,
+                user_notebanned,user_ratedbanned,user_playbanned,
+                user_total_time_online
+            FROM user WHERE user_name LIKE %s LIMIT %s""",
+                (prefix + '%', limit))
+        return d
+
+
     def user_add(name, email, passwd, real_name, admin_level):
         cursor = db.cursor()
         cursor = query(cursor, """INSERT INTO user

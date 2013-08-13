@@ -28,6 +28,8 @@ import history
 import time_format
 import db
 
+from twisted.internet import defer
+
 from .command import ics_command, Command
 from parser import BadCommandError
 
@@ -46,9 +48,10 @@ class LogMixin(object):
 
 @ics_command('finger', 'ooo')
 class Finger(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u = user.find_by_prefix_for_user(args[0], conn, min_len=2)
+            u = yield user.find_by_prefix_for_user_async(args[0], conn)
             flags = args[1:]
         else:
             u = conn.user
