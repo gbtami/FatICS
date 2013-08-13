@@ -197,12 +197,12 @@ class Game(object):
                     u.session.ivars['compressmove'] and
                     self.variant.pos.get_last_move() is not None and
                     not isolated):
-                u.write_nowrap(self.variant.to_deltaboard(u))
+                u.write_nowrap(self.variant.to_deltaboard(u), prompt=True)
             else:
-                u.write_nowrap(self.variant.to_style12(u))
+                u.write_nowrap(self.variant.to_style12(u), prompt=True)
         else:
             # style 1, the default
-            u.write_nowrap(self.variant.to_style1(u))
+            u.write_nowrap(self.variant.to_style1(u), prompt=True)
 
     def __eq__(self, other):
         return self.number == other.number
