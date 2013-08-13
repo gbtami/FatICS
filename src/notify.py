@@ -80,8 +80,7 @@ def notify_pin(user, arrived):
         else:
             pin_ivar_str = '\n<wd> %s\n' % user.name
         for u in global_.online.pin_ivar:
-            u.write_nowrap(pin_ivar_str)
-            u.write_prompt()
+            u.write_nowrap(pin_ivar_str, prompt=True)
 
     if global_.online.pin_var:
         if arrived:
@@ -95,8 +94,9 @@ def notify_pin(user, arrived):
             pin_var_str = '\n[%s has disconnected.]\n' % user.name
         for u in global_.online.pin_var:
             if u.is_admin() and arrived:
-                u.session.conn.write(admin_pin_var_str)
+                u.write_nowrap(admin_pin_var_str, prompt=True)
             else:
-                u.session.conn.write(pin_var_str)
+                u.write_nowrap(pin_var_str, prompt=True)
+            u.write_prompt()
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

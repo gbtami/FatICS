@@ -330,9 +330,9 @@ class TestPinVar(Test):
         self.expect('You will now hear logins/logouts.', t)
 
         t2 = self.connect_as_guest('GuestTest')
-        self.expect('[GuestTest has connected.]', t)
+        self.expect('[GuestTest has connected.]\r\nfics% ', t)
         self.close(t2)
-        self.expect('[GuestTest has disconnected.]', t)
+        self.expect('[GuestTest has disconnected.]\r\nfics% ', t)
 
         t.write('set pin\n')
         self.expect('You will not hear logins/logouts.', t)
@@ -380,7 +380,7 @@ class TestGinVar(Test):
 
         t = self.connect_as_admin()
         t2.write('resign\n')
-        self.expect('{Game %d (GuestTest vs. GuestTwo) GuestTest resigns} 0-1\r\n' % game_num, t)
+        self.expect('{Game %d (GuestTest vs. GuestTwo) GuestTest resigns} 0-1\r\nfics%% ' % game_num, t)
         self.close(t2)
         self.close(t3)
 

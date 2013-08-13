@@ -551,7 +551,7 @@ class PlayedGame(Game):
 
         # notify users with the gin variable set
         for u in global_.online.gin_var:
-            u.write_nowrap(create_str_2)
+            u.write_nowrap(create_str_2, prompt=True)
 
         # currently we do not send pings at the start of the game
 
