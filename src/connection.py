@@ -292,7 +292,7 @@ class Connection(basic.LineReceiver):
         if s is None:
             s = self.session.next_lines
         lines = s.split('\n', height - 2)
-        if len(lines) ==  height - 1:
+        if len(lines) == height - 1:
             self.session.next_lines = lines.pop()
             s = '\n'.join(lines)
             s = '%s\nType [next] to see next page.\n' % s

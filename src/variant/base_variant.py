@@ -57,7 +57,7 @@ class BaseVariant(object):
         for r in range(0, 8):
             rank = 8 - r if side == WHITE else r + 1
             s.append('    %d  |' % rank)
-            for f in range(0,  8):
+            for f in range(0, 8):
                 file_ = f + 1 if side == WHITE else 8 - f
                 piece_char = self.pos.board[0x10 * (rank - 1) + file_ - 1]
                 if piece_char == '-':

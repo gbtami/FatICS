@@ -98,12 +98,12 @@ class Who(Command):
             param = args[0]
             i = 0
             while i < len(param):
-                if param[i] ==  'o':
+                if param[i] == 'o':
                     users = [u for u in users if u.vars['open']]
                 # r for rated not implemented (it's obsolete)
-                elif param[i] ==  'f':
+                elif param[i] == 'f':
                     users = [u for u in users if not u.session.game]
-                elif param[i] ==  'a':
+                elif param[i] == 'a':
                     users = [u for u in users if u.vars['open'] and not u.session.game]
                 elif param[i] == 'R':
                     users = [u for u in users if not u.is_guest]

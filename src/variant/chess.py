@@ -601,7 +601,7 @@ class Position(object):
             self.ep = mv.new_ep
             self.hash ^= zobrist.ep_hash(self.ep)
 
-        self.history.set_move(self.ply - 1 , mv)
+        self.history.set_move(self.ply - 1, mv)
         #assert(self.hash == self._compute_hash())
         self.history.set_hash(self.ply, self.hash)
 
@@ -734,7 +734,6 @@ class Position(object):
         for (sq, pc) in self:
             #if pc != '-' and piece_is_white(pc) == self.wtm:
             if pc not in ['-', 'K', 'k'] and piece_is_white(pc) == self.wtm:
-                cur_sq = sq
                 if self._any_pc_moves(sq, pc):
                     return True
         return False
@@ -1107,14 +1106,14 @@ class Position(object):
         # own turn.)  My idea is to only check the previous position
         # when the player making the draw offer has the move, to avoid
         # a situation like the following:
-        # 
-        # Player A has the move.  The current position represents a 
+        #
+        # Player A has the move.  The current position represents a
         # threefold repetition, so player A is entitled to claim a draw.
         # Instead, Player A decides to press on, and plays a blunder
         # that loses his queen.  Player A realizes the mistake before
         # the opponent has a chance to move, and claims a draw.
         #
-        # The old fics grants the draw request, unreasonably in my 
+        # The old fics grants the draw request, unreasonably in my
         # opinion.  My change should close the loophole.
         if self.ply > 8 and (side == WHITE) == self.wtm:
             count = 0
@@ -1128,7 +1127,7 @@ class Position(object):
                 i -= 2
 
         return False
-    
+
     def to_xfen(self):
         p = []
         for r in range(7, -1, -1):

@@ -27,6 +27,10 @@ class DeleteError(Exception):
 class UpdateError(Exception):
     pass
 
+# pacify pyflakes
+db = None
+adb = None
+
 if 1:
     def _init():
         global db

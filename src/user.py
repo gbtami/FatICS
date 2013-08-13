@@ -34,8 +34,7 @@ import global_
 import server
 import db
 
-from twisted.python.log import err
-from twisted.internet import reactor, defer, threads
+from twisted.internet import defer, threads
 
 from config import config
 

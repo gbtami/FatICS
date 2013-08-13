@@ -118,7 +118,7 @@ class Abort(Offer):
         self.game = game
         offers = [o for o in game.pending_offers if o.name == self.name]
         if len(offers) > 1:
-            raise RuntimeError('more than one abort request in game %d' \
+            raise RuntimeError('more than one abort request in game %d'
                 % game.number)
         if len(offers) > 0:
             o = offers[0]
@@ -159,7 +159,7 @@ class Adjourn(Offer):
         self.game = game
         offers = [o for o in game.pending_offers if o.name == self.name]
         if len(offers) > 1:
-            raise RuntimeError('more than one adjourn offer in game %d' \
+            raise RuntimeError('more than one adjourn offer in game %d'
                 % game.number)
         if len(offers) > 0:
             o = offers[0]
@@ -200,7 +200,7 @@ class Draw(Offer):
         self.game = game
         offers = [o for o in game.pending_offers if o.name == self.name]
         if len(offers) > 1:
-            raise RuntimeError('more than one draw offer in game %d' \
+            raise RuntimeError('more than one draw offer in game %d'
                 % game.number)
         if len(offers) > 0:
             o = offers[0]

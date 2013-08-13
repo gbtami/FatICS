@@ -44,7 +44,6 @@ __builtin__.__dict__['A_'] = lambda s: s
 from config import config
 import telnet
 import connection
-import var
 import timer
 
 reactor.shuttingDown = False

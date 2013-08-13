@@ -36,6 +36,10 @@ from game_constants import WHITE, BLACK
 
 all_tokens = {}
 
+
+# pacify pyflakes
+token = nextt = chal = f_num = 0
+
 class FormulaError(Exception):
     def __init__(self, msg):
         super(FormulaError, self).__init__()

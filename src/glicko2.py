@@ -162,7 +162,7 @@ class Player:
         _E(int) -> float
 
         """
-        return 1 / (1 + math.exp(-1 * self._g(p2RD) * \
+        return 1 / (1 + math.exp(-1 * self._g(p2RD) *
                                  (self.rating - p2rating)))
 
     def _g(self, RD):

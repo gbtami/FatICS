@@ -103,7 +103,7 @@ class Bugwho(Command):
             count = 0
             for g in global_.games.values():
                 if g.variant.name == 'bughouse':
-                    # XXX 
+                    # XXX
                     conn.write('TODO\n')
                     count += 1
             conn.write(ngettext(' %d game displayed.\n',

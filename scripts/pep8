@@ -1,0 +1,1 @@
+autopep8 --diff --select E201,E202,E203,E211,E221,E222,E223,E241,E502,W291,W293,W391 src/*.tac src/*.py src/command/*.py src/variant/*.py

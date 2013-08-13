@@ -45,7 +45,7 @@ class Clock(object):
         if secs < 0:
             secs = 0
         td = datetime.timedelta(seconds=secs)
-        oldstr = str(td)
+        #oldstr = str(td)
         # round to the nearest millisecond
         ret = time_format.hms(secs)
         return ret

@@ -44,7 +44,7 @@ except NameError:
     seeks = {}
 
     # commands
-    commands  = trie.Trie()
+    commands = trie.Trie()
     admin_commands = trie.Trie()
 
     # player variables and ivariables
