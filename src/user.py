@@ -33,6 +33,7 @@ import lang
 import global_
 import server
 import db
+import find_user
 
 from twisted.internet import defer, threads
 
@@ -741,26 +742,11 @@ class GuestUser(BaseUser):
     def get_rating(self, speed_variant):
         return rating.NoRating(is_guest=True)
 
-class AmbiguousException(Exception):
-    def __init__(self, names):
-        self.names = names
-
-def _check_name(name, min_len):
-    """ Check whether a string is a valid user name. """
-    # XXX "try again" should be specific to logging in
-    if len(name) < min_len:
-        raise UsernameException(_('Names should be at least %d characters long.  Try again.\n') % min_len)
-    elif len(name) > config.max_login_name_len:
-        raise UsernameException(_('Names should be at most %d characters long.  Try again.\n') % config.max_login_name_len)
-    elif not username_re.match(name):
-        raise UsernameException(_('Names should only consist of lower and upper case letters.  Try again.\n'))
-
-username_re = re.compile('^[a-zA-Z]+$')
 
 def find_by_name_exact(name,
         min_len=config.min_login_name_len, online_only=False):
     """Find a user, accepting only exact matches. """
-    _check_name(name, min_len)
+    find_user.check_name(name, min_len)
     u = global_.online.find_exact(name)
     if u:
         assert(u.is_online)
@@ -769,6 +755,7 @@ def find_by_name_exact(name,
         if dbu:
             u = RegUser(dbu)
     return u
+
 
 def find_by_name_exact_for_user(name, conn, min_len=config.min_login_name_len,
         online_only=False):
@@ -785,20 +772,6 @@ def find_by_name_exact_for_user(name, conn, min_len=config.min_login_name_len,
     return u
 
 
-@defer.inlineCallbacks
-def find_exact(name):
-    """ async version of find_by_name_exact() """
-    _check_name(name, config.min_login_name_len)
-    u = global_.online.find_exact(name)
-    if not u:
-        dbu = yield db.user_get_async(name)
-        if dbu:
-            u = RegUser(dbu)
-        else:
-            u = None
-    defer.returnValue(u)
-
-
 def _find_by_prefix(name, online_only=False):
     """ Find a user but allow the name to be abbreviated if
     it is unambiguous; if the name is not an exact match, prefer
@@ -809,7 +782,7 @@ def _find_by_prefix(name, online_only=False):
     if len(name) >= config.min_login_name_len:
         u = find_by_name_exact(name, min_len=2, online_only=online_only)
     else:
-        _check_name(name, 1)
+        find_user.check_name(name, 1)
     if not u:
         # failing that, try a prefix match
         ulist = global_.online.find_part(name)
@@ -821,7 +794,7 @@ def _find_by_prefix(name, online_only=False):
             # when there are multiple matching users
             # online, don't bother searching for offline
             # users who also match
-            raise AmbiguousException([u.name for u in ulist])
+            raise find_user.AmbiguousException([u.name for u in ulist])
 
     if u and online_only:
         assert(u.is_online)
@@ -830,40 +803,9 @@ def _find_by_prefix(name, online_only=False):
         if len(ulist) == 1:
             u = RegUser(ulist[0])
         elif len(ulist) > 1:
-            raise AmbiguousException([u['user_name'] for u in ulist])
+            raise find_user.AmbiguousException([u['user_name'] for u in ulist])
     return u
 
-
-@defer.inlineCallbacks
-def _find_by_prefix_async(name):
-    """ Find a user but allow the name to be abbreviated if
-    it is unambiguous; prefer online users to offline. """
-    _check_name(name, 2)
-
-    u = None
-
-    # first try an exact match
-    if len(name) >= config.min_login_name_len:
-        u = yield find_exact(name)
-    if not u:
-        # failing that, try a prefix match
-        ulist = global_.online.find_part(name)
-        if len(ulist) == 1:
-            u = ulist[0]
-        elif len(ulist) > 1:
-            # When there are multiple matching users
-            # online, don't bother searching for offline
-            # users who also match. We have already confirmed
-            # that there are no exact matches.
-            raise AmbiguousException([u.name for u in ulist])
-
-    if not u:
-        ulist = yield db.user_get_by_prefix(name)
-        if len(ulist) == 1:
-            u = RegUser(ulist[0])
-        elif len(ulist) > 1:
-            raise AmbiguousException([u['user_name'] for u in ulist])
-    defer.returnValue(u)
 
 def find_by_prefix_for_user(name, conn, min_len=0, online_only=False):
     """ Like _find_by_prefix(), but writes a friendly error message on
@@ -895,58 +837,12 @@ def find_by_prefix_for_user(name, conn, min_len=0, online_only=False):
                 conn.write(_('There is no player matching the name "%s".\n') % name)
     except UsernameException:
         conn.write(_('"%s" is not a valid handle.\n') % name)
-    except AmbiguousException as e:
+    except find_user.AmbiguousException as e:
         conn.write(_("""Ambiguous name "%s". Matches: %s\n""") %
             (name, ' '.join(e.names)))
     return u
 
 
-@defer.inlineCallbacks
-def find_by_prefix_for_user_async(name, conn):
-    """ async version of find_by_prefix_for_user() """
-
-    try:
-        # Original FICS interprets a name ending with ! as an exact name
-        # that is not an abbreviation.  I don't see this documented anywhere
-        # but Babas uses this for private tells.
-        if name.endswith('!'):
-            name = name[:-1]
-            if not name:
-                raise UsernameException(name)
-            u = yield find_exact_for_user(name, conn)
-            defer.returnValue(u)
-
-        if len(name) < 2:
-            conn.write(_('You need to specify at least %d characters of the name.\n') % 2)
-            defer.returnValue(None)
-        u = yield _find_by_prefix_async(name)
-        #if not u:
-        #    conn.write(_('No player named "%s" is online.\n') % name)
-        if not u:
-            conn.write(_('There is no player matching the name "%s".\n')
-                % name)
-        defer.returnValue(u)
-
-    except UsernameException as e:
-        conn.write(_('"%s" is not a valid handle: %s\n') % (name, e.reason))
-        #conn.write(_('"%s" is not a valid handle.\n') % name)
-    except AmbiguousException as e:
-        conn.write(_("""Ambiguous name "%s". Matches: %s\n""") %
-            (name, ' '.join(e.names)))
-    defer.returnValue(None)
-
-
-@defer.inlineCallbacks
-def find_exact_for_user(name, conn):
-    """ Like find_exact(), but writes an error message on failure. """
-    try:
-        u = yield find_exact(name)
-    except UsernameException:
-        conn.write(_('"%s" is not a valid handle.\n') % name)
-        defer.returnValue(None)
-    if not u:
-        conn.write(_('There is no player matching the name "%s".\n') % name)
-    defer.returnValue(u)
 
 # test whether a string meets the requirements for a password
 def is_legal_passwd(passwd):

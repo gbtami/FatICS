@@ -35,6 +35,7 @@ def check_server():
     for r in remove_list:
         t.write('remplayer %s\n' % r)
     t.write('aclearhist admin\n')
+    t.write('quit\n')
     t.close()
 
 check_server()

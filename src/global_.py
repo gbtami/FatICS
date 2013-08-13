@@ -19,7 +19,7 @@
 
 """ Server-wide global state. """
 
-import online
+import find_user
 import trie
 import list_
 
@@ -38,7 +38,7 @@ except NameError:
     games = {}
 
     # online players
-    online = online.Online()
+    online = find_user.Online()
 
     # seeks
     seeks = {}

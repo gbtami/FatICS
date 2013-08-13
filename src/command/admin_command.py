@@ -29,6 +29,7 @@ import channel
 import db
 import trie
 import var
+import find_user
 
 from reload import reload
 from .command import Command, ics_command
@@ -39,7 +40,7 @@ from config import config
 class Aclearhistory(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
-        u = yield user.find_exact_for_user(args[0], conn)
+        u = yield find_user.exact_for_user(args[0], conn)
         if u:
             # disallow clearing history for higher adminlevels?
             u.clear_history()
@@ -52,7 +53,7 @@ class Addplayer(Command):
     def run(self, args, conn):
         [name, email, real_name] = args
         try:
-            u = yield user.find_exact(name)
+            u = yield find_user.exact(name)
         except user.UsernameException:
             conn.write(_('"%s" is not a valid handle.\n') % name)
             return
@@ -75,8 +76,10 @@ class Announce(Command):
         for u in global_.online:
             if u != conn.user:
                 count = count + 1
-                u.write("\n\n    **ANNOUNCEMENT** from %s: %s\n\n" % (conn.user.name, args[0]))
-        conn.write("(%d) **ANNOUNCEMENT** from %s: %s\n\n" % (count, conn.user.name, args[0]))
+                u.write("\n\n    **ANNOUNCEMENT** from %s: %s\n\n" %
+                    (conn.user.name, args[0]))
+        conn.write("(%d) **ANNOUNCEMENT** from %s: %s\n\n" %
+            (count, conn.user.name, args[0]))
 
 @ics_command('annunreg', 'S', admin.Level.admin)
 class Annunreg(Command):
@@ -86,8 +89,10 @@ class Annunreg(Command):
         for u in global_.online:
             if u != conn.user and u.is_guest:
                 count = count + 1
-                u.write("\n\n    **UNREG ANNOUNCEMENT** from %s: %s\n\n" % (conn.user.name, args[0]))
-        conn.write("(%d) **UNREG ANNOUNCEMENT** from %s: %s\n\n" % (count, conn.user.name, args[0]))
+                u.write("\n\n    **UNREG ANNOUNCEMENT** from %s: %s\n\n"
+                    % (conn.user.name, args[0]))
+        conn.write("(%d) **UNREG ANNOUNCEMENT** from %s: %s\n\n"
+            % (count, conn.user.name, args[0]))
 
 @ics_command('areload', '', admin.Level.god)
 class Areload(Command):
@@ -100,7 +105,7 @@ class Asetadmin(Command):
     def run(self, args, conn):
         [name, level] = args
         adminuser = conn.user
-        u = yield user.find_exact_for_user(name, conn)
+        u = yield find_user.exact_for_user(name, conn)
         if u:
             # Note: it's possible to set the admin level
             # of a guest.
@@ -159,7 +164,7 @@ class Asetpasswd(Command):
     def run(self, args, conn):
         (name, passwd) = args
         adminuser = conn.user
-        u = yield user.find_exact_for_user(name, conn)
+        u = yield find_user.exact_for_user(name, conn)
         if u:
             if u.is_guest:
                 conn.write('You cannot set the password of an unregistered player!\n')
@@ -179,7 +184,7 @@ class Asetrating(Command):
     def run(self, args, conn):
         (name, speed_name, variant_name, urating, rd, volatility, win,
             loss, draw) = args
-        u = yield user.find_exact_for_user(name, conn)
+        u = yield find_user.exact_for_user(name, conn)
         if not u:
             return
         if u.is_guest:
@@ -207,7 +212,7 @@ class Asetemail(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         adminuser = conn.user
-        u = yield user.find_exact_for_user(args[0], conn)
+        u = yield find_user.exact_for_user(args[0], conn)
         if u:
             if not admin.check_user_operation(adminuser, u):
                 conn.write("You need a higher adminlevel to change the email address of %s.\n" % u.name)
@@ -239,7 +244,7 @@ class Asetrealname(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         adminuser = conn.user
-        u = yield user.find_exact_for_user(args[0], conn)
+        u = yield find_user.exact_for_user(args[0], conn)
         if u:
             if not admin.check_user_operation(adminuser, u):
                 conn.write("You need a higher adminlevel to change the real name of %s.\n" % u.name)
@@ -276,6 +281,7 @@ class Nuke(Command):
                     db.add_comment(conn.user.id, u.id, 'Nuked.')
                 conn.write('Nuked: %s\n' % u.name)
 
+
 @ics_command('pose', 'wS', admin.Level.admin)
 class Pose(Command):
     def run(self, args, conn):
@@ -294,7 +300,7 @@ class Asetv(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         adminuser = conn.user
-        u = yield user.find_exact_for_user(args[0], conn)
+        u = yield find_user.exact_for_user(args[0], conn)
         if not u:
             return
         if u == adminuser:
@@ -319,7 +325,7 @@ class Asetv(Command):
 class Remplayer(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
-        d = user.find_exact_for_user(args[0], conn)
+        d = find_user.exact_for_user(args[0], conn)
         adminuser = conn.user
         u = yield d
         if u:
@@ -336,7 +342,7 @@ class Addcomment(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         adminuser = conn.user
-        u = yield user.find_exact_for_user(args[0], conn)
+        u = yield find_user.exact_for_user(args[0], conn)
         if u:
             if u.is_guest:
                 conn.write(A_('Unregistered players cannot have comments.\n'))

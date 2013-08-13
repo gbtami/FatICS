@@ -27,6 +27,7 @@ import user
 import history
 import time_format
 import db
+import find_user
 
 from twisted.internet import defer
 
@@ -46,12 +47,13 @@ class LogMixin(object):
             conn.write('%s: %-20s %-6s%s\n' %
                 (when, a['log_who_name'], a['log_which'], ip))
 
+
 @ics_command('finger', 'ooo')
 class Finger(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u = yield user.find_by_prefix_for_user_async(args[0], conn)
+            u = yield find_user.by_prefix_for_user_async(args[0], conn)
             flags = args[1:]
         else:
             u = conn.user
@@ -169,16 +171,19 @@ class Finger(Command):
                 # XXX TODO
                 pass
 
+
 @ics_command('ping', 'o')
 class Ping(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u2 = user.find_by_prefix_for_user(args[0], conn,
+            u2 = yield find_user.by_prefix_for_user_async(args[0], conn,
                 online_only=True)
         else:
             u2 = conn.user
 
         if u2:
+            assert(u2.is_online)
             pt = u2.session.ping_time
             if not u2.has_timeseal():
                 conn.write(_('Ping time not available; %s is not using zipseal.\n') %
@@ -190,6 +195,7 @@ class Ping(Command):
                     (u2.name, len(pt)))
                 avg = 1000.0 * sum(pt) / len(pt)
                 conn.write(_('Average: %.3fms\n') % (avg))
+
 
 @ics_command('history', 'o')
 class History(Command):

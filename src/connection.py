@@ -83,7 +83,7 @@ class Connection(basic.LineReceiver):
         self.write("login: ")
 
     def lineReceived(self, line):
-        #print '((%s,%s))\n' % (self.state, repr(line))
+        #print('((%s,%s))\n' % (self.state, repr(line)))
 
         if self.session.use_timeseal:
             (t, dline) = timeseal.decode_timeseal(line)

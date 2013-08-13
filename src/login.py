@@ -20,6 +20,7 @@ import user
 import filter_
 import global_
 import db
+import find_user
 
 from twisted.internet import defer
 
@@ -35,7 +36,7 @@ def get_user(name, conn):
         conn.write(_('\nLogging you in as "%s"; you may use this name to play unrated games.\n(After logging in, do "help register" for more info on how to register.)\n\nPress return to enter the server as "%s":\n') % (u.name, u.name))
     elif name:
         try:
-            u = yield user.find_exact(name)
+            u = yield find_user.exact(name)
         except user.UsernameException as e:
             conn.write('\n' + e.reason + '\n')
         else:
