@@ -18,6 +18,7 @@
 
 import global_
 
+
 def _find_free_slot():
     """ Find the next available offer number. """
     i = 1
@@ -25,6 +26,7 @@ def _find_free_slot():
         if i not in global_.offers:
             return i
         i += 1
+
 
 class Offer(object):
     """represents an offer from one player to another"""
@@ -109,6 +111,7 @@ class Offer(object):
         """ Player b declines the offer by logging out. """
         self.decline(notify=False)
 
+
 class Abort(Offer):
     def __init__(self, game, user):
         Offer.__init__(self, 'abort request')
@@ -150,6 +153,7 @@ class Abort(Offer):
         Offer.withdraw(self, notify)
         self.game.pending_offers.remove(self)
 
+
 class Adjourn(Offer):
     def __init__(self, game, user):
         Offer.__init__(self, 'adjourn request')
@@ -190,6 +194,7 @@ class Adjourn(Offer):
     def withdraw(self, notify=True):
         Offer.withdraw(self, notify)
         self.game.pending_offers.remove(self)
+
 
 class Draw(Offer):
     def __init__(self, game, user):

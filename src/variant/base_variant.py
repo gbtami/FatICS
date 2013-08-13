@@ -20,9 +20,11 @@ import time_format
 
 from game_constants import *
 
+
 class IllegalMoveError(Exception):
     def __init__(self, reason):
         self.reason = reason
+
 
 class BaseVariant(object):
     """ Methods common to all variants. """

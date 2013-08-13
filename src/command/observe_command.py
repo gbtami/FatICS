@@ -26,6 +26,7 @@ import global_
 
 from game_constants import EXAMINED, PLAYED
 
+
 @ics_command('observe', 'i')
 class Observe(Command):
     def run(self, args, conn):
@@ -41,6 +42,7 @@ class Observe(Command):
             else:
                 assert(conn.user not in g.observers)
                 g.observe(conn.user)
+
 
 @ics_command('follow', 'o')
 class Follow(Command):
@@ -86,6 +88,7 @@ class Follow(Command):
                     g.observe(conn.user)
                     assert(g in conn.user.session.observed)
 
+
 @ics_command('allobservers', 'o')
 class Allobservers(Command):
     def run(self, args, conn):
@@ -108,6 +111,7 @@ class Allobservers(Command):
                 '  %(count)d game displayed (of %(total)d in progress).\n',
                 '  %(count)d games displayed (of %(total)d in progress).\n',
                     count) % {'count': count, 'total': len(global_.games)})
+
 
 @ics_command('pfollow', 'o')
 class Pfollow(Command):
@@ -151,6 +155,7 @@ class Pfollow(Command):
                     conn.user not in g.players):
                     g.bug_link.observe(conn.user)
 
+
 @ics_command('unobserve', 'n')
 class Unobserve(Command):
     def run(self, args, conn):
@@ -169,6 +174,7 @@ class Unobserve(Command):
                 for g in conn.user.session.observed.copy():
                     g.unobserve(conn.user)
                 assert(not conn.user.session.observed)
+
 
 @ics_command('primary', 'n')
 class Primary(Command):
@@ -192,6 +198,7 @@ class Primary(Command):
 
                 else:
                     conn.write('You are not observing game %d.\n' % g.number)
+
 
 @ics_command('games', 'no')
 class Games(Command):

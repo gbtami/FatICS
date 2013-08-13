@@ -22,8 +22,11 @@ import traceback
 
 from twisted.internet import defer
 
+
 class InternalException(Exception):
     pass
+
+
 class BadCommandError(Exception):
     pass
 
@@ -36,6 +39,8 @@ import block_codes
 from command import *
 
 _command_re = re.compile(r'^(\S+)(?:\s+(.*))?$')
+
+
 def _do_parse(s, conn):
     """ Returns a deferred. """
     assert(conn.user.is_online)
@@ -139,6 +144,7 @@ def _do_parse(s, conn):
     else:
         return defer.succeed(ret)
 
+
 def parse(s, conn):
     if not conn.session.ivars['block']:
         d = _do_parse(s, conn)
@@ -155,6 +161,7 @@ def parse(s, conn):
         else:
             d = defer.succeed(block_codes.BLKCMD_ERROR_NOSEQUENCE)
     return d
+
 
 def parse_args(s, param_str):
     args = []

@@ -20,6 +20,8 @@
 from .command import ics_command, Command
 
 MAX_ALIASES = 1024
+
+
 @ics_command('alias', 'oT')
 class Alias(Command):
     def run(self, args, conn):
@@ -62,6 +64,7 @@ class Alias(Command):
             conn.write(_('Alias "%s" changed.\n') % aname)
         else:
             conn.write(_('Alias "%s" set.\n') % aname)
+
 
 @ics_command('unalias', 'w')
 class Unalias(Command):

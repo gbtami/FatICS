@@ -25,6 +25,8 @@ from config import config
 from game_constants import PLAYED
 
 heartbeat_timeout = 5
+
+
 def heartbeat():
     # idle timeout
     if config.idle_timeout:

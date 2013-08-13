@@ -31,6 +31,7 @@ import db
 
 from game_constants import WHITE, BLACK, opp, PLAYED, EXAMINED, file
 
+
 def find_free_slot():
     """Find the first available game number."""
     # This is O(n) in the number of games, but it's simple and should
@@ -40,6 +41,7 @@ def find_free_slot():
         if i not in global_.games:
             return i
         i += 1
+
 
 def from_name_or_number(arg, conn):
     g = None
@@ -59,6 +61,7 @@ def from_name_or_number(arg, conn):
             else:
                 g = u.session.game
     return g
+
 
 class Game(object):
     def __init__(self):
@@ -333,7 +336,7 @@ class Game(object):
                 move_str = '%-7s (%s)' % (mv.to_san(),
                     time_format.hms(mv.time, conn.user))
             if i % 2 == 0:
-                conn.write_nowrap('%3d.  %-23s ' % (int((i + 3) / 2),move_str))
+                conn.write_nowrap('%3d.  %-23s ' % (int((i + 3) / 2), move_str))
             else:
                 assert(len(move_str) <= 23)
                 conn.write_nowrap('%s\n' % move_str)
@@ -560,7 +563,6 @@ class PlayedGame(Game):
             if not self.minmovetime:
                 for p in self.players | self.observers:
                     p.write_("Game %d: All players agree no minimum move time during the game.\n", self.number)
-
 
     def _resume(self, adj, a, b):
         """ Resume an adjourned game. """

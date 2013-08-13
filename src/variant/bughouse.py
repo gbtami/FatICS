@@ -29,6 +29,7 @@ from base_variant import BaseVariant, IllegalMoveError
 the same as FEN. A blank square is '-'.
 """
 
+
 class BadFenError(Exception):
     def __init__(self, reason=None):
         self.reason = reason
@@ -41,6 +42,8 @@ piece_moves = {
     'k': [-0x11, -0xf, 0xf, 0x11, -0x10, -1, 1, 0x10]
 }
 direction_table = array('i', [0 for i in range(0, 0x100)])
+
+
 def dir(fr, to):
     """Returns the direction a queen needs to go to get from TO to FR,
     or 0 if it's not possible."""
@@ -59,6 +62,7 @@ piece_material = {
     'k': 0
 }
 
+
 def to_castle_flags(w_oo, w_ooo, b_oo, b_ooo):
     return (w_oo << 3) + (w_ooo << 2) + (b_oo << 1) + b_ooo
 
@@ -70,16 +74,20 @@ castle_mask[A1] = to_castle_flags(True, False, True, True)
 castle_mask[E1] = to_castle_flags(False, False, True, True)
 castle_mask[H1] = to_castle_flags(False, True, True, True)
 
+
 def str_to_sq(s):
     return 'abcdefgh'.index(s[0]) + 0x10 * '12345678'.index(s[1])
 
+
 def sq_to_str(sq):
     return 'abcdefgh'[file(sq)] + '12345678'[rank(sq)]
+
 
 def piece_is_white(pc):
     assert(len(pc) == 1)
     assert(pc in 'pnbrqkPNBRQK')
     return pc.isupper()
+
 
 class Zobrist(object):
     """Zobrist keys for low-overhead repetition detection"""
@@ -124,6 +132,7 @@ class Zobrist(object):
         return [random.getrandbits(64) for i in xrange(0, len)]
 
 zobrist = Zobrist()
+
 
 class Move(object):
     def __init__(self, pos, fr, to, prom=None, is_oo=False,
@@ -329,9 +338,11 @@ class Move(object):
         else:
             return True
 
+
 class Undo(object):
     """information needed to undo a move"""
     pass
+
 
 class PositionHistory(object):
     """keeps past of past positions for repetition detection"""
@@ -354,6 +365,7 @@ class PositionHistory(object):
 
     def get_move(self, ply):
         return self.moves[ply]
+
 
 class Position(object):
     def __init__(self, fen):
@@ -490,7 +502,6 @@ class Position(object):
                 self.detect_check()
                 if self.is_checkmate or self.is_stalemate:
                     raise BadFenError('got a terminal position')
-
 
         except AssertionError:
             raise
@@ -797,7 +808,7 @@ class Position(object):
         wmat = sum([piece_material[pc.lower()]
             for (sq, pc) in self if pc != '-' and piece_is_white(pc)])
 
-        for (pc,count) in self.holding.iteritems():
+        for (pc, count) in self.holding.iteritems():
             if pc.isupper():
                 wmat += piece_material[pc.lower()] * count
             else:
@@ -961,7 +972,7 @@ class Position(object):
 
         # bishop/queen attacks
         for d in piece_moves['b']:
-            cur_sq = sq +d
+            cur_sq = sq + d
             while valid_sq(cur_sq):
                 if self.board[cur_sq] != '-':
                     if wtm:
@@ -973,7 +984,6 @@ class Position(object):
                     # square blocked
                     break
                 cur_sq += d
-
 
         # rook/queen attacks
         for d in piece_moves['r']:
@@ -1381,7 +1391,7 @@ class Bughouse(BaseVariant):
             # san
             if not mv:
                 mv = self.pos.move_from_drop(s)
-        except IllegalMoveError as e:
+        except IllegalMoveError: #as e:
             #print e.reason
             raise
 
@@ -1429,6 +1439,7 @@ class Bughouse(BaseVariant):
         s = '\n<b1> game %d white [%s] black [%s]%s\n' % (self.game.number,
             holding_white, holding_black, passed_str)
         return s
+
 
 def init_direction_table():
     for r in range(8):

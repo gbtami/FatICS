@@ -17,6 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+
 class Config(object):
     port = 5001
     compatibility_port = 5000

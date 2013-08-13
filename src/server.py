@@ -32,6 +32,7 @@ except:
 
 start_time = time.time()
 
+
 def get_copyright_notice():
     return """Copyright (C) 2010-2013 Wil Mahan
 This server is free software licensed under the GNU Affero General Public
@@ -45,6 +46,7 @@ available here: %s
 def get_license():
     f = open('COPYING', 'r')
     return 'Copyright(C) 2010-2013 Wil Mahan\n\n%s\nThe source code for the version of the server you are using is available here:\n%s\n\n' % (f.read(), get_server_link())
+
 
 def get_server_link():
     return 'https://bitbucket.org/wmahan/fatics'

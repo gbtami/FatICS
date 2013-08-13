@@ -35,6 +35,7 @@ from config import config
 # t - optional string to end
 # lowercase <-> case-insensitive
 
+
 class Command(object):
     def __init__(self, name, param_str, admin_level):
         assert(hasattr(self, 'run'))
@@ -50,6 +51,7 @@ class Command(object):
 
     def usage(self, conn):
         conn.write("Usage: TODO for %s\n" % self.name)
+
 
 class ics_command(object):
     def __init__(self, name, param_str, admin_level=admin.Level.user):
@@ -69,8 +71,11 @@ class ics_command(object):
 
 # hack around bug in twisted.python.rebuild that occurs when this is a
 # nested function
+
+
 def wrapped_f(*args):
     raise RuntimeError('command objects should not be instantiated directly')
+
 
 def requires_registration(f):
     def check_reg(self, args, conn):
@@ -79,6 +84,7 @@ def requires_registration(f):
         else:
             f(self, args, conn)
     return check_reg
+
 
 @ics_command('limits', '')
 class Limits(Command):
@@ -90,6 +96,7 @@ class Limits(Command):
         conn.write(_('    Connections: %(umax)d users (+ %(amax)d admins)\n') %
             {'umax': config.maxplayer - config.admin_reserve,
                 'amax': config.admin_reserve})
+
 
 @ics_command('password', 'WW')
 class Password(Command):
@@ -105,6 +112,7 @@ class Password(Command):
             else:
                 yield conn.user.set_passwd(newpass)
                 conn.write(_("Password changed to %s.\n") % ('*' * len(newpass)))
+
 
 @ics_command('quit', '', admin.Level.user)
 class Quit(Command):

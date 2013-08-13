@@ -24,6 +24,7 @@ speed_names = {}
 variant_names = {}
 variant_abbrevs = {}
 
+
 class Speed(object):
     def __init__(self, id_, name, abbrev):
         self.id_ = id_
@@ -37,6 +38,7 @@ class Speed(object):
 
     def __str__(self):
         return self.name
+
 
 class Variant(object):
     def __init__(self, id_, name, abbrev):
@@ -52,6 +54,7 @@ class Variant(object):
 
     def __str__(self):
         return self.name
+
 
 class SpeedAndVariant(object):
     def __init__(self, speed, variant):
@@ -85,13 +88,16 @@ class SpeedAndVariant(object):
         else:
             return self.variant.name
 
+
 def from_names(speed_name, variant_name):
     return SpeedAndVariant(speed_names[speed_name],
         variant_names[variant_name])
 
+
 def from_ids(speed_id, variant_id):
     return SpeedAndVariant(speed_ids[speed_id],
         variant_ids[variant_id])
+
 
 def init():
     for row in db.get_speeds():
@@ -109,6 +115,8 @@ def init():
 init()
 
 variant_class = {}
+
+
 def _init():
     import variant.chess
     import variant.chess960

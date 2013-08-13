@@ -25,6 +25,7 @@ import clock
 from game import Game
 from game_constants import *
 
+
 class ExaminedGame(Game):
     def __init__(self, user, hist_game=None):
         self.gtype = EXAMINED

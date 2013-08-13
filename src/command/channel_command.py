@@ -23,6 +23,7 @@ import admin
 import channel
 import user
 
+
 @ics_command('inchannel', 'n', admin.Level.user)
 class Inchannel(Command):
     def run(self, args, conn):
@@ -54,6 +55,7 @@ class Inchannel(Command):
                 if len(on) > 0:
                     conn.write("%s: %s\n" % (ch.get_display_name(), ' '.join(on)))
 
+
 @ics_command('chkick', 'dw', admin.Level.user)
 class Chkick(Command):
     """ Kick a user from a channel. """
@@ -69,6 +71,7 @@ class Chkick(Command):
             conn.write(_('Invalid channel number.\n'))
             return
         ch.kick(u, conn.user)
+
 
 @ics_command('chtopic', 'dT', admin.Level.user)
 class Chtopic(Command):

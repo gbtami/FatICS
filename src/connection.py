@@ -35,6 +35,7 @@ from config import config
 from timeseal import timeseal, TIMESEAL_PONG
 from session import Session
 
+
 class Connection(basic.LineReceiver):
     implements(twisted.internet.interfaces.IProtocol)
     # the telnet transport changes all '\r\n' to '\n',

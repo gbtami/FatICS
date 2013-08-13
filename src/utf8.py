@@ -19,6 +19,8 @@
 import re
 
 legal_chars_re = re.compile('''^[\x20-\xfd]*$''')
+
+
 def check_user_utf8(s):
     ret = legal_chars_re.match(s)
     if ret:
@@ -32,6 +34,8 @@ def check_user_utf8(s):
     return ret
 
 illegal_char_re = re.compile('''[^\x20-\xfd]''')
+
+
 def utf8_to_ascii(s):
     """ Try to gracefully convert UTF-8 to ASCII.  Non-ASCII chars are
     replaced by '?'. """

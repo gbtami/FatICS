@@ -20,10 +20,15 @@ from MySQLdb import connect, cursors, IntegrityError, OperationalError
 from config import config
 from twisted.enterprise import adbapi
 
+
 class DuplicateKeyError(Exception):
     pass
+
+
 class DeleteError(Exception):
     pass
+
+
 class UpdateError(Exception):
     pass
 
@@ -40,7 +45,6 @@ if 1:
         cursor = query(cursor, """SET time_zone='+00:00'""")
         db.set_character_set('utf8')
         cursor.close()
-
 
         def openfun(adbconn):
             cursor = adbconn.cursor()
@@ -107,7 +111,7 @@ if 1:
     def user_set_var(user_id, name, val):
         cursor = db.cursor()
         up = """UPDATE user SET %s""" % name
-        cursor = query(cursor, up + """=%s WHERE user_id=%s""", (val,user_id))
+        cursor = query(cursor, up + """=%s WHERE user_id=%s""", (val, user_id))
         cursor.close()
 
     def user_get_formula(user_id):
@@ -125,11 +129,11 @@ if 1:
         num = dbkeys[name]
         cursor = db.cursor()
         if val is not None:
-            cursor = query(cursor, """INSERT INTO formula SET user_id=%s,num=%s,f=%s ON DUPLICATE KEY UPDATE f=%s""", (user_id,num,val,val))
+            cursor = query(cursor, """INSERT INTO formula SET user_id=%s,num=%s,f=%s ON DUPLICATE KEY UPDATE f=%s""", (user_id, num, val, val))
         else:
             # OK to not actually delete any rows; we are just unsetting an
             # already unset variable.
-            cursor = query(cursor, """DELETE FROM formula WHERE user_id=%s AND num=%s""", (user_id,num))
+            cursor = query(cursor, """DELETE FROM formula WHERE user_id=%s AND num=%s""", (user_id, num))
             assert(cursor.rowcount <= 1)
         cursor.close()
 
@@ -145,9 +149,9 @@ if 1:
         assert(num >= 1 and num <= 10)
         cursor = db.cursor()
         if val is not None:
-            cursor = query(cursor, """INSERT INTO note SET user_id=%s,num=%s,txt=%s ON DUPLICATE KEY UPDATE txt=%s""" , (user_id,num,val,val))
+            cursor = query(cursor, """INSERT INTO note SET user_id=%s,num=%s,txt=%s ON DUPLICATE KEY UPDATE txt=%s""", (user_id, num, val, val))
         else:
-            cursor = query(cursor, """DELETE FROM note WHERE user_id=%s AND num=%s""", (user_id,num))
+            cursor = query(cursor, """DELETE FROM note WHERE user_id=%s AND num=%s""", (user_id, num))
             if cursor.rowcount != 1:
                 cursor.close()
                 raise DeleteError()
@@ -156,9 +160,9 @@ if 1:
     def user_set_alias(user_id, name, val):
         cursor = db.cursor()
         if val is not None:
-            cursor = query(cursor, """INSERT INTO user_alias SET user_id=%s,name=%s,val=%s ON DUPLICATE KEY UPDATE val=%s""" , (user_id,name,val,val))
+            cursor = query(cursor, """INSERT INTO user_alias SET user_id=%s,name=%s,val=%s ON DUPLICATE KEY UPDATE val=%s""", (user_id, name, val, val))
         else:
-            cursor = query(cursor, """DELETE FROM user_alias WHERE user_id=%s AND name=%s""", (user_id,name))
+            cursor = query(cursor, """DELETE FROM user_alias WHERE user_id=%s AND name=%s""", (user_id, name))
             if cursor.rowcount != 1:
                 cursor.close()
                 raise DeleteError()
@@ -196,13 +200,12 @@ if 1:
                 (prefix + '%', limit))
         return d
 
-
     def user_add(name, email, passwd, real_name, admin_level):
         cursor = db.cursor()
         cursor = query(cursor, """INSERT INTO user
             SET user_name=%s,user_email=%s,user_passwd=%s,user_real_name=%s,
                 user_admin_level=%s""",
-            (name,email,passwd,real_name,admin_level))
+            (name, email, passwd, real_name, admin_level))
         user_id = cursor.lastrowid
         cursor.close()
         return user_id
@@ -243,7 +246,7 @@ if 1:
         assert(secs >= 0)
         cursor = db.cursor()
         cursor = query(cursor, """UPDATE user
-            SET user_total_time_online=user_total_time_online+%s WHERE user_id=%s""", (secs,uid))
+            SET user_total_time_online=user_total_time_online+%s WHERE user_id=%s""", (secs, uid))
         cursor.close()
 
     def user_log(user_name, login, ip):
@@ -302,7 +305,7 @@ if 1:
         cursor = db.cursor()
         assert(val in [0, 1])
         cursor = query(cursor, """UPDATE user
-            SET user_banned=%s WHERE user_id=%s""", (val,uid))
+            SET user_banned=%s WHERE user_id=%s""", (val, uid))
         cursor.close()
 
     def get_banned_user_names():
@@ -317,7 +320,7 @@ if 1:
         cursor = db.cursor()
         assert(val in [0, 1])
         cursor = query(cursor, """UPDATE user
-            SET user_muzzled=%s WHERE user_id=%s""", (val,uid))
+            SET user_muzzled=%s WHERE user_id=%s""", (val, uid))
         cursor.close()
 
     def get_muzzled_user_names():
@@ -332,7 +335,7 @@ if 1:
         cursor = db.cursor()
         assert(val in [0, 1])
         cursor = query(cursor, """UPDATE user
-            SET user_cmuzzled=%s WHERE user_id=%s""", (val,uid))
+            SET user_cmuzzled=%s WHERE user_id=%s""", (val, uid))
         cursor.close()
 
     def get_cmuzzled_user_names():
@@ -347,14 +350,14 @@ if 1:
         cursor = db.cursor()
         assert(val in [0, 1])
         cursor = query(cursor, """UPDATE user
-            SET user_muted=%s WHERE user_id=%s""", (val,uid))
+            SET user_muted=%s WHERE user_id=%s""", (val, uid))
         cursor.close()
 
     def user_set_notebanned(uid, val):
         cursor = db.cursor()
         assert(val in [0, 1])
         cursor = query(cursor, """UPDATE user
-            SET user_notebanned=%s WHERE user_id=%s""", (val,uid))
+            SET user_notebanned=%s WHERE user_id=%s""", (val, uid))
         cursor.close()
 
     def get_notebanned_user_names():
@@ -369,7 +372,7 @@ if 1:
         cursor = db.cursor()
         assert(val in [0, 1])
         cursor = query(cursor, """UPDATE user
-            SET user_ratedbanned=%s WHERE user_id=%s""", (val,uid))
+            SET user_ratedbanned=%s WHERE user_id=%s""", (val, uid))
         cursor.close()
 
     def get_ratedbanned_user_names():
@@ -384,7 +387,7 @@ if 1:
         cursor = db.cursor()
         assert(val in [0, 1])
         cursor = query(cursor, """UPDATE user
-            SET user_playbanned=%s WHERE user_id=%s""", (val,uid))
+            SET user_playbanned=%s WHERE user_id=%s""", (val, uid))
         cursor.close()
 
     def get_playbanned_user_names():
@@ -484,7 +487,7 @@ if 1:
     def channel_add_user(chid, user_id):
         cursor = db.cursor()
         cursor = query(cursor, """INSERT INTO channel_user
-            SET user_id=%s,channel_id=%s""", (user_id,chid))
+            SET user_id=%s,channel_id=%s""", (user_id, chid))
         cursor.close()
 
     def channel_set_topic(args):
@@ -506,7 +509,7 @@ if 1:
     def channel_del_user(ch_id, user_id):
         cursor = db.cursor()
         cursor = query(cursor, """DELETE FROM channel_user
-            WHERE user_id=%s AND channel_id=%s""", (user_id,ch_id))
+            WHERE user_id=%s AND channel_id=%s""", (user_id, ch_id))
         if cursor.rowcount != 1:
             cursor.close()
             raise DeleteError()
@@ -549,7 +552,7 @@ if 1:
     def channel_is_owner(chid, user_id):
         cursor = db.cursor()
         cursor = query(cursor, """SELECT 1 FROM channel_owner
-            WHERE channel_id=%s AND user_id=%s LIMIT 1""", (chid,user_id))
+            WHERE channel_id=%s AND user_id=%s LIMIT 1""", (chid, user_id))
         row = cursor.fetchone()
         cursor.close()
         return bool(row)
@@ -557,13 +560,13 @@ if 1:
     def channel_add_owner(chid, user_id):
         cursor = db.cursor()
         cursor = query(cursor, """INSERT INTO channel_owner
-            SET channel_id=%s,user_id=%s""", (chid,user_id))
+            SET channel_id=%s,user_id=%s""", (chid, user_id))
         cursor.close()
 
     def channel_del_owner(chid, user_id):
         cursor = db.cursor()
         cursor = query(cursor, """DELETE FROM channel_owner
-            WHERE channel_id=%s AND user_id=%s""", (chid,user_id))
+            WHERE channel_id=%s AND user_id=%s""", (chid, user_id))
         if cursor.rowcount != 1:
             cursor.close()
             raise DeleteError()
@@ -580,7 +583,7 @@ if 1:
     def user_add_title(user_id, title_id):
         cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO user_title SET user_id=%s,title_id=%s""", (user_id,title_id))
+            cursor = query(cursor, """INSERT INTO user_title SET user_id=%s,title_id=%s""", (user_id, title_id))
             cursor.close()
         except IntegrityError:
             cursor.close()
@@ -588,7 +591,7 @@ if 1:
 
     def user_del_title(user_id, title_id):
         cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM user_title WHERE user_id=%s AND title_id=%s""", (user_id,title_id))
+        cursor = query(cursor, """DELETE FROM user_title WHERE user_id=%s AND title_id=%s""", (user_id, title_id))
         if cursor.rowcount != 1:
             cursor.close()
             raise DeleteError()
@@ -605,14 +608,14 @@ if 1:
         cursor = db.cursor()
         cursor = query(cursor, """UPDATE user_title
             SET title_light=NOT title_light
-            WHERE title_id=%s AND user_id=%s""", (title_id,user_id))
+            WHERE title_id=%s AND user_id=%s""", (title_id, user_id))
         cursor.close()
 
     # notifications
     def user_add_notification(notified, notifier):
         cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO user_notify SET notified=%s,notifier=%s""", (notified,notifier))
+            cursor = query(cursor, """INSERT INTO user_notify SET notified=%s,notifier=%s""", (notified, notifier))
         except IntegrityError:
             raise DuplicateKeyError()
         finally:
@@ -620,7 +623,7 @@ if 1:
 
     def user_del_notification(notified, notifier):
         cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM user_notify WHERE notified=%s AND notifier=%s""", (notified,notifier))
+        cursor = query(cursor, """DELETE FROM user_notify WHERE notified=%s AND notifier=%s""", (notified, notifier))
         if cursor.rowcount != 1:
             cursor.close()
             raise DeleteError()
@@ -644,7 +647,7 @@ if 1:
         cursor = db.cursor()
         try:
             cursor = query(cursor, """INSERT INTO user_gnotify
-                SET gnotified=%s,gnotifier=%s""", (gnotified,gnotifier))
+                SET gnotified=%s,gnotifier=%s""", (gnotified, gnotifier))
         except IntegrityError:
             raise DuplicateKeyError()
         finally:
@@ -653,7 +656,7 @@ if 1:
     def user_del_gnotification(notified, notifier):
         cursor = db.cursor()
         cursor = query(cursor, """DELETE FROM user_gnotify
-            WHERE gnotified=%s AND gnotifier=%s""", (notified,notifier))
+            WHERE gnotified=%s AND gnotifier=%s""", (notified, notifier))
         if cursor.rowcount != 1:
             cursor.close()
             raise DeleteError()
@@ -680,7 +683,7 @@ if 1:
     def user_add_censor(censorer, censored):
         cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO censor SET censored=%s,censorer=%s""", (censored,censorer))
+            cursor = query(cursor, """INSERT INTO censor SET censored=%s,censorer=%s""", (censored, censorer))
         except IntegrityError:
             raise DuplicateKeyError()
         finally:
@@ -688,7 +691,7 @@ if 1:
 
     def user_del_censor(censorer, censored):
         cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM censor WHERE censored=%s AND censorer=%s""", (censored,censorer))
+        cursor = query(cursor, """DELETE FROM censor WHERE censored=%s AND censorer=%s""", (censored, censorer))
         if cursor.rowcount != 1:
             cursor.close()
             raise DeleteError()
@@ -705,7 +708,7 @@ if 1:
     def user_add_noplay(noplayer, noplayed):
         cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO noplay SET noplayed=%s,noplayer=%s""", (noplayed,noplayer))
+            cursor = query(cursor, """INSERT INTO noplay SET noplayed=%s,noplayer=%s""", (noplayed, noplayer))
         except IntegrityError:
             raise DuplicateKeyError()
         finally:
@@ -713,7 +716,7 @@ if 1:
 
     def user_del_noplay(noplayer, noplayed):
         cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM noplay WHERE noplayed=%s AND noplayer=%s""", (noplayed,noplayer))
+        cursor = query(cursor, """DELETE FROM noplay WHERE noplayed=%s AND noplayer=%s""", (noplayed, noplayer))
         if cursor.rowcount != 1:
             cursor.close()
             raise DeleteError()
@@ -806,7 +809,7 @@ if 1:
                 LEFT JOIN user AS black
                     ON (black.user_id = black_user_id)
             WHERE white_user_id=%s or black_user_id=%s""",
-            (user_id,user_id))
+            (user_id, user_id))
         rows = cursor.fetchall()
         cursor.close()
         return rows
@@ -823,7 +826,7 @@ if 1:
                 LEFT JOIN speed USING(speed_id)
             WHERE (white_user_id=%s AND black_user_id=%s)
                 OR (white_user_id=%s AND black_user_id=%s)""",
-            (id1,id2,id2,id1))
+            (id1, id2, id2, id1))
         row = cursor.fetchone()
         cursor.close()
         return row
@@ -918,7 +921,7 @@ if 1:
     def add_news(title, user, is_admin):
         is_admin = '1' if is_admin else '0'
         cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO news_index SET news_title=%s,news_poster=%s,news_when=NOW(),news_is_admin=%s""", (title,user.name,is_admin))
+        cursor = query(cursor, """INSERT INTO news_index SET news_title=%s,news_poster=%s,news_when=NOW(),news_is_admin=%s""", (title, user.name, is_admin))
         news_id = cursor.lastrowid
         cursor.close()
         return news_id
@@ -950,7 +953,7 @@ if 1:
         cursor = query(cursor, """
             SELECT news_id,news_title,DATE(news_when) as news_date,news_poster
             FROM news_index WHERE news_is_admin=%s AND news_when > %s
-            ORDER BY news_id DESC LIMIT 10""", (is_admin,when))
+            ORDER BY news_id DESC LIMIT 10""", (is_admin, when))
         rows = cursor.fetchall()
         cursor.close()
         return rows
@@ -982,7 +985,7 @@ if 1:
         else:
             num = row[0] + 1
         cursor = query(cursor, """INSERT INTO news_line
-            SET news_id=%s,num=%s,txt=%s""", (news_id,num,text))
+            SET news_id=%s,num=%s,txt=%s""", (news_id, num, text))
         cursor.close()
 
     def del_last_news_line(news_id):
@@ -997,7 +1000,7 @@ if 1:
             if num is None:
                 raise DeleteError
             cursor = query(cursor, """DELETE FROM news_line
-                WHERE news_id=%s AND num=%s""", (news_id,num))
+                WHERE news_id=%s AND num=%s""", (news_id, num))
             if cursor.rowcount != 1:
                 raise DeleteError
         finally:
@@ -1008,7 +1011,7 @@ if 1:
         try:
             cursor = db.cursor()
             cursor = query(cursor, """UPDATE news_index SET news_poster=%s WHERE news_id=%s""",
-                (u.name,news_id))
+                (u.name, news_id))
             if cursor.rowcount != 1:
                 raise UpdateError
         finally:
@@ -1019,7 +1022,7 @@ if 1:
         try:
             cursor = db.cursor()
             cursor = query(cursor, """UPDATE news_index SET news_title=%s WHERE news_id=%s""",
-                (title,news_id))
+                (title, news_id))
             if cursor.rowcount != 1:
                 raise UpdateError
         finally:
@@ -1156,7 +1159,7 @@ if 1:
             (from_user_id,forwarder_user_id,to_user_id,num,txt,when_sent,unread)
             (SELECT from_user_id,%s,%s,%s,txt,when_sent,1 FROM message
                 WHERE message_id=%s)""",
-            (forwarder_user_id,to_user_id,num,message_id))
+            (forwarder_user_id, to_user_id, num, message_id))
         message_id = cursor.lastrowid
         cursor.close()
         return message_id

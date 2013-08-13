@@ -16,6 +16,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+
 class GameList(object):
     def __init__(self):
         self.games = []

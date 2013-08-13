@@ -28,6 +28,8 @@ from config import config
 
 # return a user object if one exists; otherwise make a
 # guest user
+
+
 @defer.inlineCallbacks
 def get_user(name, conn):
     u = None

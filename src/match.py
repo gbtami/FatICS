@@ -47,8 +47,10 @@ shortcuts = {
     'f': 'formula',
 }
 
+
 class MatchError(Exception):
     pass
+
 
 class MatchStringParser(object):
     """ Mixin used to parse both match and seek strings. """
@@ -272,6 +274,7 @@ class MatchStringParser(object):
         self.speed_variant = speed_variant.from_names(self.speed_name,
             self.variant_name)
 
+
 def check_censor_noplay(a, b):
     """ Test whether a user can play a given opponent. """
     if a.name in b.censor:
@@ -287,6 +290,7 @@ def check_censor_noplay(a, b):
         a.write(_("You have %s on your noplay list.\n") % b.name)
         return False
     return True
+
 
 class Challenge(Offer, MatchStringParser):
     """ represents a match offer from one player to another """
@@ -419,7 +423,6 @@ class Challenge(Offer, MatchStringParser):
             bpart.write_('Your bughouse partner was challenged: %s\n',
                 challenge_str)
             bpart.write_('Your game will be: %s\n', challenge_str2)
-
 
         o = next((o for o in b_sent if o.name == self.name and
             o.b == a), None)

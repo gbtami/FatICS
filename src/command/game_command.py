@@ -70,6 +70,7 @@ class Abort(Command, GameMixin):
         else:
             offer.Abort(g, conn.user)
 
+
 @ics_command('adjourn', '')
 class Adjourn(Command, GameMixin):
     def run(self, args, conn):
@@ -82,6 +83,7 @@ class Adjourn(Command, GameMixin):
             return
         offer.Adjourn(g, conn.user)
 
+
 @ics_command('draw', 'o')
 class Draw(Command, GameMixin):
     def run(self, args, conn):
@@ -93,6 +95,7 @@ class Draw(Command, GameMixin):
         else:
             conn.write('TODO: DRAW PARAM\n')
 
+
 @ics_command('resign', 'o')
 class Resign(Command, GameMixin):
     def run(self, args, conn):
@@ -102,6 +105,7 @@ class Resign(Command, GameMixin):
         g = self._get_played_game(conn)
         if g:
             g.resign(conn.user)
+
 
 @ics_command('eco', 'oo')
 class Eco(Command, GameMixin):
@@ -158,12 +162,14 @@ class Eco(Command, GameMixin):
             conn.write(_(' NIC[%3d]: %s\n') % (nicply, nic))
             conn.write(_('LONG[%3d]: %s\n') % (ply, long_))
 
+
 @ics_command('moves', 'n')
 class Moves(Command, GameMixin):
     def run(self, args, conn):
         g = self._game_param(args[0], conn)
         if g:
             g.write_moves(conn)
+
 
 @ics_command('moretime', 'd')
 class Moretime(Command, GameMixin):
@@ -176,6 +182,7 @@ class Moretime(Command, GameMixin):
             else:
                 g.moretime(secs, conn.user)
 
+
 @ics_command('flag', '')
 class Flag(Command):
     def run(self, args, conn):
@@ -186,12 +193,14 @@ class Flag(Command):
         if not g.clock.check_flag(g, opp(g.get_user_side(conn.user))):
             conn.write(_('Your opponent is not out of time.\n'))
 
+
 @ics_command('refresh', 'n')
 class Refresh(Command, GameMixin):
     def run(self, args, conn):
         g = self._game_param(args[0], conn)
         if g:
             g.send_board(conn.user, isolated=True)
+
 
 @ics_command('time', 'n')
 class Time(Command, GameMixin):
@@ -202,6 +211,7 @@ class Time(Command, GameMixin):
             g.send_info_str(conn.user)
             conn.write(_('White Clock : %s\n') % white_clock)
             conn.write(_('Black Clock : %s\n') % black_clock)
+
 
 @ics_command('ginfo', 'n')
 class Ginfo(Command, GameMixin):

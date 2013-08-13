@@ -26,8 +26,10 @@ from config import config
 
 USER_CHANNEL_START = 1024
 
+
 class ChannelError(Exception):
     pass
+
 
 class Channel(object):
     def __init__(self, params):
@@ -229,6 +231,8 @@ class Channel(object):
 
 """ The channel ID is stored in a 32-bit column in the database. """
 CHANNEL_MAX = 1 << 31
+
+
 class ChannelList(object):
     all = {}
     def __init__(self):

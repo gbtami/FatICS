@@ -25,6 +25,7 @@ import trie
 import admin
 import global_
 
+
 @ics_command('iset', 'wS', admin.Level.user)
 class Iset(Command):
     def run(self, args, conn):
@@ -39,6 +40,7 @@ class Iset(Command):
             conn.write(_('No such ivariable "%s".\n') % name)
         except var.BadVarError:
             conn.write(_('Bad value given for ivariable "%s".\n') % v.name)
+
 
 @ics_command('set', 'wT', admin.Level.user)
 class Set(Command):
@@ -55,6 +57,7 @@ class Set(Command):
             conn.write(_('No such variable "%s".\n') % name)
         except var.BadVarError:
             conn.write(_('Bad value given for variable "%s".\n') % v.name)
+
 
 @ics_command('ivariables', 'o', admin.Level.user)
 class Ivariables(Command):
@@ -81,6 +84,7 @@ class Ivariables(Command):
         conn.write('suicide=%(suicide)d          crazyhouse=%(crazyhouse)d       losers=%(losers)d           wildcastle=%(wildcastle)d\n' % u.session.ivars)
         conn.write('fr=%(fr)d               atomic=%(atomic)d\n' % u.session.ivars)
         conn.write('xml=?\n\n' % u.session.ivars)
+
 
 @ics_command('variables', 'o', admin.Level.user)
 class Variables(Command):
@@ -113,7 +117,7 @@ class Variables(Command):
             conn.write(_('\nPrompt: %s\n') % u.vars['prompt'])
             if u.vars['interface']:
                 conn.write(_('Interface: %s\n') % u.vars['interface'])
-            if  u.session.partner:
+            if u.session.partner:
                 conn.write(_('Bughouse partner: %s\n') % u.session.partner.name)
             if u.session.following:
                 if u.session.pfollow:
@@ -128,6 +132,7 @@ class Variables(Command):
         if u.vars['formula']:
             conn.write('Formula: %s\n' % u.vars['formula'])
         conn.write("\n")
+
 
 @ics_command('style', 'd', admin.Level.user)
 class Style(Command):

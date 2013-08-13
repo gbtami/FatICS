@@ -22,6 +22,7 @@ from netaddr import IPAddress, IPNetwork
 import list_
 import db
 
+
 def add_filter(pattern, conn):
     # Don't check whether this filter is a subset of any existing filter,
     # because it could be reasonable to block overlapping ranges, such as
@@ -36,6 +37,7 @@ def add_filter(pattern, conn):
     db.add_filtered_ip(str(net))
     conn.write(_('%s added to the filter list.\n') % net)
 
+
 def remove_filter(pattern, conn):
     try:
         net = IPNetwork(pattern, implicit_prefix=False).cidr
@@ -48,9 +50,11 @@ def remove_filter(pattern, conn):
     db.del_filtered_ip(str(net))
     conn.write(_('%s removed from the filter list.\n') % net)
 
+
 def check_filter(addr):
     ip = IPAddress(addr)
     return any(ip in net for net in filters)
+
 
 def _init_filters():
     # sanity checks

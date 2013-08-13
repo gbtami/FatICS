@@ -29,6 +29,7 @@ INITIAL_RD = 350
 # 350 in about 2 years.
 INITIAL_VOLATILITY = .00196 # 0.6
 
+
 class Rating(object):
     def __init__(self, rating, rd, volatility, ltime, win, loss, draw,
             best=None, when_best=None):
@@ -56,6 +57,7 @@ class Rating(object):
 
     def __int__(self):
         return self.rating
+
 
 class NoRating(object):
     def __init__(self, is_guest):
@@ -87,6 +89,7 @@ class NoRating(object):
 
     def __int__(self):
         return 0
+
 
 def update_ratings(game, white_score, black_score):
     wp = glicko2.Player(game.white_rating.glicko2_rating(),
@@ -133,6 +136,7 @@ def update_ratings(game, white_score, black_score):
     game.black.set_rating(game.speed_variant,
         black_rating, black_rd, bp.vol,
         black_win, black_loss, black_draw, ltime)
+
 
 def show_ratings(user, conn):
     rows = db.user_get_ratings(user.id)

@@ -22,9 +22,11 @@ import subprocess
 SENDMAIL = "/usr/sbin/sendmail"
 FROM = "FatICS <noreply@fatics.org>"
 
+
 class EmailError(Exception):
     def __init__(self, msg):
         self.msg = msg
+
 
 def send_mail(fr, to, body):
     subject = "FatICS message from %s (Don't reply by email)" % fr.name

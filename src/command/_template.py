@@ -19,6 +19,7 @@
 
 from .command import ics_command, Command
 
+
 @ics_command('foo', '')
 class Foo(Command):
     def run(self, args, conn):

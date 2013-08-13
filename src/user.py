@@ -39,9 +39,11 @@ from twisted.internet import defer, threads
 
 from config import config
 
+
 class UsernameException(Exception):
     def __init__(self, reason):
         self.reason = reason
+
 
 class BaseUser(object):
     def __init__(self):
@@ -341,6 +343,8 @@ class BaseUser(object):
         self.is_playbanned = val
 
 # a registered user
+
+
 class RegUser(BaseUser):
     def __init__(self, u):
         BaseUser.__init__(self)
@@ -693,6 +697,7 @@ class RegUser(BaseUser):
             tot += self.session.get_online_time()
         return tot
 
+
 class GuestUser(BaseUser):
     def __init__(self, name):
         BaseUser.__init__(self)
@@ -843,7 +848,6 @@ def find_by_prefix_for_user(name, conn, min_len=0, online_only=False):
     return u
 
 
-
 # test whether a string meets the requirements for a password
 def is_legal_passwd(passwd):
     if len(passwd) > 32:
@@ -856,6 +860,7 @@ def is_legal_passwd(passwd):
         return False
     return True
 
+
 def make_passwd():
     chars = string.letters + string.digits
     passlen = random.choice(list(range(5, 8)))
@@ -863,6 +868,7 @@ def make_passwd():
     for i in range(passlen):
         ret = ret + random.choice(chars)
     return ret
+
 
 def add_user(name, email, passwd, real_name):
     pwhash = bcrypt.hashpw(passwd, bcrypt.gensalt())

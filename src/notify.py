@@ -20,6 +20,7 @@ import global_
 
 import db
 
+
 def notify_users(user, arrived):
     """ Send a message to all users notified about the given user. """
 
@@ -69,6 +70,7 @@ def notify_users(user, arrived):
                 u.write_("\nNotification: %s has arrived and isn't on your notify list.\n", name)
             else:
                 u.write_("\nNotification: %s has departed and isn't on your notify list.\n", name)
+
 
 def notify_pin(user, arrived):
     """ Notify users who have the pin variable or ivariable set. """

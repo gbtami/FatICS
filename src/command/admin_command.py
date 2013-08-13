@@ -36,6 +36,7 @@ from .command import Command, ics_command
 from parser import BadCommandError
 from config import config
 
+
 @ics_command('aclearhistory', 'w', admin.Level.admin)
 class Aclearhistory(Command):
     @defer.inlineCallbacks
@@ -68,6 +69,7 @@ class Addplayer(Command):
             conn.write(A_('Added: >%s< >%s< >%s< >%s<\n')
                 % (name, real_name, email, passwd))
 
+
 @ics_command('announce', 'S', admin.Level.admin)
 class Announce(Command):
     def run(self, args, conn):
@@ -80,6 +82,7 @@ class Announce(Command):
                     (conn.user.name, args[0]))
         conn.write("(%d) **ANNOUNCEMENT** from %s: %s\n\n" %
             (count, conn.user.name, args[0]))
+
 
 @ics_command('annunreg', 'S', admin.Level.admin)
 class Annunreg(Command):
@@ -94,10 +97,12 @@ class Annunreg(Command):
         conn.write("(%d) **UNREG ANNOUNCEMENT** from %s: %s\n\n"
             % (count, conn.user.name, args[0]))
 
+
 @ics_command('areload', '', admin.Level.god)
 class Areload(Command):
     def run(self, args, conn):
         reload.reload_all(conn)
+
 
 @ics_command('asetadmin', 'wd', admin.Level.admin)
 class Asetadmin(Command):
@@ -128,6 +133,7 @@ class Asetadmin(Command):
                         u.session.commands = global_.commands
                     u.write(A_('''\n\n%s has set your admin level to %d.\n\n''') % (adminuser.name, level))
 
+
 @ics_command('asetmaxplayer', 'p', admin.Level.admin)
 class Asetmaxplayer(Command):
     def run(self, args, conn):
@@ -143,6 +149,7 @@ class Asetmaxplayer(Command):
             (max(config.maxplayer - config.admin_reserve, 0), min(config.maxplayer - len(global_.online), config.admin_reserve)))
         conn.write(A_('Total allowed connections: %d.\n') % config.maxplayer)
 
+
 @ics_command('asetmaxguest', 'p', admin.Level.admin)
 class Asetmaxguest(Command):
     def run(self, args, conn):
@@ -157,6 +164,7 @@ class Asetmaxguest(Command):
             config.maxguest = args[0]
 
         conn.write(A_('Allowed guest connections: %d.\n') % config.maxguest)
+
 
 @ics_command('asetpasswd', 'wW', admin.Level.admin)
 class Asetpasswd(Command):
@@ -177,6 +185,7 @@ class Asetpasswd(Command):
                 conn.write('Password of %s changed to %s.\n' % (u.name, '*' * len(passwd)))
                 if u.is_online:
                     u.write_('\n%s has changed your password.\n', (adminuser.name,))
+
 
 @ics_command('asetrating', 'wwwddfddd', admin.Level.admin)
 class Asetrating(Command):
@@ -206,6 +215,7 @@ class Asetrating(Command):
             conn.write(A_('Set %s %s rating for %s.\n' %
                 (speed_name, variant_name, u.name)))
         # XXX notify the user?
+
 
 @ics_command('asetemail', 'ww', admin.Level.admin)
 class Asetemail(Command):
@@ -239,6 +249,7 @@ class Asetemail(Command):
                 conn.write(A_('Email address of %(uname)s changed to "%(email)s".\n') %
                     {'uname': u.name, 'email': email})
 
+
 @ics_command('asetrealname', 'wS', admin.Level.admin)
 class Asetrealname(Command):
     @defer.inlineCallbacks
@@ -266,6 +277,7 @@ class Asetrealname(Command):
                         {'aname': adminuser.name, 'real_name': real_name})
                 conn.write(A_('Real name of %(uname)s changed to "%(real_name)s".\n') %
                     {'uname': u.name, 'real_name': real_name})
+
 
 @ics_command('nuke', 'w', admin.Level.admin)
 class Nuke(Command):
@@ -295,6 +307,7 @@ class Pose(Command):
                 u2.write_('%s has issued the following command on your behalf: %s\n', (adminuser.name, args[1]))
                 parser.parse(args[1], u2.session.conn)
 
+
 @ics_command('asetv', 'wwS', admin.Level.admin)
 class Asetv(Command):
     @defer.inlineCallbacks
@@ -321,6 +334,7 @@ class Asetv(Command):
         else:
             conn.write(A_("Command issued as %s.\n") % (u.name))
 
+
 @ics_command('remplayer', 'w', admin.Level.admin)
 class Remplayer(Command):
     @defer.inlineCallbacks
@@ -337,6 +351,7 @@ class Remplayer(Command):
                 u.remove()
                 conn.write(A_("Player %s removed.\n") % u.name)
 
+
 @ics_command('addcomment', 'wS', admin.Level.admin)
 class Addcomment(Command):
     @defer.inlineCallbacks
@@ -349,6 +364,7 @@ class Addcomment(Command):
             else:
                 db.add_comment(adminuser.id, u.id, args[1])
                 conn.write(A_('Comment added for %s.\n') % u.name)
+
 
 @ics_command('showcomment', 'w', admin.Level.admin)
 class Showcomment(Command):
@@ -364,6 +380,7 @@ class Showcomment(Command):
                 else:
                     allcomments = [A_('%s at %s: %s\n') % (c['admin_name'], c['when_added'], c['txt']) for c in comments]
                     conn.write_paged('\n'.join(allcomments))
+
 
 @ics_command('ftell', 'o', admin.Level.admin)
 class Ftell(Command):
@@ -394,10 +411,12 @@ class Ftell(Command):
                     conn.session.ftell = u
                     u.session.ftell_admins.add(conn.user)
 
+
 @ics_command('hideinfo', '', admin.Level.admin)
 class Hideinfo(Command):
     def run(self, args, conn):
         global_.vars_['hideinfo'].set(conn.user, None)
+
 
 @ics_command('shutdown', 'p', admin.Level.admin)
 class Shutdown(Command):
@@ -422,6 +441,7 @@ class Shutdown(Command):
         if reactor.shuttingDown:
             reactor.shuttingDown.cancel()
         reactor.shuttingDown = reactor.callLater(mins * 60, reactor.stop)
+
 
 @ics_command('chkip', 'S', admin.Level.admin)
 class Chkip(Command):

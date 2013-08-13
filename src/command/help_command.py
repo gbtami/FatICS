@@ -28,6 +28,7 @@ import trie
 
 help_dir = 'help/'
 
+
 @ics_command('help', 'o')
 class Help(Command):
     def run(self, args, conn):
@@ -86,6 +87,8 @@ class Help(Command):
 # separately, using the optional "stats" and "text" parameters.
 # I am not convinced that is useful enough to be worth the extra
 # implementation complexity.
+
+
 @ics_command('next', '')
 class Next(Command):
     def run(self, args, conn):

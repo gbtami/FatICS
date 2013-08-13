@@ -21,6 +21,7 @@ from offer import Offer
 
 import global_
 
+
 class Partner(Offer):
     def __init__(self, a, b):
         Offer.__init__(self, 'partnership request')
@@ -44,7 +45,7 @@ class Partner(Offer):
         self.a = a
         self.b = b
         a.write(_('Making a partnership offer to %s.\n') % b.name)
-        b.write_('\n%s offers to be your bughouse partner; type "partner %s" to accept.\n', (a.name,a.name))
+        b.write_('\n%s offers to be your bughouse partner; type "partner %s" to accept.\n', (a.name, a.name))
         self._register()
         self.pendinfo('partner', '#')
 
@@ -94,6 +95,7 @@ class Partner(Offer):
         self.a.write_('\n%s, whom you were offering a partnership with, has departed.\n', (self.b.name,))
         self.b.write_('Partnership offer from %s removed.\n', (self.a.name,))
 
+
 def end_partnership(p1, p2):
     """ P1 ends the partnership with P2. """
     # TODO: don't assume "ended partnership", but also handle
@@ -105,7 +107,7 @@ def end_partnership(p1, p2):
     p2.write_('\nYour partner has ended partnership.\n')
     for o in p1.session.offers_sent[:]:
         if o.name == 'match offer' and o.variant_name == 'bughouse':
-            o.b.write_("\n%s, who was challenging you, has ended partnership.\nChallenge from %s removed.\n", (p1.name,p1.name))
+            o.b.write_("\n%s, who was challenging you, has ended partnership.\nChallenge from %s removed.\n", (p1.name, p1.name))
             o.withdraw_partner()
             o.b.session.partner.write_("\n%s's partner has ended partnership.\n'", (p2.name))
             o.b.session.partner.write_("\nPartner's challenge from %s removed.\n'", (p1.name))

@@ -26,6 +26,7 @@ import global_
 
 from game_constants import PLAYED
 
+
 @ics_command('showadmins', '')
 class Showadmins(Command):
     def run(self, args, conn):
@@ -47,6 +48,7 @@ class Showadmins(Command):
         conn.write(ngettext('\n%d admin logged in.\n',
             '\n%d admins logged in.\n', len(admins)) % len(admins))
 
+
 @ics_command('showsrs', '')
 class Showsrs(Command):
     def run(self, args, conn):
@@ -67,6 +69,7 @@ class Showsrs(Command):
         conn.write(ngettext('\n%d SR logged in.\n',
             '\n%d SRs logged in.\n', len(srs)) % len(srs))
 
+
 @ics_command('showtms', '')
 class Showtms(Command):
     def run(self, args, conn):
@@ -86,6 +89,7 @@ class Showtms(Command):
             conn.write('%-17s %-12s %s\n' % (u.name, status, idle))
         conn.write(ngettext('\n%d TM logged in.\n',
             '\n%d TMs logged in.\n', len(tms)) % len(tms))
+
 
 @ics_command('who', 'T')
 class Who(Command):

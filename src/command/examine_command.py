@@ -26,6 +26,7 @@ from game_constants import EXAMINED
 
 from .command import ics_command, Command
 
+
 @ics_command('examine', 'on')
 class Examine(Command):
     def run(self, args, conn):
@@ -72,6 +73,7 @@ class Examine(Command):
                 return
             conn.write('TODO: EXAMINE ADJOURNED GAME\n')
 
+
 @ics_command('mexamine', 'w')
 class Mexamine(Command):
     def run(self, args, conn):
@@ -86,6 +88,7 @@ class Mexamine(Command):
 
         g.mexamine(u, conn)
 
+
 @ics_command('backward', 'p')
 class Backward(Command):
     def run(self, args, conn):
@@ -96,6 +99,7 @@ class Backward(Command):
             return
         g.backward(n, conn)
 
+
 @ics_command('forward', 'p')
 class Forward(Command):
     def run(self, args, conn):
@@ -105,6 +109,7 @@ class Forward(Command):
             conn.write(_("You are not examining a game.\n"))
             return
         g.forward(n, conn)
+
 
 @ics_command('unexamine', '')
 class Unexamine(Command):

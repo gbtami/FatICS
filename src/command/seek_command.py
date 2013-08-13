@@ -27,6 +27,7 @@ from parser import BadCommandError
 from game_constants import opp, EXAMINED
 from .command import Command, ics_command
 
+
 @ics_command('seek', 't')
 class Seek(Command):
     def run(self, args, conn):
@@ -84,6 +85,7 @@ class Seek(Command):
         conn.write(ngettext('(%d player saw the seek.)\n',
             '(%d players saw the seek.)\n', count) % count)
 
+
 @ics_command('unseek', 'p')
 class Unseek(Command):
     def run(self, args, conn):
@@ -101,6 +103,7 @@ class Unseek(Command):
                 conn.write(_('Your seeks have been removed.\n'))
             else:
                 conn.write(_('You have no active seeks.\n'))
+
 
 @ics_command('play', 'i')
 class Play(Command):
@@ -176,6 +179,8 @@ class Play(Command):
                 ad.accept(conn.user)
 
 #  7 1500 SomePlayerA         5   2 rated   blitz      [white]  1300-9999 m
+
+
 @ics_command('sought', 'o')
 class Sought(Command):
     def run(self, args, conn):

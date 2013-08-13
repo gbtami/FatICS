@@ -26,6 +26,7 @@ import admin
 
 from game_constants import PLAYED, EXAMINED
 
+
 class ToldMixin(object):
     def _told(self, u, conn):
         if u.session.game:
@@ -40,6 +41,7 @@ class ToldMixin(object):
                        (u.name, (u.session.get_idle_time() / 60)))
         else:
             conn.write(_("(told %s)\n") % u.name)
+
 
 class TellCommand(Command, ToldMixin):
     def _do_tell(self, args, conn):
@@ -102,8 +104,8 @@ class TellCommand(Command, ToldMixin):
                         if adm.hears_channels():
                             adm.write(A_("Fwd tell: %s told %s: %s\n") % (conn.user.name, u.name, args[1]))
 
-
         return (u, ch)
+
 
 @ics_command('tell', 'nS', admin.Level.user)
 class Tell(TellCommand):
@@ -114,10 +116,12 @@ class Tell(TellCommand):
         elif ch is not None:
             conn.session.last_tell_ch = ch
 
+
 @ics_command('xtell', 'nS', admin.Level.user)
 class Xtell(TellCommand):
     def run(self, args, conn):
         self._do_tell(args, conn)
+
 
 @ics_command('qtell', 'iS', admin.Level.user)
 class Qtell(Command):
@@ -145,6 +149,7 @@ class Qtell(Command):
                 args[0] = u.name
                 u.write(msg)
         conn.write('*qtell %s %d*\n' % (args[0], ret))
+
 
 @ics_command('say', 'S')
 class Say(Command, ToldMixin):

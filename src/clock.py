@@ -25,6 +25,7 @@ from game_constants import WHITE, BLACK
 
 clock_names = {}
 
+
 class Clock(object):
     def __init__(self, g, white_time, black_time):
         self._white_time = white_time
@@ -120,6 +121,7 @@ class Clock(object):
                     game.result('%s forfeits on time' % game.black.name, '1-0')
         return not game.is_active
 
+
 class FischerClock(Clock):
     def add_increment(self, side):
         if side == WHITE:
@@ -127,6 +129,7 @@ class FischerClock(Clock):
         else:
             self._black_time += self.inc
 clock_names['fischer'] = FischerClock
+
 
 class BronsteinClock(Clock):
     def __init__(self, g, white_time, black_time):
@@ -149,6 +152,7 @@ class BronsteinClock(Clock):
             self._black_time += inc
 clock_names['bronstein'] = BronsteinClock
 
+
 class HourglassClock(Clock):
     def __init__(self, g, white_time, black_time):
         super(HourglassClock, self).__init__(g, white_time, black_time)
@@ -169,6 +173,7 @@ class HourglassClock(Clock):
     def add_increment(self, side):
         pass
 clock_names['hourglass'] = HourglassClock
+
 
 class OvertimeClock(Clock):
     def __init__(self, g, white_time, black_time):
@@ -197,6 +202,7 @@ class OvertimeClock(Clock):
         else:
             self._black_time += self.inc
 clock_names['overtime'] = OvertimeClock
+
 
 class UntimedClock(Clock):
     def __init__(self, g=None, white_time=None, black_time=None):

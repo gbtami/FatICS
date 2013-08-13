@@ -3,6 +3,7 @@ import admin
 
 from .command import Command, ics_command, requires_registration
 
+
 @ics_command('admin', '', admin.Level.admin)
 class Admin(Command):
     # requires registration because I did not implement light toggling
@@ -17,6 +18,7 @@ class Admin(Command):
         else:
             conn.write(A_('Admin mode (*) is now not shown.\n'))
 
+
 @ics_command('sr', '', admin.Level.user)
 class Sr(Command):
     @requires_registration
@@ -30,6 +32,7 @@ class Sr(Command):
             conn.write(A_('Service Representative mode (SR) is now shown.\n'))
         else:
             conn.write(A_('Service Representative mode (SR) is now not shown.\n'))
+
 
 @ics_command('tm', '', admin.Level.user)
 class Tm(Command):

@@ -28,6 +28,7 @@ import global_
 from parser import BadCommandError
 from game_constants import PLAYED
 
+
 @ics_command('rmatch', 'wwt')
 class Rmatch(Command):
     def run(self, args, conn):
@@ -75,6 +76,7 @@ class Tournset(Command):
             u2.write_('\n%s has set your tourney variable to OFF.\n',
                 (conn.user.name,))
 
+
 @ics_command('robserve', 'wi')
 class Robserve(Command):
     def run(self, args, conn):
@@ -93,6 +95,7 @@ class Robserve(Command):
                 pass
             else:
                 g.observe(u2)
+
 
 @ics_command('getpi', 'w')
 class Getpi(Command):
@@ -124,6 +127,7 @@ class Getpi(Command):
         except user.UsernameException:
             # do nothing
             pass
+
 
 @ics_command('getgi', 'w')
 class Getgi(Command):

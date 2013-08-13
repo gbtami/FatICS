@@ -18,6 +18,7 @@
 
 import db
 
+
 class History(object):
     def save_game(self, game, msg, result_code):
         if 'by adjudication' in msg:
@@ -90,6 +91,7 @@ class History(object):
             eco[0:3], flags, game.white_time, game.inc, result_reason,
             game.when_ended, movetext, game.idn)
         return game_id
+
 
 def show_for_user(user, conn):
     hist = user.get_history()

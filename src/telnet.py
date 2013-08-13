@@ -57,6 +57,7 @@ IAC = chr(255) # interpret as command
 
 BS = chr(8) # backspace
 
+
 class TelnetTransport(protocol.Protocol):
     implements(interfaces.ITransport)
     protocolFactory = None
@@ -163,7 +164,6 @@ class TelnetTransport(protocol.Protocol):
 
         if appDataBuffer:
             self.applicationDataReceived(''.join(appDataBuffer))
-
 
     def commandReceived(self, command, argument):
         cmdFunc = self.commandMap.get(command)

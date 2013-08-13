@@ -29,6 +29,7 @@ from parser import BadCommandError
 # user names
 #MAX_LEN = 950
 
+
 class FormatMessage(object):
     def _format_msg(self, msg, u):
         if msg['forwarder_name']:
@@ -43,6 +44,7 @@ class FormatMessage(object):
 
     def _write_msg(self, msg, u):
         u.write(self._format_msg(msg, u))
+
 
 @ics_command('clearmessages', 'n')
 class Clearmessages(Command):
@@ -79,6 +81,7 @@ class Clearmessages(Command):
         conn.write(ngettext('Cleared %d message.\n',
             'Cleared %d messages.\n', count) % count)
 
+
 @ics_command('fmessage', 'wd')
 class Fmessage(Command, FormatMessage):
     @requires_registration
@@ -110,6 +113,7 @@ class Fmessage(Command, FormatMessage):
                 self._write_msg(msg, conn.user)
             else:
                 conn.write(_('There is no such message.\n'))
+
 
 @ics_command('messages', 'nT')
 class Messages(Command, FormatMessage):

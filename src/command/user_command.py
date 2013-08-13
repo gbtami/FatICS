@@ -36,6 +36,7 @@ from parser import BadCommandError
 
 from game_constants import EXAMINED, PLAYED
 
+
 class LogMixin(object):
     def _display_log(self, log, conn):
         for a in reversed(log):
@@ -145,7 +146,6 @@ class Finger(Command):
                     conn.write(A_('Acc:         %s\n') % u.session.timeseal_acc)
                     conn.write(A_('System:      %s\n') % u.session.timeseal_system)
 
-
             notes = u.notes if show_notes else []
             if (not u.is_guest and u.is_notebanned and u != conn.user and
                 not conn.user.is_admin()):
@@ -208,6 +208,7 @@ class History(Command):
         if u:
             history.show_for_user(u, conn)
 
+
 @ics_command('logons', 'o')
 class Logons(Command, LogMixin):
     def run(self, args, conn):
@@ -222,6 +223,7 @@ class Logons(Command, LogMixin):
             else:
                 self._display_log(log, conn)
 
+
 @ics_command('llogons', 'p')
 class Llogons(Command, LogMixin):
     def run(self, args, conn):
@@ -233,6 +235,7 @@ class Llogons(Command, LogMixin):
             limit = 200
 
         self._display_log(db.get_log_all(limit), conn)
+
 
 @ics_command('handles', 'w')
 class Handles(Command):

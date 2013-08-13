@@ -27,6 +27,7 @@ from .command import Command, ics_command
 
 from game_constants import EXAMINED
 
+
 @ics_command('match', 'wt', admin.Level.user)
 class Match(Command):
     def run(self, args, conn):
@@ -46,6 +47,8 @@ class Match(Command):
         match.Challenge(conn.user, u, args[1])
 
 # TODO: parameters?
+
+
 @ics_command('rematch', '')
 class Rematch(Command):
     def run(self, args, conn):

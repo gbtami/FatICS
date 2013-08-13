@@ -25,7 +25,7 @@ import game
 import formula
 
 from match import MatchStringParser, MatchError
-from game_constants import WHITE,BLACK
+from game_constants import WHITE, BLACK
 
 # Wait 90 seconds after a seek ends to reuse its seek number
 # (this is the value GICS uses; original FICS is likely the
@@ -47,6 +47,7 @@ def find_free_slot():
                 and global_.seeks[i].expired_time <= expiration_time):
             return i
         i += 1
+
 
 def find_matching(seek):
     """ Find all seeks that match a given seek.  Returns a list of
@@ -76,6 +77,8 @@ _seekinfo_titles_map = {
     'WIM': 0x40,
     'WFM': 0x80,
 }
+
+
 def _seekinfo_titles(u):
     """ Convert a user's title into the weird bitfield format used
     by original FICS. """
@@ -84,6 +87,7 @@ def _seekinfo_titles(u):
         if t in _seekinfo_titles_map:
             ret |= _seekinfo_titles_map[t]
     return ret
+
 
 class Seek(MatchStringParser):
     def __init__(self, user, args):

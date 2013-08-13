@@ -25,6 +25,7 @@ import game
 
 from game_constants import EXAMINED
 
+
 class KibitzCommand(Command):
     def _do_kibitz(self, g, msg, conn):
         name = conn.user.get_display_name()
@@ -50,6 +51,7 @@ class KibitzCommand(Command):
         conn.write(ngettext('(kibitzed to %d player)\n',
             '(kibitzed to %d players)\n', count) % count)
 
+
 class WhisperCommand(Command):
     def _do_whisper(self, g, msg, conn):
         name = conn.user.get_display_name()
@@ -74,6 +76,7 @@ class WhisperCommand(Command):
         conn.write(ngettext('(whispered to %d player)\n',
             '(whispered to %d players)\n', count) % count)
 
+
 @ics_command('kibitz', 'S')
 class Kibitz(KibitzCommand, GameMixin):
     def run(self, args, conn):
@@ -84,6 +87,7 @@ class Kibitz(KibitzCommand, GameMixin):
             conn.write(_("Only registered players may kibitz to others' games.\n"))
             return
         self._do_kibitz(g, args[0], conn)
+
 
 @ics_command('whisper', 'S')
 class Whisper(WhisperCommand, GameMixin):
@@ -96,6 +100,7 @@ class Whisper(WhisperCommand, GameMixin):
             return
         self._do_whisper(g, args[0], conn)
 
+
 @ics_command('xkibitz', 'iS')
 class Xkibitz(KibitzCommand):
     def run(self, args, conn):
@@ -105,6 +110,7 @@ class Xkibitz(KibitzCommand):
                 conn.write(_('You are not observing game %d.\n') % g.number)
             else:
                 self._do_kibitz(g, args[1], conn)
+
 
 @ics_command('xwhisper', 'iS')
 class Xwhisper(WhisperCommand):

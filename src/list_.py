@@ -33,9 +33,11 @@ lists, with "your list" replaced by "the list").  Also original FICS
 used a linear search to find entries, so my implementation should
 be more efficient for large lists. """
 
+
 class ListError(Exception):
     def __init__(self, reason):
         self.reason = reason
+
 
 class MyList(object):
     """ A list as operated on by addlist, sublist, and showlist.  Subclasses
@@ -50,6 +52,7 @@ class MyList(object):
     def _require_admin(self, user):
         if not user.is_admin():
             raise ListError(_("You don't have permission to do that.\n"))
+
 
 class SystemUserList(MyList):
     def _notify_added(self, conn, u):
@@ -73,8 +76,9 @@ class SystemUserList(MyList):
             self._require_admin(conn.user)
         names = self._get_names()
         conn.write(ngettext('-- %s list: %d name --\n',
-            '-- %s list: %d names --\n', len(names)) % (self.name,len(names)))
+            '-- %s list: %d names --\n', len(names)) % (self.name, len(names)))
         conn.write('%s\n' % ' '.join(names))
+
 
 class TitleList(SystemUserList):
     """ A player title, like GM or WFM """
@@ -112,6 +116,7 @@ class TitleList(SystemUserList):
 
     def _get_names(self):
         return db.title_get_users(self.id)
+
 
 class NotifyList(MyList):
     def add(self, item, conn):
@@ -153,6 +158,7 @@ class NotifyList(MyList):
             '-- notify list: %d names --\n', len(notlist)) % len(notlist))
         conn.write('%s\n' % ' '.join(notlist))
 
+
 class IdlenotifyList(MyList):
     def add(self, item, conn):
         u = user.find_by_prefix_for_user(item, conn, online_only=True)
@@ -178,6 +184,7 @@ class IdlenotifyList(MyList):
         conn.write(ngettext('-- idlenotify list: %d name --\n',
             '-- idlenotify list: %d names --\n', len(notlist)) % len(notlist))
         conn.write('%s\n' % ' '.join([u.name for u in notlist]))
+
 
 class GnotifyList(MyList):
     def add(self, item, conn):
@@ -215,6 +222,7 @@ class GnotifyList(MyList):
         conn.write(ngettext('-- gnotify list: %d name --\n',
             '-- gnotify list: %d names --\n', len(notlist)) % len(notlist))
         conn.write('%s\n' % ' '.join(notlist))
+
 
 class ChannelList(MyList):
     def add(self, item, conn):
@@ -254,6 +262,7 @@ class ChannelList(MyList):
             '-- channel list: %d channels --\n', len(chlist)) % len(chlist))
         conn.write('%s\n' % ' '.join([str(ch) for ch in chlist]))
 
+
 class CensorList(MyList):
     def add(self, item, conn):
         u = user.find_by_prefix_for_user(item, conn)
@@ -277,6 +286,7 @@ class CensorList(MyList):
             '-- censor list: %d names --\n', len(cenlist)) % len(cenlist))
         conn.write('%s\n' % ' '.join(cenlist))
 
+
 class NoplayList(MyList):
     def add(self, item, conn):
         u = user.find_by_prefix_for_user(item, conn)
@@ -299,6 +309,7 @@ class NoplayList(MyList):
         conn.write(ngettext('-- noplay list: %d name --\n',
             '-- noplay list: %d names --\n', len(noplist)) % len(noplist))
         conn.write('%s\n' % ' '.join(noplist))
+
 
 class BanList(SystemUserList):
     def __init__(self, name):
@@ -335,6 +346,7 @@ class BanList(SystemUserList):
     def _get_names(self):
         return db.get_banned_user_names()
 
+
 class MuzzleList(SystemUserList):
     def __init__(self, name):
         super(MuzzleList, self).__init__(name, is_public=False)
@@ -368,6 +380,7 @@ class MuzzleList(SystemUserList):
     def _get_names(self):
         return db.get_muzzled_user_names()
 
+
 class CmuzzleList(SystemUserList):
     def __init__(self, name):
         super(CmuzzleList, self).__init__(name, is_public=False)
@@ -400,6 +413,7 @@ class CmuzzleList(SystemUserList):
 
     def _get_names(self):
         return db.get_cmuzzled_user_names()
+
 
 class MuteList(SystemUserList):
     def __init__(self, name):
@@ -435,6 +449,7 @@ class MuteList(SystemUserList):
             if u.is_muted and u.is_guest]
         return db.get_muted_user_names() + muted_guests
 
+
 class FilterList(MyList):
     def add(self, item, conn):
         self._require_admin(conn.user)
@@ -450,6 +465,7 @@ class FilterList(MyList):
         conn.write(ngettext('-- filter list: %d IP --\n',
             '-- filter list: %d IPs --\n', len(filterlist)) % len(filterlist))
         conn.write('%s\n' % ' '.join(filterlist))
+
 
 class NotebanList(SystemUserList):
     def __init__(self, name):
@@ -484,6 +500,7 @@ class NotebanList(SystemUserList):
     def _get_names(self):
         return db.get_notebanned_user_names()
 
+
 class RatedbanList(SystemUserList):
     def __init__(self, name):
         super(RatedbanList, self).__init__(name, is_public=False)
@@ -516,6 +533,7 @@ class RatedbanList(SystemUserList):
 
     def _get_names(self):
         return db.get_ratedbanned_user_names()
+
 
 class PlaybanList(SystemUserList):
     def __init__(self, name):
@@ -550,6 +568,7 @@ class PlaybanList(SystemUserList):
         playbanned_guests = [u.name for u in global_.online
             if u.is_playbanned and u.is_guest]
         return db.get_playbanned_user_names() + playbanned_guests
+
 
 def init_lists():
     """ initialize lists """

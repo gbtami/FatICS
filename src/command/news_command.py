@@ -22,6 +22,7 @@ import db
 
 from .command import ics_command, Command
 
+
 @ics_command('news', 'p', admin.Level.user)
 class News(Command):
     def run(self, args, conn):
@@ -45,6 +46,7 @@ class News(Command):
                     conn.write('%4d (%s) %s\n' % (item['news_id'],
                         item['news_date'], item['news_title']))
 
+
 @ics_command('cnewsd', 'd', admin.Level.admin)
 class Cnewsd(Command):
     """ Delete the last line of a news item's text. """
@@ -56,6 +58,7 @@ class Cnewsd(Command):
             conn.write(A_('News item %d not found or already has no lines.\n') % news_id)
         else:
             conn.write(A_('Deleted last line of news item %d.\n') % news_id)
+
 
 @ics_command('cnewse', 'dp', admin.Level.admin)
 class Cnewse(Command):
@@ -73,6 +76,7 @@ class Cnewse(Command):
         else:
             conn.write(A_('Deleted news item %d.\n') % args[0])
 
+
 @ics_command('cnewsf', 'dT', admin.Level.admin)
 class Cnewsf(Command):
     """ Add a line to a news item's text. """
@@ -81,6 +85,7 @@ class Cnewsf(Command):
         line = args[1] if args[1] is not None else ''
         db.add_news_line(news_id, line)
         conn.write(A_('News item %d updated.\n') % news_id)
+
 
 @ics_command('cnewsi', 'S', admin.Level.admin)
 class Cnewsi(Command):
@@ -91,6 +96,7 @@ class Cnewsi(Command):
         news_id = db.add_news(args[0], conn.user, is_admin=False)
         conn.write(A_('Created news item %d.\n') % news_id)
 
+
 @ics_command('cnewsp', 'd', admin.Level.admin)
 class Cnewsp(Command):
     def run(self, args, conn):
@@ -100,6 +106,7 @@ class Cnewsp(Command):
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])
+
 
 @ics_command('cnewst', 'dS', admin.Level.admin)
 class Cnewst(Command):

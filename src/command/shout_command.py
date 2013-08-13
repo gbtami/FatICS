@@ -21,6 +21,7 @@ from .command import ics_command, Command, requires_registration
 
 import global_
 
+
 @ics_command('shout', 'S')
 class Shout(Command):
     @requires_registration
@@ -47,6 +48,7 @@ class Shout(Command):
             conn.write("%s shouts: %s\n" % (dname, args[0]))
             conn.write(ngettext("(shouted to %d player)\n", "(shouted to %d players)\n", count) % count)
 
+
 @ics_command('it', 'S')
 class It(Command):
     @requires_registration
@@ -72,6 +74,7 @@ class It(Command):
                         count += 1
             conn.write("--> %s %s\n" % (dname, args[0]))
             conn.write(ngettext("(it-shouted to %d player)\n", "(it-shouted to %d players)\n", count) % count)
+
 
 @ics_command('cshout', 'S')
 class Cshout(Command):

@@ -26,6 +26,7 @@ import server
 
 from .command import ics_command, Command
 
+
 @ics_command('date', '')
 class Date(Command):
     def run(self, args, conn):
@@ -37,6 +38,7 @@ class Date(Command):
         # same as above, just included in case scripts parse it
         #conn.write(_("GMT            - %s\n") %
         #    dt.strftime("%a %b %e, %H:%M GMT %Y"))
+
 
 @ics_command('uptime', '')
 class Uptime(Command):

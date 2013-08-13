@@ -50,6 +50,7 @@ import rating
 
 scale = 400 / math.log(10)
 
+
 class Player:
     # Class attribute
     # The system constant, which constrains
@@ -93,7 +94,6 @@ class Player:
             tempSum += self._g(RD_list[i]) * \
                        (outcome_list[i] - self._E(rating_list[i], RD_list[i]))
         self.rating += math.pow(self._rd, 2) * tempSum
-
 
     def _newVol(self, rating_list, RD_list, outcome_list, v):
         """ Calculating the new volatility as per the Glicko2 system.

@@ -26,12 +26,15 @@ from config import config
 import db
 import user
 
+
 class AmbiguousException(Exception):
     def __init__(self, names):
         self.names = names
 
 
 _username_re = re.compile('^[a-zA-Z]+$')
+
+
 def check_name(name, min_len):
     """ Check whether a string is a valid user name. """
     # XXX "try again" should be specific to logging in
@@ -80,10 +83,8 @@ class Online(object):
         del self._online[u.name.lower()]
         self.guest_count -= int(u.is_guest)
 
-
     def is_online(self, name):
         return name.lower() in self._online_names
-
 
     def find_exact(self, name):
         name = name.lower()
@@ -93,13 +94,11 @@ class Online(object):
             u = None
         return u
 
-
     def find_exact_for_user(self, name, conn):
         u = self.find_exact(name)
         if not u:
             conn.write(_('No player named "%s" is online.\n') % name)
         return u
-
 
     def find_part(self, prefix):
         assert(not self.is_online(prefix))
@@ -110,11 +109,8 @@ class Online(object):
             ulist = []
         return ulist
 
-
     #def __getitem__(self, key):
     #    return self._online[key]
-
-
     def __iter__(self):
         return iter(self._online_names.values())
 

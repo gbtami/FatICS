@@ -27,6 +27,8 @@ import channel
 from game_list import GameList
 
 # user state that is per-session and not saved to persistent storage
+
+
 class Session(object):
     def __init__(self, conn):
         """ Created when a connection is made. """
@@ -95,7 +97,7 @@ class Session(object):
         if self.game:
             try:
                 self.game.leave(self.user)
-                assert(self.game is  None)
+                assert(self.game is None)
             except:
                 print 'exception ending game due to logout'
                 traceback.print_exc()
@@ -186,7 +188,6 @@ class Session(object):
 
         if for_move:
             self.move_sent_timestamp = t
-
 
     def get_timeseal_move_time(self):
         if self.move_sent_timestamp is None:

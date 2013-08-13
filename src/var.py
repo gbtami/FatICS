@@ -29,8 +29,10 @@ from config import config
 
 ivar_number = {}
 
+
 class BadVarError(Exception):
     pass
+
 
 def _set_nowrap(user, val):
     """ Called when the nowrap ivar is set. """
@@ -38,6 +40,7 @@ def _set_nowrap(user, val):
         user.session.conn.transport.disableWrapping()
     else:
         user.session.conn.transport.enableWrapping(user.vars['width'])
+
 
 def _set_pin_ivar(user, val):
     """ Called when the pin ivar is set. """
@@ -47,6 +50,7 @@ def _set_pin_ivar(user, val):
         if user in global_.online.pin_ivar:
             global_.online.pin_ivar.remove(user)
 
+
 def _set_pin_var(user, val):
     """ Called when the pin var is set. """
     if val:
@@ -55,6 +59,7 @@ def _set_pin_var(user, val):
         if user in global_.online.pin_var:
             global_.online.pin_var.remove(user)
 
+
 def _set_gin_var(user, val):
     """ Called when the gin var is set. """
     if val:
@@ -62,6 +67,7 @@ def _set_gin_var(user, val):
     else:
         if user in global_.online.gin_var:
             global_.online.gin_var.remove(user)
+
 
 def _set_open_var(u, val):
     for offer in u.session.offers_sent[:]:
@@ -77,6 +83,7 @@ def _set_open_var(u, val):
             u.session.partner.write_('\nYour partner has become available for matches.\n')
         else:
             u.session.partner.write_('\nYour partner has become unavailable for matches.\n')
+
 
 def _set_bugopen_var(u, val):
     if not val:
@@ -96,6 +103,7 @@ def _set_bugopen_var(u, val):
         if u.session.partner:
             u.session.partner.write_('\nYour partner has become unavailable for bughouse.\n')
             partner.end_partnership(u, u.session.partner)
+
 
 class Var(object):
     """This class represents the form of a variable but does not hold
@@ -142,6 +150,7 @@ class Var(object):
         if self._hook:
             self._hook(user, val)
 
+
 class StringVar(Var):
     def __init__(self, name, default, max_len=1023):
         Var.__init__(self, name, default)
@@ -162,6 +171,7 @@ class StringVar(Var):
         if self._hook:
             self._hook(user, val)
 
+
 class PromptVar(StringVar):
     def set(self, user, val):
         if val is not None and len(val) > self.max_len - 1:
@@ -175,6 +185,7 @@ class PromptVar(StringVar):
         user.set_var(self, val)
         user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
 
+
 class LangVar(StringVar):
     def set(self, user, val):
         if val not in lang.langs:
@@ -184,6 +195,7 @@ class LangVar(StringVar):
         # Start using the new language right away.
         lang.langs[val].install(names=['ngettext'])
         user.write(_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val})
+
 
 class FormulaVar(Var):
     max_len = 1023
@@ -207,6 +219,7 @@ class FormulaVar(Var):
             user.set_formula(self, val)
             user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
 
+
 class NoteVar(Var):
     max_len = 1023
 
@@ -224,6 +237,7 @@ class NoteVar(Var):
             user.write((_('''Note %(name)s set: %(val)s\n''') %
                 {'name': self.name, 'val': val}))
 
+
 class TzoneVar(Var):
     def set(self, user, val):
         if val is None:
@@ -239,6 +253,7 @@ class TzoneVar(Var):
                 tzinfo=pytz.utc).astimezone(user.tz).strftime(' (%Z, UTC%z)')
         user.write(_('''Time zone set to "%(val)s"%(info)s.\n''') %
             {'val': val, 'info': info})
+
 
 class IntVar(Var):
     """An integer variable."""
@@ -264,6 +279,7 @@ class IntVar(Var):
             user.write(_("%(name)s set to %(val)s.\n") % {'name': self.name, 'val': val})
         if self._hook:
             self._hook(user, val)
+
 
 class BoolVar(Var):
     """ A boolean variable. """
@@ -305,6 +321,7 @@ class BoolVar(Var):
                 user.write(_("%s unset.\n") % self.name)
         if self._hook:
             self._hook(user, val)
+
 
 class VarList(object):
     def __init__(self):

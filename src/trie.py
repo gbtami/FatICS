@@ -22,11 +22,13 @@
 # that returns a list of child nodes when there is no matching node,
 # and a method to get all children of a given key
 
+
 class NeedMore(Exception):
     def __init__(self, matches=None):
         self.matches = matches
 
 NO_VALUE = object()
+
 
 class Node(object):
     """Internal representation of Trie nodes."""

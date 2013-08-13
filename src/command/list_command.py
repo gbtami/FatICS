@@ -23,6 +23,7 @@ import trie
 
 from .command import ics_command, Command
 
+
 @ics_command('addlist', 'ww')
 class Addlist(Command):
     def run(self, args, conn):
@@ -41,6 +42,7 @@ class Addlist(Command):
                 ls.add(args[1], conn)
             except list_.ListError as e:
                 conn.write(e.reason)
+
 
 @ics_command('showlist', 'o')
 class Showlist(Command):
@@ -65,6 +67,7 @@ class Showlist(Command):
                 ls.show(conn)
             except list_.ListError as e:
                 conn.write(e.reason)
+
 
 @ics_command('sublist', 'ww')
 class Sublist(Command):

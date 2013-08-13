@@ -51,6 +51,7 @@ reactor.shuttingDown = False
 if os.geteuid() == 0:
     sys.path.append('.')
 
+
 class IcsFactory(ServerFactory):
     def __init__(self, port):
         #ServerFactory.__init__(self)
@@ -64,6 +65,7 @@ class IcsFactory(ServerFactory):
         conn.compatibility = self.port == config.compatibility_port
         conn.send_IAC = self.port != config.websocket_port
         return conn
+
 
 def getService(port):
     """

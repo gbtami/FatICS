@@ -24,6 +24,7 @@ import user
 
 from parser import BadCommandError
 
+
 @ics_command('summon', 'w')
 class Summon(Command):
     def run(self, args, conn):
@@ -43,6 +44,7 @@ class Summon(Command):
         u.write_('%s needs to speak to you.  To contact him or her type "tell %s hello".\n', ((conn.user.name, conn.user.name)))
         conn.write(_('Summoning sent to "%s".\n') % u.name)
         conn.user.add_idlenotification(u)
+
 
 @ics_command('znotify', 'o')
 class Znotify(Command):
