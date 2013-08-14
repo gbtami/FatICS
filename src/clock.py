@@ -16,7 +16,6 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import datetime
 import time
 
 import time_format
@@ -45,7 +44,8 @@ class Clock(object):
     def _time_to_str(self, secs):
         if secs < 0:
             secs = 0
-        td = datetime.timedelta(seconds=secs)
+        # XXX I'm not sure what this code was supposed to do
+        #td = datetime.timedelta(seconds=secs)
         #oldstr = str(td)
         # round to the nearest millisecond
         ret = time_format.hms(secs)

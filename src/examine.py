@@ -23,7 +23,7 @@ import speed_variant
 import clock
 
 from game import Game
-from game_constants import *
+from game_constants import WHITE, EXAMINED
 
 
 class ExaminedGame(Game):
@@ -247,8 +247,6 @@ class ExaminedGame(Game):
 
     def free(self):
         super(ExaminedGame, self).free()
-        for p in self.players:
-            assert(user.session.game == self)
-            p.session.game = None
+        assert(not self.players)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

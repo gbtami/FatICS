@@ -22,7 +22,6 @@ import traceback
 import var
 import timeseal
 import partner
-import channel
 import global_
 
 from game_list import GameList
@@ -37,7 +36,7 @@ class Session(object):
         self.use_timeseal = False
         self.use_zipseal = False
         self.check_for_timeseal = True
-        self.ivars = var.varlist.get_default_ivars()
+        self.ivars = global_.varlist.get_default_ivars()
         self.closed = False
 
     def set_user(self, user):
@@ -152,10 +151,10 @@ class Session(object):
         # remove ftells
         if self.ftell:
             self.ftell.session.ftell_admins.remove(self.user)
-            channel.chlist[0].tell("I am logging out now - conversation forwarding stopped.", self.user)
+            global_.channels[0].tell("I am logging out now - conversation forwarding stopped.", self.user)
 
         if self.ftell_admins:
-            ch = channel.chlist[0]
+            ch = global_.channels[0]
             for adm in self.ftell_admins:
                 ch.tell(A_("*%s* has logged out - conversation forwarding stopped.") % self.user.name, adm)
                 adm.write(A_("%s, whose tells you were forwarding, has logged out.\n") % self.user.name)

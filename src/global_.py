@@ -22,38 +22,50 @@
 import find_user
 import trie
 import list_
+import var
+import filter_
+import lang
+import channel
 
-try:
-    globals_defined
-except NameError:
-    globals_defined = True
+# bughouse partners
+partners = []
 
-    # bughouse partners
-    partners = []
+# all offers
+offers = {}
 
-    # all offers
-    offers = {}
+# all games
+games = {}
 
-    # all games
-    games = {}
+# online players
+online = find_user.Online()
 
-    # online players
-    online = find_user.Online()
+# seeks
+seeks = {}
 
-    # seeks
-    seeks = {}
+# player variables and ivariables
+vars_ = trie.Trie()
+ivars = trie.Trie()
+varlist = var.VarList()
 
-    # commands
-    commands = trie.Trie()
-    admin_commands = trie.Trie()
+# lists
+lists = trie.Trie()
+admin_lists = trie.Trie()
+list_.init_lists()
 
-    # player variables and ivariables
-    vars_ = trie.Trie()
-    ivars = trie.Trie()
+# filters
+filters = filter_.get_initial_filters()
 
-    # lists
-    lists = trie.Trie()
-    admin_lists = trie.Trie()
-    list_.init_lists()
+# langauages
+langs = lang.get_langs()
+
+# channels
+channels = channel.ChannelList()
+
+# commands
+commands = trie.Trie()
+admin_commands = trie.Trie()
+
+# load commands
+from command import *
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

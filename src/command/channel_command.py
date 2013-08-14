@@ -20,8 +20,8 @@
 from .command import ics_command, Command, requires_registration
 
 import admin
-import channel
 import user
+import global_
 
 
 @ics_command('inchannel', 'n', admin.Level.user)
@@ -40,7 +40,7 @@ class Inchannel(Command):
                 conn.write(s + '\n')
             else:
                 try:
-                    ch = channel.chlist[args[0]]
+                    ch = global_.channels[args[0]]
                 except KeyError:
                     conn.write(_('Invalid channel number.\n'))
                 else:
@@ -50,7 +50,7 @@ class Inchannel(Command):
                     count = len(on)
                     conn.write(ngettext('There is %d player in channel %d.\n', 'There are %d players in channel %d.\n', count) % (count, args[0]))
         else:
-            for ch in channel.chlist.all.values():
+            for ch in global_.channels.all.values():
                 on = ch.get_online()
                 if len(on) > 0:
                     conn.write("%s: %s\n" % (ch.get_display_name(), ' '.join(on)))
@@ -66,7 +66,7 @@ class Chkick(Command):
         if not u:
             return
         try:
-            ch = channel.chlist[chid]
+            ch = global_.channels[chid]
         except KeyError:
             conn.write(_('Invalid channel number.\n'))
             return
@@ -79,7 +79,7 @@ class Chtopic(Command):
     def run(self, args, conn):
         (chid, topic) = args
         try:
-            ch = channel.chlist[chid]
+            ch = global_.channels[chid]
         except KeyError:
             conn.write(_('Invalid channel number.\n'))
             return

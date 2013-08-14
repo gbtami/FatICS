@@ -26,7 +26,6 @@ from zope.interface import implements
 
 import telnet
 import parser
-import lang
 import global_
 import db
 import login
@@ -50,7 +49,7 @@ class Connection(basic.LineReceiver):
     timeout_check = None
 
     def connectionMade(self):
-        lang.langs['en'].install(names=['ngettext'])
+        global_.langs['en'].install(names=['ngettext'])
         self.session = Session(self)
         self.factory.connections.append(self)
         self.write(db.get_server_message('welcome'))
@@ -225,7 +224,7 @@ class Connection(basic.LineReceiver):
             self.session.pong(self.session.timeseal_last_timestamp)
             return
 
-        lang.langs[self.user.vars['lang']].install(names=['ngettext'])
+        global_.langs[self.user.vars['lang']].install(names=['ngettext'])
         d = parser.parse(line, self)
         #if self.user.is_online:
         if self.state == 'prompt':

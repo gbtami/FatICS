@@ -20,7 +20,6 @@ import copy
 import pytz
 import datetime
 
-import lang
 import formula
 import global_
 import partner
@@ -188,12 +187,12 @@ class PromptVar(StringVar):
 
 class LangVar(StringVar):
     def set(self, user, val):
-        if val not in lang.langs:
+        if val not in global_.langs:
             raise BadVarError()
         assert(not self.is_ivar)
         user.set_var(self, val)
         # Start using the new language right away.
-        lang.langs[val].install(names=['ngettext'])
+        global_.langs[val].install(names=['ngettext'])
         user.write(_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val})
 
 
@@ -452,7 +451,5 @@ class VarList(object):
 
     def get_default_ivars(self):
         return copy.copy(self.default_ivars)
-
-varlist = VarList()
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

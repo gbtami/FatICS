@@ -269,10 +269,4 @@ class ChannelList(object):
     def get_default_guest_channels(self):
         return [4, 53][:]
 
-chlist = ChannelList()
-#try:
-#    chlist
-#except NameError:
-#    chlist = ChannelList()
-
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -19,7 +19,6 @@
 
 from .command import Command, ics_command
 
-import channel
 import user
 import global_
 import admin
@@ -75,7 +74,7 @@ class TellCommand(Command, ToldMixin):
         else:
             if type(args[0]) in [int, long]:
                 try:
-                    ch = channel.chlist[args[0]]
+                    ch = global_.channels[args[0]]
                 except KeyError:
                     conn.write(_('Invalid channel number.\n'))
                 else:
@@ -100,7 +99,7 @@ class TellCommand(Command, ToldMixin):
                     (conn.user.get_display_name(), args[1]))
                 self._told(u, conn)
                 if u.session.ftell == conn.user or conn.user.session.ftell == u:
-                    for adm in channel.chlist[0].online:
+                    for adm in global_.channels[0].online:
                         if adm.hears_channels():
                             adm.write(A_("Fwd tell: %s told %s: %s\n") % (conn.user.name, u.name, args[1]))
 
@@ -135,7 +134,7 @@ class Qtell(Command):
         if type(args[0]) == type(1):
             # qtell channel
             try:
-                ch = channel.chlist[args[0]]
+                ch = global_.channels[args[0]]
             except KeyError:
                 ret = 1
             else:

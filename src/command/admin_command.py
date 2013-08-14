@@ -26,7 +26,6 @@ import parser
 import global_
 import admin
 import speed_variant
-import channel
 import db
 import trie
 import var
@@ -390,7 +389,7 @@ class Showcomment(Command):
 @ics_command('ftell', 'o', admin.Level.admin)
 class Ftell(Command):
     def run(self, args, conn):
-        ch = channel.chlist[0]
+        ch = global_.channels[0]
         if not args[0]:
             if not conn.session.ftell:
                 conn.write(A_("You were not forwarding a conversation.\n"))

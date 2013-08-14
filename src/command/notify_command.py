@@ -19,7 +19,6 @@
 
 from .command import Command, ics_command
 
-import global_
 import user
 
 from parser import BadCommandError

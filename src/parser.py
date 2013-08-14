@@ -36,8 +36,6 @@ import trie
 import block
 import block_codes
 
-from command import *
-
 _command_re = re.compile(r'^(\S+)(?:\s+(.*))?$')
 
 

@@ -18,8 +18,6 @@
 
 from twisted.internet import defer
 
-import channel
-#import user
 import filter_
 import global_
 import find_user
@@ -251,7 +249,7 @@ class ChannelList(MyList):
             raise ListError(_('The channel must be a number.\n'))
 
         try:
-            ch = channel.chlist[val]
+            ch = global_.channels[val]
         except KeyError:
             raise ListError(_('Invalid channel number.\n'))
 
@@ -270,7 +268,7 @@ class ChannelList(MyList):
             raise ListError(_('The channel must be a number.\n'))
 
         try:
-            ch = channel.chlist[val]
+            ch = global_.channels[val]
         except KeyError:
             raise ListError(_('Invalid channel number.\n'))
 
