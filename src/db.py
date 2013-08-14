@@ -59,8 +59,6 @@ if 1:
             host=config.db_host, db=config.db_db,
             read_default_file="~/.my.cnf", cursorclass=cursors.DictCursor,
             cp_reconnect=True, cp_min=1, cp_max=3, cp_openfun=openfun)
-            # XXX for coexistence with MySQLdb
-            #autocommit=True)
 
     def query(cursor, *args):
         try:
@@ -442,16 +440,13 @@ if 1:
         yield adb.runOperation("""INSERT INTO ip_filter SET filter_pattern=%s""",
             (filter_pattern,))
 
-    @defer.inlineCallbacks
     def del_filtered_ip(filter_pattern):
-        yield adb.runOperation(
-            """DELETE FROM ip_filter WHERE filter_pattern=%s""",
-            (filter_pattern,))
-        # XXX
-        #if cursor.rowcount != 1:
-        #    cursor.close()
-        #    raise DeleteError()
-        defer.returnValue(None)
+        def do_del(txn):
+            txn.execute("""DELETE FROM ip_filter WHERE filter_pattern=%s""",
+                (filter_pattern,))
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     # comments
     '''def add_comment(admin_id, user_id, txt):
@@ -516,16 +511,13 @@ if 1:
         assert(cursor.rowcount == 1)
         cursor.close()
 
-    @defer.inlineCallbacks
     def channel_del_user(ch_id, user_id):
-        yield adb.runOperation("""DELETE FROM channel_user
-            WHERE user_id=%s AND channel_id=%s""", (user_id, ch_id))
-        # XXX
-        #if cursor.rowcount != 1:
-        #    cursor.close()
-        #    raise DeleteError()
-        #cursor.close()
-        defer.returnValue(None)
+        def do_del(txn):
+            txn.execute("""DELETE FROM channel_user
+                WHERE user_id=%s AND channel_id=%s""", (user_id, ch_id))
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     def channel_list():
         cursor = db.cursor(cursors.DictCursor)
@@ -573,15 +565,13 @@ if 1:
             SET channel_id=%s,user_id=%s""", (chid, user_id))
         defer.returnValue(None)
 
-    @defer.inlineCallbacks
     def channel_del_owner(chid, user_id):
-        yield adb.runQuery("""DELETE FROM channel_owner
+        def do_del(txn):
+            txn.execute("""DELETE FROM channel_owner
             WHERE channel_id=%s AND user_id=%s""", (chid, user_id))
-        # XXX
-        #if cursor.rowcount != 1:
-        #    cursor.close()
-        #    raise DeleteError()
-        defer.returnValue(None)
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     @defer.inlineCallbacks
     def user_channels_owned(user_id):
@@ -598,14 +588,13 @@ if 1:
             raise DuplicateKeyError()
         defer.returnValue(None)
 
-    @defer.inlineCallbacks
     def user_del_title(user_id, title_id):
-        yield adb.runOperation("""DELETE FROM user_title WHERE user_id=%s AND title_id=%s""",
+        def do_del(txn):
+            txn.execute("""DELETE FROM user_title WHERE user_id=%s AND title_id=%s""",
             (user_id, title_id))
-        # XXX
-        #if cursor.rowcount != 1:
-        #    raise DeleteError()
-        defer.returnValue(None)
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     def user_get_titles(user_id):
         cursor = db.cursor(cursors.DictCursor)
@@ -631,15 +620,13 @@ if 1:
             raise DuplicateKeyError()
         defer.returnValue(None)
 
-    @defer.inlineCallbacks
     def user_del_notification(notified, notifier):
-        yield adb.runOperation("""DELETE FROM user_notify WHERE notified=%s AND notifier=%s""",
+        def do_del(txn):
+            txn.execute("""DELETE FROM user_notify WHERE notified=%s AND notifier=%s""",
             (notified, notifier))
-        # XXX
-        #if cursor.rowcount != 1:
-        #    cursor.close()
-        #    raise DeleteError()
-        defer.returnValue(None)
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     def user_get_notified(user_id):
         cursor = db.cursor(cursors.DictCursor)
@@ -664,15 +651,13 @@ if 1:
             raise DuplicateKeyError()
         defer.returnValue(None)
 
-    @defer.inlineCallbacks
     def user_del_gnotification(notified, notifier):
-        yield adb.runOperation("""DELETE FROM user_gnotify
-            WHERE gnotified=%s AND gnotifier=%s""", (notified, notifier))
-        # XXX
-        #if cursor.rowcount != 1:
-        #    cursor.close()
-        #    raise DeleteError()
-        defer.returnValue(None)
+        def do_del(txn):
+            txn.execute("""DELETE FROM user_gnotify
+                WHERE gnotified=%s AND gnotifier=%s""", (notified, notifier))
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     def user_get_gnotified(user_id):
         cursor = db.cursor(cursors.DictCursor)
@@ -702,16 +687,13 @@ if 1:
         return d
         #defer.returnValue(None)
 
-    #@defer.inlineCallbacks
     def user_del_censor(censorer, censored):
-        d = adb.runOperation("""DELETE FROM censor WHERE censored=%s AND censorer=%s""",
-            (censored, censorer))
-        # XXX
-        #if cursor.rowcount != 1:
-        #    cursor.close()
-        #    raise DeleteError()
-        #defer.returnValue(None)
-        return d
+        def do_del(txn):
+            txn.execute("""DELETE FROM censor WHERE censored=%s AND censorer=%s""",
+                (censored, censorer))
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     @defer.inlineCallbacks
     def user_get_censored_async(user_id):
@@ -734,15 +716,13 @@ if 1:
             raise DuplicateKeyError()
         defer.returnValue(None)
 
-    @defer.inlineCallbacks
     def user_del_noplay(noplayer, noplayed):
-        yield adb.runOperation("""DELETE FROM noplay WHERE noplayed=%s AND noplayer=%s""",
+        def do_del(txn):
+            txn.execute("""DELETE FROM noplay WHERE noplayed=%s AND noplayer=%s""",
             (noplayed, noplayer))
-        # XXX
-        #if cursor.rowcount != 1:
-        #    cursor.close()
-        #    raise DeleteError()
-        defer.returnValue(None)
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     def user_get_noplayed(user_id):
         cursor = db.cursor(cursors.DictCursor)
