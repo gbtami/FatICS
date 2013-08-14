@@ -62,10 +62,8 @@ class BaseUser(object):
     def log_on(self, conn):
         self.vars.update(var.varlist.get_transient_vars())
         self.aliases = {}
-        self.notifiers = set()
-        self.notified = set()
-        self.gnotifiers = set()
         self.gnotified = set()
+        self.gnotifiers = set()
         self.noplay = set()
         self.session = conn.session
         self.session.set_user(self)
@@ -194,9 +192,13 @@ class BaseUser(object):
         return self.get_total_time_online() < 36000
 
     def add_notification(self, user):
+        assert(not self.is_guest)
+        assert(not user.is_guest)
         self.notifiers.add(user.name)
         if user.is_online:
             user.notified.add(self.name)
+            self.session.notifiers_online.add(user)
+            user.session.notified_online.add(self)
 
     def remove_notification(self, user):
         self.notifiers.remove(user.name)
@@ -422,7 +424,15 @@ class RegUser(BaseUser):
             #u.session.conn.write(_("**** %s has arrived - you can't both be logged in. ****\n\n") % self.name)
             u.session.conn.loseConnection('logged in again')
 
+        # notify
+        self.notified = set([dbu['user_name']
+            for dbu in db.user_get_notified(self.id)])
+        self.notifiers = set([dbu['user_name']
+            for dbu in db.user_get_notifiers(self.id)])
+
         BaseUser.log_on(self, conn)
+
+        notify.notify_users(self, arrived=True)
 
         if not self.first_login:
             db.user_set_first_login(self.id)
@@ -447,21 +457,6 @@ class RegUser(BaseUser):
             'You have %(mcount)d messages (%(ucount)d unread).\n', mcount) %
             {'mcount': mcount, 'ucount': ucount})
         conn.write(_('Use "messages u" to view unread messages and "clearmessages *" to clear all.\n'))
-
-        for dbu in db.user_get_notified(self.id):
-            name = dbu['user_name']
-            self.notified.add(name)
-
-        nlist = []
-        for dbu in db.user_get_notifiers(self.id):
-            name = dbu['user_name']
-            self.notifiers.add(name)
-            if global_.online.is_online(name):
-                nlist.append(name)
-        notify.notify_users(self, arrived=True)
-
-        if nlist:
-            self.write(_('Present company includes: %s\n') % ' '.join(nlist))
 
         # gnotify
         self.gnotifiers = set([dbu['user_name']
@@ -767,6 +762,8 @@ class GuestUser(BaseUser):
     def log_on(self, conn):
         self._titles = set(['unregistered'])
         self._title_str = '(U)'
+        self.notifiers = set()
+        self.notified = set()
         BaseUser.log_on(self, conn)
         self._history = []
 

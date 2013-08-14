@@ -29,13 +29,13 @@ def check_server():
         raise unittest.SkipTest # this doesn't actually work as intended
 
     # remove players possibly left over from an old run
-    remove_list = ['testplayer', 'testtwo', 'admintwo', 'testobs']
+    '''remove_list = ['testplayer', 'testtwo', 'admintwo', 'testobs']
     t.write('admin\n')
     t.write('%s\n' % admin_passwd)
     for r in remove_list:
         t.write('remplayer %s\n' % r)
     t.write('aclearhist admin\n')
-    t.write('quit\n')
+    t.write('quit\n')'''
     t.close()
 
 check_server()

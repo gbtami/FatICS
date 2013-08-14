@@ -23,6 +23,7 @@ import var
 import timeseal
 import partner
 import channel
+import global_
 
 from game_list import GameList
 
@@ -65,6 +66,17 @@ class Session(object):
         self.observed = GameList()
         self.partner = None
         self.conn.write(_('**** Starting FICS session as %s ****\n\n') % user.get_display_name())
+        # XXX could use set comprehensions for Python 2.7+
+        self.notifiers_online = set([u for u in
+            (global_.online.find_exact(name) for name in self.user.notifiers)
+            if u])
+        for u in self.notifiers_online:
+            u.session.notified_online.add(self.user)
+        self.notified_online = set([u for u in
+            (global_.online.find_exact(name) for name in self.user.notified)
+            if u])
+        for u in self.notified_online:
+            u.session.notifiers_online.add(self.user)
 
     def get_idle_time(self):
         """ returns seconds """
@@ -99,7 +111,7 @@ class Session(object):
                 self.game.leave(self.user)
                 assert(self.game is None)
             except:
-                print 'exception ending game due to logout'
+                print('exception ending game due to logout')
                 traceback.print_exc()
         del self.offers_received[:]
         del self.offers_sent[:]
@@ -149,6 +161,13 @@ class Session(object):
                 adm.write(A_("%s, whose tells you were forwarding, has logged out.\n") % self.user.name)
                 adm.session.ftell = None
             self.ftell_admins = []
+
+        for u in self.notified_online:
+            u.session.notifiers_online.remove(self.user)
+        for u in self.notifiers_online:
+            u.session.notified_online.remove(self.user)
+        self.notifiers_online = None
+        self.notified_online = None
 
     def set_ivars_from_str(self, s):
         """Parse a %b string sent by Jin to set ivars before logging in."""

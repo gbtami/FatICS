@@ -17,6 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import time
 import datetime
 from twisted.internet import reactor, defer
 
@@ -481,5 +482,23 @@ class Chkip(Command):
                 if count > 10:
                     break
         conn.write(A_("Number of players matched: %d\n") % count)
+
+
+@ics_command('asetidle', 'wd', admin.Level.admin)
+class Asetidle(Command):
+    """ Set a player's idle time. I implemented it to help with testing, but
+    maybe there could be other uses. """
+    @defer.inlineCallbacks
+    def run(self, args, conn):
+        u = yield find_user.by_prefix_for_user(args[0], conn, online_only=True)
+        if args[1] < 0:
+            raise BadCommandError
+        if u:
+            secs = 60 * args[1]
+            u.session.last_command_time = time.time() - secs
+            conn.write(A_('Idle time for "%s" set to %d seconds.\n') %
+                (u.name, secs))
+            u.write_("\n%s has set your idle time to %d seconds.\n",
+                (conn.user.name, secs))
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

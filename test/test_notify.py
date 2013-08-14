@@ -240,21 +240,30 @@ class TestSummon(Test):
         self.close(t2)
 
 class TestZnotify(Test):
-    @with_player('TestPlayer')
     @with_player('testtwo')
+    @with_player('testthree')
     def test_znotify(self):
         t = self.connect_as_admin()
         t.write('znotify\n')
         self.expect('No one from your notify list is logged on.\r\nNo one logged in has you on their notify list.', t)
 
-        t.write('+notify testplayer\n')
-        t2 = self.connect_as('testplayer')
-        t3 = self.connect_as('testtwo')
+        t.write('+notify testtwo\n')
+        t2 = self.connect_as('testtwo')
+        t3 = self.connect_as('testthree')
         t3.write('+notify admin\n')
         self.expect('admin added to your notify list', t3)
 
         t.write('znot\n')
-        self.expect('Present company on your notify list:\r\n   TestPlayer\r\nThe following players have you on their notify list:\r\n   testtwo', t)
+        self.expect('Present company on your notify list:\r\n   testtwo\r\nThe following players have you on their notify list:\r\n   testthree', t)
+
+        t.write('asetidle testtwo 10\n')
+        t.write('asetidle testthree 20\n')
+        t.write('zn\n')
+        self.expect('Present company on your notify list:\r\n   testtwo(idle:10m)\r\nThe following players have you on their notify list:\r\n   testthree(idle:20m)', t)
+
+        # hide idle times
+        t.write('z n\n')
+        self.expect('Present company on your notify list:\r\n   testtwo\r\nThe following players have you on their notify list:\r\n   testthree', t)
 
         t.write('-notify testplayer\n')
         self.close(t2)

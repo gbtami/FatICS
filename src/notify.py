@@ -29,6 +29,12 @@ def notify_users(user, arrived):
     # notify of adjourned games
     adjourned_opps = []
     if arrived:
+        nlist = user.session.notifiers_online
+        if nlist:
+            user.write(_('Present company includes: %s\n')
+                % ' '.join((n.name for n in nlist)))
+
+        # XXX don't call DB here
         for adj in db.get_adjourned(user.id):
             if adj['white_user_id'] == user.id:
                 opp_name = adj['black_name']
@@ -45,27 +51,24 @@ def notify_users(user, arrived):
             '%d players who have an adjourned game with you are online: %s\n',
             len(adjourned_opps), (len(adjourned_opps), ' '.join(adjourned_opps)))
 
-    nlist = []
-    for nname in user.notified:
-        u = global_.online.find_exact(nname)
-        if u:
-            if arrived:
-                if u.name not in adjourned_opps:
-                    u.write_("\nNotification: %s has arrived.\n", name)
-                    nlist.append(u.name)
-            else:
-                u.write_("\nNotification: %s has departed.\n", name)
-                nlist.append(u.name)
-
-    if nlist and user.vars['notifiedby']:
+    nlist = user.session.notified_online
+    for u in nlist:
         if arrived:
-            user.write(_('The following players were notified of your arrival: %s\n') % ' '.join(nlist))
+            if u.name not in adjourned_opps:
+                u.write_("\nNotification: %s has arrived.\n", name)
         else:
-            user.write(_('The following players were notified of your departure: %s\n') % ' '.join(nlist))
+            u.write_("\nNotification: %s has departed.\n", name)
 
-    for nname in user.notifiers:
-        u = global_.online.find_exact(nname)
-        if u and u.vars['notifiedby'] and u.name not in nlist:
+    if user.vars['notifiedby']:
+        if arrived:
+            user.write(_('The following players were notified of your arrival: %s\n')
+                % ' '.join((n.name for n in nlist)))
+        else:
+            user.write(_('The following players were notified of your departure: %s\n')
+                % ' '.join((n.name for n in nlist)))
+
+    for u in user.session.notifiers_online - nlist:
+        if u.vars['notifiedby']:
             if arrived:
                 u.write_("\nNotification: %s has arrived and isn't on your notify list.\n", name)
             else:
