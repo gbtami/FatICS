@@ -17,6 +17,7 @@
 #
 
 from datetime import datetime
+from twisted.internet import defer
 
 import list_
 import admin
@@ -141,6 +142,7 @@ class Channel(object):
             assert(not user.is_guest)
             return db.user_in_channel(user.id, self.id)
 
+    @defer.inlineCallbacks
     def add(self, user):
         if user in self.online:
             raise list_.ListError(_('[%s] is already on your channel list.\n') %
@@ -151,18 +153,22 @@ class Channel(object):
         if self.is_user_owned():
             if user.is_guest:
                 raise list_.ListError(_('Only registered players can join channels %d and above.\n') % USER_CHANNEL_START)
-            if db.channel_user_count(self.id) == 0:
-                if (db.user_channels_owned(user.id) >= config.max_channels_owned
+            count = yield db.channel_user_count(self.id)
+            if count == 0:
+                owned_count = yield db.user_channels_owned(user.id)
+                if (owned_count >= config.max_channels_owned
                         and not user.has_title('TD')):
                     raise list_.ListError(_('You cannot own more than %d channels.\n') % config.max_channels_owned)
-                db.channel_add_owner(self.id, user.id)
+                yield db.channel_add_owner(self.id, user.id)
                 user.write(_('You are now the owner of channel %d.\n') % self.id)
 
         self.online.append(user)
-        user.add_channel(self.id)
+        yield user.add_channel(self.id)
         if self.topic:
             self.show_topic(user)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def remove(self, user):
         if user not in self.online:
             raise list_.ListError(_('[%s] is not on your channel list.\n') %
@@ -170,17 +176,18 @@ class Channel(object):
 
         assert(user.is_online)
         self.online.remove(user)
-        user.remove_channel(self.id)
+        yield user.remove_channel(self.id)
 
         if not user.is_guest and self.is_user_owned():
             try:
-                db.channel_del_owner(self.id, user.id)
+                yield db.channel_del_owner(self.id, user.id)
             except db.DeleteError:
                 # user was not an owner
                 pass
             else:
                 user.write(_('You are no longer an owner of channel %d.\n') % self.id)
                 # TODO? what if channel no longer has an owner?
+        defer.returnValue(None)
 
     def kick(self, u, owner):
         if not self.check_owner(owner):

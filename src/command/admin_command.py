@@ -240,7 +240,7 @@ class Asetemail(Command):
                     return
                 old_email = u.email
                 u.set_email(email)
-                db.add_comment(adminuser.id, u.id,
+                yield db.add_comment_async(adminuser.id, u.id,
                     'Changed email address from "%s" to "%s".' % (
                         old_email, email))
                 if u.is_online:
@@ -270,7 +270,7 @@ class Asetrealname(Command):
             else:
                 old_real_name = u.real_name
                 u.set_real_name(real_name)
-                db.add_comment(adminuser.id, u.id,
+                yield db.add_comment_async(adminuser.id, u.id,
                     'Changed real name from "%s" to "%s".' % (old_real_name, real_name))
                 if u.is_online:
                     u.write_('%(aname)s has changed your real name to "%(real_name)s".\n',
@@ -281,17 +281,20 @@ class Asetrealname(Command):
 
 @ics_command('nuke', 'w', admin.Level.admin)
 class Nuke(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         u = global_.online.find_exact_for_user(args[0], conn)
         if u:
             if not admin.check_user_operation(conn.user, u):
-                conn.write("You need a higher adminlevel to nuke %s!\n" % u.name)
+                conn.write("You need a higher adminlevel to nuke %s!\n"
+                    % u.name)
             else:
                 u.write_('\n\n**** You have been kicked out by %s! ****\n\n', (conn.user.name,))
                 u.session.conn.loseConnection('nuked')
                 if not u.is_guest:
-                    db.add_comment(conn.user.id, u.id, 'Nuked.')
+                    yield db.add_comment_async(conn.user.id, u.id, 'Nuked.')
                 conn.write('Nuked: %s\n' % u.name)
+        defer.returnValue(None)
 
 
 @ics_command('pose', 'wS', admin.Level.admin)
@@ -362,19 +365,20 @@ class Addcomment(Command):
             if u.is_guest:
                 conn.write(A_('Unregistered players cannot have comments.\n'))
             else:
-                db.add_comment(adminuser.id, u.id, args[1])
+                yield db.add_comment_async(adminuser.id, u.id, args[1])
                 conn.write(A_('Comment added for %s.\n') % u.name)
 
 
 @ics_command('showcomment', 'w', admin.Level.admin)
 class Showcomment(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
-        u = user.find_by_prefix_for_user(args[0], conn)
+        u = yield find_user.by_prefix_for_user(args[0], conn)
         if u:
             if u.is_guest:
                 conn.write(A_('Unregistered players cannot have comments.\n'))
             else:
-                comments = db.get_comments(u.id)
+                comments = yield db.get_comments(u.id)
                 if not comments:
                     conn.write(A_('There are no comments for %s.\n') % u.name)
                 else:

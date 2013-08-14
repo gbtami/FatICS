@@ -207,7 +207,7 @@ class TelnetTransport(protocol.Protocol):
         self.transport.pauseProducing()
 
     def resumeProducing(self):
-        if self.transport.connected:
+        if self.transport.connected and not self.transport.disconnecting:
             self.transport.resumeProducing()
 
     def connectionLost(self, reason):

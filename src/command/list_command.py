@@ -17,6 +17,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import global_
 import list_
 import trie
@@ -26,6 +28,7 @@ from .command import ics_command, Command
 
 @ics_command('addlist', 'ww')
 class Addlist(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.is_admin():
             ulists = global_.admin_lists
@@ -39,9 +42,10 @@ class Addlist(Command):
             conn.write(_('''Ambiguous list \"%s\". Matches: %s\n''') % (args[0], ' '.join([r.name for r in e.matches])))
         else:
             try:
-                ls.add(args[1], conn)
+                yield ls.add(args[1], conn)
             except list_.ListError as e:
                 conn.write(e.reason)
+        defer.returnValue(None)
 
 
 @ics_command('showlist', 'o')
@@ -71,6 +75,7 @@ class Showlist(Command):
 
 @ics_command('sublist', 'ww')
 class Sublist(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.is_admin():
             ulists = global_.admin_lists
@@ -84,8 +89,9 @@ class Sublist(Command):
             conn.write(_('''Ambiguous list \"%s\". Matches: %s\n''') % (args[0], ' '.join([r.name for r in e.matches])))
         else:
             try:
-                ls.sub(args[1], conn)
+                yield ls.sub(args[1], conn)
             except list_.ListError as e:
                 conn.write(e.reason)
+        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

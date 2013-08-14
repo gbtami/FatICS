@@ -18,6 +18,8 @@
 
 from MySQLdb import connect, cursors, IntegrityError, OperationalError
 from config import config
+
+from twisted.internet import defer
 from twisted.enterprise import adbapi
 
 
@@ -41,6 +43,7 @@ if 1:
         global db
         db = connect(host=config.db_host, db=config.db_db,
             read_default_file="~/.my.cnf")
+        db.autocommit(True) # XXX necessary to coexist with adbapi
         cursor = db.cursor()
         cursor = query(cursor, """SET time_zone='+00:00'""")
         db.set_character_set('utf8')
@@ -56,6 +59,8 @@ if 1:
             host=config.db_host, db=config.db_db,
             read_default_file="~/.my.cnf", cursorclass=cursors.DictCursor,
             cp_reconnect=True, cp_min=1, cp_max=3, cp_openfun=openfun)
+            # XXX for coexistence with MySQLdb
+            #autocommit=True)
 
     def query(cursor, *args):
         try:
@@ -211,7 +216,7 @@ if 1:
         return user_id
 
     def user_set_passwd(uid, passwd):
-        d = adb.runQuery("""UPDATE user SET user_passwd=%s
+        d = adb.runOperation("""UPDATE user SET user_passwd=%s
             WHERE user_id=%s""", (passwd, uid))
         return d
 
@@ -302,11 +307,10 @@ if 1:
         return ret
 
     def user_set_banned(uid, val):
-        cursor = db.cursor()
         assert(val in [0, 1])
-        cursor = query(cursor, """UPDATE user
+        d = adb.runOperation("""UPDATE user
             SET user_banned=%s WHERE user_id=%s""", (val, uid))
-        cursor.close()
+        return d
 
     def get_banned_user_names():
         cursor = db.cursor()
@@ -316,12 +320,12 @@ if 1:
         cursor.close()
         return ret
 
+    @defer.inlineCallbacks
     def user_set_muzzled(uid, val):
-        cursor = db.cursor()
         assert(val in [0, 1])
-        cursor = query(cursor, """UPDATE user
+        yield adb.runOperation("""UPDATE user
             SET user_muzzled=%s WHERE user_id=%s""", (val, uid))
-        cursor.close()
+        defer.returnValue(None)
 
     def get_muzzled_user_names():
         cursor = db.cursor()
@@ -331,12 +335,12 @@ if 1:
         cursor.close()
         return ret
 
+    @defer.inlineCallbacks
     def user_set_cmuzzled(uid, val):
-        cursor = db.cursor()
         assert(val in [0, 1])
-        cursor = query(cursor, """UPDATE user
+        yield adb.runOperation("""UPDATE user
             SET user_cmuzzled=%s WHERE user_id=%s""", (val, uid))
-        cursor.close()
+        defer.returnValue(None)
 
     def get_cmuzzled_user_names():
         cursor = db.cursor()
@@ -346,19 +350,19 @@ if 1:
         cursor.close()
         return ret
 
+    @defer.inlineCallbacks
     def user_set_muted(uid, val):
-        cursor = db.cursor()
         assert(val in [0, 1])
-        cursor = query(cursor, """UPDATE user
+        yield adb.runOperation("""UPDATE user
             SET user_muted=%s WHERE user_id=%s""", (val, uid))
-        cursor.close()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def user_set_notebanned(uid, val):
-        cursor = db.cursor()
         assert(val in [0, 1])
-        cursor = query(cursor, """UPDATE user
+        yield adb.runOperation("""UPDATE user
             SET user_notebanned=%s WHERE user_id=%s""", (val, uid))
-        cursor.close()
+        defer.returnValue(None)
 
     def get_notebanned_user_names():
         cursor = db.cursor()
@@ -368,12 +372,12 @@ if 1:
         cursor.close()
         return ret
 
+    @defer.inlineCallbacks
     def user_set_ratedbanned(uid, val):
-        cursor = db.cursor()
         assert(val in [0, 1])
-        cursor = query(cursor, """UPDATE user
+        yield adb.runOperation("""UPDATE user
             SET user_ratedbanned=%s WHERE user_id=%s""", (val, uid))
-        cursor.close()
+        defer.returnValue(None)
 
     def get_ratedbanned_user_names():
         cursor = db.cursor()
@@ -383,12 +387,12 @@ if 1:
         cursor.close()
         return ret
 
+    @defer.inlineCallbacks
     def user_set_playbanned(uid, val):
-        cursor = db.cursor()
         assert(val in [0, 1])
-        cursor = query(cursor, """UPDATE user
+        yield adb.runOperation("""UPDATE user
             SET user_playbanned=%s WHERE user_id=%s""", (val, uid))
-        cursor.close()
+        defer.returnValue(None)
 
     def get_playbanned_user_names():
         cursor = db.cursor()
@@ -433,39 +437,45 @@ if 1:
         cursor.close()
         return ret
 
+    @defer.inlineCallbacks
     def add_filtered_ip(filter_pattern):
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO ip_filter SET filter_pattern=%s""",
+        yield adb.runOperation("""INSERT INTO ip_filter SET filter_pattern=%s""",
             (filter_pattern,))
-        cursor.close()
 
+    @defer.inlineCallbacks
     def del_filtered_ip(filter_pattern):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM ip_filter WHERE filter_pattern=%s""",
+        yield adb.runOperation(
+            """DELETE FROM ip_filter WHERE filter_pattern=%s""",
             (filter_pattern,))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor.close()
+        # XXX
+        #if cursor.rowcount != 1:
+        #    cursor.close()
+        #    raise DeleteError()
+        defer.returnValue(None)
 
     # comments
-    def add_comment(admin_id, user_id, txt):
+    '''def add_comment(admin_id, user_id, txt):
         cursor = db.cursor()
         cursor = query(cursor, """INSERT INTO user_comment
             SET admin_id=%s,user_id=%s,when_added=NOW(),txt=%s""",
                 (admin_id, user_id, txt))
-        cursor.close()
+        cursor.close()'''
 
+    @defer.inlineCallbacks
+    def add_comment_async(admin_id, user_id, txt):
+        yield adb.runOperation("""INSERT INTO user_comment
+            SET admin_id=%s,user_id=%s,when_added=NOW(),txt=%s""",
+                (admin_id, user_id, txt))
+        defer.returnValue(None)
+
+    @defer.inlineCallbacks
     def get_comments(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """
+        rows = yield adb.runQuery("""
             SELECT user_name AS admin_name,when_added,txt FROM user_comment
                 LEFT JOIN user ON (user.user_id=user_comment.admin_id)
                 WHERE user_comment.user_id=%s
                 ORDER BY when_added DESC""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        defer.returnValue(rows)
 
     # channels
     def user_get_channels(id):
@@ -506,14 +516,16 @@ if 1:
         assert(cursor.rowcount == 1)
         cursor.close()
 
+    @defer.inlineCallbacks
     def channel_del_user(ch_id, user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM channel_user
+        yield adb.runOperation("""DELETE FROM channel_user
             WHERE user_id=%s AND channel_id=%s""", (user_id, ch_id))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor.close()
+        # XXX
+        #if cursor.rowcount != 1:
+        #    cursor.close()
+        #    raise DeleteError()
+        #cursor.close()
+        defer.returnValue(None)
 
     def channel_list():
         cursor = db.cursor(cursors.DictCursor)
@@ -541,13 +553,11 @@ if 1:
         cursor.close()
         return bool(row)
 
+    @defer.inlineCallbacks
     def channel_user_count(chid):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT COUNT(*) FROM channel_user
+        rows = yield adb.runQuery("""SELECT COUNT(*) AS c FROM channel_user
             WHERE channel_id=%s""", (chid,))
-        row = cursor.fetchone()
-        cursor.close()
-        return row[0]
+        defer.returnValue(rows[0]['c'])
 
     def channel_is_owner(chid, user_id):
         cursor = db.cursor()
@@ -557,45 +567,45 @@ if 1:
         cursor.close()
         return bool(row)
 
+    @defer.inlineCallbacks
     def channel_add_owner(chid, user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO channel_owner
+        yield adb.runQuery("""INSERT INTO channel_owner
             SET channel_id=%s,user_id=%s""", (chid, user_id))
-        cursor.close()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def channel_del_owner(chid, user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM channel_owner
+        yield adb.runQuery("""DELETE FROM channel_owner
             WHERE channel_id=%s AND user_id=%s""", (chid, user_id))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor.close()
+        # XXX
+        #if cursor.rowcount != 1:
+        #    cursor.close()
+        #    raise DeleteError()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def user_channels_owned(user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT COUNT(*) FROM channel_owner
+        rows = yield adb.runQuery("""SELECT COUNT(*) AS c FROM channel_owner
             WHERE user_id=%s""", (user_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        return row[0]
+        defer.returnValue(rows[0]['c'])
 
+    @defer.inlineCallbacks
     def user_add_title(user_id, title_id):
-        cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO user_title SET user_id=%s,title_id=%s""", (user_id, title_id))
-            cursor.close()
+            yield adb.runOperation("""INSERT INTO user_title SET user_id=%s,title_id=%s""",
+                (user_id, title_id))
         except IntegrityError:
-            cursor.close()
             raise DuplicateKeyError()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def user_del_title(user_id, title_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM user_title WHERE user_id=%s AND title_id=%s""", (user_id, title_id))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor.close()
+        yield adb.runOperation("""DELETE FROM user_title WHERE user_id=%s AND title_id=%s""",
+            (user_id, title_id))
+        # XXX
+        #if cursor.rowcount != 1:
+        #    raise DeleteError()
+        defer.returnValue(None)
 
     def user_get_titles(user_id):
         cursor = db.cursor(cursors.DictCursor)
@@ -612,22 +622,24 @@ if 1:
         cursor.close()
 
     # notifications
+    @defer.inlineCallbacks
     def user_add_notification(notified, notifier):
-        cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO user_notify SET notified=%s,notifier=%s""", (notified, notifier))
+            yield adb.runOperation("""INSERT INTO user_notify SET notified=%s,notifier=%s""",
+                (notified, notifier))
         except IntegrityError:
             raise DuplicateKeyError()
-        finally:
-            cursor.close()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def user_del_notification(notified, notifier):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM user_notify WHERE notified=%s AND notifier=%s""", (notified, notifier))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor.close()
+        yield adb.runOperation("""DELETE FROM user_notify WHERE notified=%s AND notifier=%s""",
+            (notified, notifier))
+        # XXX
+        #if cursor.rowcount != 1:
+        #    cursor.close()
+        #    raise DeleteError()
+        defer.returnValue(None)
 
     def user_get_notified(user_id):
         cursor = db.cursor(cursors.DictCursor)
@@ -643,24 +655,24 @@ if 1:
         return rows
 
     # game notifications
+    @defer.inlineCallbacks
     def user_add_gnotification(gnotified, gnotifier):
-        cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO user_gnotify
+            yield adb.runOperation("""INSERT INTO user_gnotify
                 SET gnotified=%s,gnotifier=%s""", (gnotified, gnotifier))
         except IntegrityError:
             raise DuplicateKeyError()
-        finally:
-            cursor.close()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def user_del_gnotification(notified, notifier):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM user_gnotify
+        yield adb.runOperation("""DELETE FROM user_gnotify
             WHERE gnotified=%s AND gnotifier=%s""", (notified, notifier))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor.close()
+        # XXX
+        #if cursor.rowcount != 1:
+        #    cursor.close()
+        #    raise DeleteError()
+        defer.returnValue(None)
 
     def user_get_gnotified(user_id):
         cursor = db.cursor(cursors.DictCursor)
@@ -680,22 +692,31 @@ if 1:
         return rows
 
     # censor
+    #@defer.inlineCallbacks
     def user_add_censor(censorer, censored):
-        cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO censor SET censored=%s,censorer=%s""", (censored, censorer))
+            d = adb.runOperation("""INSERT INTO censor SET censored=%s,censorer=%s""",
+                (censored, censorer))
         except IntegrityError:
             raise DuplicateKeyError()
-        finally:
-            cursor.close()
+        return d
+        #defer.returnValue(None)
 
+    #@defer.inlineCallbacks
     def user_del_censor(censorer, censored):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM censor WHERE censored=%s AND censorer=%s""", (censored, censorer))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor.close()
+        d = adb.runOperation("""DELETE FROM censor WHERE censored=%s AND censorer=%s""",
+            (censored, censorer))
+        # XXX
+        #if cursor.rowcount != 1:
+        #    cursor.close()
+        #    raise DeleteError()
+        #defer.returnValue(None)
+        return d
+
+    @defer.inlineCallbacks
+    def user_get_censored_async(user_id):
+        rows = yield adb.runQuery("""SELECT user_name FROM user LEFT JOIN censor ON (user.user_id=censor.censored) WHERE censorer=%s""", (user_id,))
+        defer.returnValue(rows)
 
     def user_get_censored(user_id):
         cursor = db.cursor(cursors.DictCursor)
@@ -705,22 +726,23 @@ if 1:
         return rows
 
     # noplay
+    @defer.inlineCallbacks
     def user_add_noplay(noplayer, noplayed):
-        cursor = db.cursor()
         try:
-            cursor = query(cursor, """INSERT INTO noplay SET noplayed=%s,noplayer=%s""", (noplayed, noplayer))
+            yield adb.runOperation("""INSERT INTO noplay SET noplayed=%s,noplayer=%s""", (noplayed, noplayer))
         except IntegrityError:
             raise DuplicateKeyError()
-        finally:
-            cursor.close()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def user_del_noplay(noplayer, noplayed):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM noplay WHERE noplayed=%s AND noplayer=%s""", (noplayed, noplayer))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor.close()
+        yield adb.runOperation("""DELETE FROM noplay WHERE noplayed=%s AND noplayer=%s""",
+            (noplayed, noplayer))
+        # XXX
+        #if cursor.rowcount != 1:
+        #    cursor.close()
+        #    raise DeleteError()
+        defer.returnValue(None)
 
     def user_get_noplayed(user_id):
         cursor = db.cursor(cursors.DictCursor)

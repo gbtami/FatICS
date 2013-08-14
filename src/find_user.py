@@ -118,6 +118,9 @@ class Online(object):
         return len(self._online_names)
 
 
+# XXX there is no need to return a deferred when
+# online_only == True, to that case should probable
+# be moved into separate functions
 @defer.inlineCallbacks
 def exact(name, online_only=False):
     """ async version of find_by_name_exact() """
@@ -165,7 +168,7 @@ def _by_prefix_async(name, online_only):
 
 
 @defer.inlineCallbacks
-def by_prefix_for_user_async(name, conn, online_only=False):
+def by_prefix_for_user(name, conn, online_only=False):
     """ async version of find_by_prefix_for_user() """
 
     try:
@@ -195,8 +198,8 @@ def by_prefix_for_user_async(name, conn, online_only=False):
         defer.returnValue(u)
 
     except user.UsernameException as e:
-        conn.write(_('"%s" is not a valid handle: %s\n') % (name, e.reason))
-        #conn.write(_('"%s" is not a valid handle.\n') % name)
+        #conn.write(_('"%s" is not a valid handle: %s\n') % (name, e.reason))
+        conn.write(_('"%s" is not a valid handle.\n') % name)
     except AmbiguousException as e:
         conn.write(_("""Ambiguous name "%s". Matches: %s\n""") %
             (name, ' '.join(e.names)))

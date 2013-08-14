@@ -17,12 +17,14 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
 from netaddr import IPAddress, IPNetwork
 
 import list_
 import db
 
 
+@defer.inlineCallbacks
 def add_filter(pattern, conn):
     # Don't check whether this filter is a subset of any existing filter,
     # because it could be reasonable to block overlapping ranges, such as
@@ -34,10 +36,11 @@ def add_filter(pattern, conn):
     if net in filters:
         raise list_.ListError(_('%s is already on the filter list.\n') % net)
     filters.add(net)
-    db.add_filtered_ip(str(net))
+    yield db.add_filtered_ip(str(net))
     conn.write(_('%s added to the filter list.\n') % net)
 
 
+@defer.inlineCallbacks
 def remove_filter(pattern, conn):
     try:
         net = IPNetwork(pattern, implicit_prefix=False).cidr
@@ -47,7 +50,7 @@ def remove_filter(pattern, conn):
         filters.remove(net)
     except KeyError:
         raise list_.ListError(_('%s is not on the filter list.\n') % net)
-    db.del_filtered_ip(str(net))
+    yield db.del_filtered_ip(str(net))
     conn.write(_('%s removed from the filter list.\n') % net)
 
 

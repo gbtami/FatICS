@@ -472,8 +472,8 @@ class RegUser(BaseUser):
         for a in db.user_get_aliases(self.id):
             self.aliases[a['name']] = a['val']
 
-        #for dbu in db.user_get_censored(self.id):
-        #    self.censor.add(dbu['user_name'])
+        #self.censor = set([dbu['user_name'] for dbu in
+        #    db.user_get_censored(self.id)])
         for dbu in db.user_get_noplayed(self.id):
             self.noplay.add(dbu['user_name'])
 
@@ -532,61 +532,85 @@ class RegUser(BaseUser):
         BaseUser.set_alias(self, name, val)
         db.user_set_alias(self.id, name, val)
 
+    @defer.inlineCallbacks
     def add_channel(self, chid):
         BaseUser.add_channel(self, chid)
-        db.channel_add_user(chid, self.id)
+        yield db.channel_add_user(chid, self.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def remove_channel(self, id):
         BaseUser.remove_channel(self, id)
-        db.channel_del_user(id, self.id)
+        yield db.channel_del_user(id, self.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def add_title(self, id):
-        db.user_add_title(self.id, id)
+        yield db.user_add_title(self.id, id)
         self._load_titles()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def remove_title(self, id):
-        db.user_del_title(self.id, id)
+        yield db.user_del_title(self.id, id)
         self._load_titles()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def add_notification(self, user):
         BaseUser.add_notification(self, user)
         if not user.is_guest:
-            db.user_add_notification(self.id, user.id)
+            yield db.user_add_notification(self.id, user.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def remove_notification(self, user):
         BaseUser.remove_notification(self, user)
         if not user.is_guest:
-            db.user_del_notification(self.id, user.id)
+            yield db.user_del_notification(self.id, user.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def add_gnotification(self, user):
         BaseUser.add_gnotification(self, user)
         if not user.is_guest:
-            db.user_add_gnotification(self.id, user.id)
+            yield db.user_add_gnotification(self.id, user.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def remove_gnotification(self, user):
         BaseUser.remove_gnotification(self, user)
         if not user.is_guest:
-            db.user_del_gnotification(self.id, user.id)
+            yield db.user_del_gnotification(self.id, user.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def add_censor(self, user):
         BaseUser.add_censor(self, user)
         if not user.is_guest:
-            db.user_add_censor(self.id, user.id)
+            yield db.user_add_censor(self.id, user.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def remove_censor(self, user):
         BaseUser.remove_censor(self, user)
         if not user.is_guest:
-            db.user_del_censor(self.id, user.id)
+            yield db.user_del_censor(self.id, user.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def add_noplay(self, user):
         BaseUser.add_noplay(self, user)
         if not user.is_guest:
-            db.user_add_noplay(self.id, user.id)
+            yield db.user_add_noplay(self.id, user.id)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def remove_noplay(self, user):
         BaseUser.remove_noplay(self, user)
         if not user.is_guest:
-            db.user_del_noplay(self.id, user.id)
+            yield db.user_del_noplay(self.id, user.id)
+        defer.returnValue(None)
 
     def get_history(self):
         if self._history is None:
@@ -658,38 +682,51 @@ class RegUser(BaseUser):
         db.user_set_real_name(self.id, real_name)
         self.real_name = real_name
 
+    @defer.inlineCallbacks
     def set_banned(self, val):
         """ Ban or unban this user. """
         self.is_banned = val
-        db.user_set_banned(self.id, 1 if val else 0)
+        yield db.user_set_banned(self.id, 1 if val else 0)
 
+    @defer.inlineCallbacks
     def set_muzzled(self, val):
         """ Muzzle or unmuzzle the user (affects shouts). """
         self.is_muzzled = val
-        db.user_set_muzzled(self.id, 1 if val else 0)
+        yield db.user_set_muzzled(self.id, 1 if val else 0)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def set_cmuzzled(self, val):
         """ Cmuzzle or un-cmuzzle the user (affects c-shouts). """
         self.is_cmuzzled = val
-        db.user_set_cmuzzled(self.id, 1 if val else 0)
+        yield db.user_set_cmuzzled(self.id, 1 if val else 0)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def set_muted(self, val):
         BaseUser.set_muted(self, val)
-        db.user_set_muted(self.id, 1 if val else 0)
+        yield db.user_set_muted(self.id, 1 if val else 0)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def set_notebanned(self, val):
         """ Add or remove this user from the noteban list. """
         self.is_notebanned = val
-        db.user_set_notebanned(self.id, 1 if val else 0)
+        yield db.user_set_notebanned(self.id, 1 if val else 0)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def set_ratedbanned(self, val):
         """ Add or remove this user from the ratedban list. """
         self.is_ratedbanned = val
-        db.user_set_ratedbanned(self.id, 1 if val else 0)
+        yield db.user_set_ratedbanned(self.id, 1 if val else 0)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def set_playbanned(self, val):
         BaseUser.set_playbanned(self, val)
-        db.user_set_playbanned(self.id, 1 if val else 0)
+        yield db.user_set_playbanned(self.id, 1 if val else 0)
+        defer.returnValue(None)
 
     def get_total_time_online(self):
         tot = self._total_time_online

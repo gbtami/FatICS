@@ -97,6 +97,5 @@ def notify_pin(user, arrived):
                 u.write_nowrap(admin_pin_var_str, prompt=True)
             else:
                 u.write_nowrap(pin_var_str, prompt=True)
-            u.write_prompt()
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -257,6 +257,9 @@ class TestCensor(Test):
         t = self.connect_as_admin()
         t2 = self.connect_as('testplayer')
 
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
         t2.write('match admin white 1+0\n')
         self.expect('Challenge:', t)
         t.write('accept\n')

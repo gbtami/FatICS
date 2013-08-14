@@ -54,7 +54,7 @@ class Finger(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u = yield find_user.by_prefix_for_user_async(args[0], conn)
+            u = yield find_user.by_prefix_for_user(args[0], conn)
             flags = args[1:]
         else:
             u = conn.user
@@ -177,7 +177,7 @@ class Ping(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u2 = yield find_user.by_prefix_for_user_async(args[0], conn,
+            u2 = yield find_user.by_prefix_for_user(args[0], conn,
                 online_only=True)
         else:
             u2 = conn.user
