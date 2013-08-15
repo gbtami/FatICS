@@ -20,6 +20,7 @@ import time
 import re
 import twisted.internet.interfaces
 
+from twisted.python import log
 from twisted.protocols import basic
 from twisted.internet import reactor
 from zope.interface import implements
@@ -30,7 +31,7 @@ import global_
 import db
 import login
 
-from config import config
+import config
 from timeseal import timeseal, TIMESEAL_PONG
 from session import Session
 
@@ -161,7 +162,8 @@ class Connection(basic.LineReceiver):
                 self.resumeProducing()
         d.addCallback(lookedUpUser)
         def err(e):
-            e.printTraceback()
+            #e.printTraceback()
+            log.err()
             print('error: %s' % e)
             assert(False)
             self.loseConnection('error')
@@ -237,9 +239,12 @@ class Connection(basic.LineReceiver):
                         self.user.write_prompt()
             d.addCallback(resume)
             def err(e):
+                print('last command was: %s\n' % line)
                 e.printTraceback()
-                print('error: %s' % e)
-                assert(False)
+                self.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
+                self.write_nowrap('Error info: exception %s; command was "%s"\n' %
+                    (e.getErrorMessage(), line))
+
                 self.loseConnection('error')
             d.addErrback(err)
 

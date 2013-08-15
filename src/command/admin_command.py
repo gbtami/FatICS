@@ -30,11 +30,11 @@ import db
 import trie
 import var
 import find_user
+import config
 
 from reload import reload
 from .command import Command, ics_command
 from parser import BadCommandError
-from config import config
 
 
 @ics_command('aclearhistory', 'w', admin.Level.admin)

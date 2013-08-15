@@ -23,7 +23,7 @@ import list_
 import admin
 import db
 
-from config import config
+import config
 
 USER_CHANNEL_START = 1024
 

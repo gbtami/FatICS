@@ -20,7 +20,6 @@
 import re
 
 from twisted.internet import defer
-#from twisted.python.log import err
 
 import offer
 import game

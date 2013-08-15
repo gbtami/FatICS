@@ -342,8 +342,13 @@ class Challenge(Offer, MatchStringParser):
                 a.write(e[0])
                 return
 
+        a_sent = a.session.offers_sent
+        b_sent = b.session.offers_sent
+        a_received = a.session.offers_received
+        b_received = b.session.offers_received
+
         # look for a matching offer from player b
-        o = next((o for o in a.session.offers_received if
+        o = next((o for o in a_received if
             o.name == self.name and o.equivalent_to(self)), None)
         if o:
             # a already received an identical offer, so just accept it
@@ -382,11 +387,6 @@ class Challenge(Offer, MatchStringParser):
             challenge_str = '%s (adjourned)' % challenge_str
         #if self.board is not None:
         #    challenge_str = 'Loaded from a board'
-
-        a_sent = a.session.offers_sent
-        b_sent = b.session.offers_sent
-        a_received = a.session.offers_received
-        b_received = b.session.offers_received
 
         if self in a_sent:
             a.write_('You are already offering an identical match to %s.\n',

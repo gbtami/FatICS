@@ -19,8 +19,7 @@
 import time
 
 import global_
-
-from config import config
+import config
 
 from game_constants import PLAYED
 

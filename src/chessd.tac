@@ -26,10 +26,11 @@ from twisted.application import service, internet
 from twisted.internet.protocol import ServerFactory
 from twisted.internet import task, reactor, ssl
 
+SockJsFactory = None
 try:
     from txsockjs.factory import SockJSFactory
 except ImportError:
-    SockJSFactory = None
+    pass
 
 sys.path.insert(0, 'src/')
 
@@ -41,7 +42,7 @@ __builtin__.__dict__['N_'] = lambda s: s
 # admin messages
 __builtin__.__dict__['A_'] = lambda s: s
 
-from config import config
+import config
 import telnet
 import connection
 import timer

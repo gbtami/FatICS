@@ -64,7 +64,7 @@ class Seek(Command):
             ad.a.write_('\nYour seek matches one posted by %s.\n',
                 (conn.user.name,))
             ad.b = conn.user
-            g = game.PlayedGame(ad)
+            game.PlayedGame(ad)
             return
 
         if manual_matches:

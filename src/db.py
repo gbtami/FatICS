@@ -17,7 +17,7 @@
 #
 
 from MySQLdb import connect, cursors, IntegrityError, OperationalError
-from config import config
+import config
 
 from twisted.internet import defer
 from twisted.enterprise import adbapi

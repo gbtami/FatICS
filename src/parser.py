@@ -18,7 +18,6 @@
 
 import time
 import re
-import traceback
 
 from twisted.internet import defer
 
@@ -61,6 +60,7 @@ def _do_parse(s, conn):
         s = s[2:].lstrip()
     else:
         conn.session.last_command_time = time.time()
+        conn.user.vars['busy'] = None
         if conn.session.idlenotified_by:
             for u in conn.session.idlenotified_by:
                 u.write_('\nNotification: %s has unidled.\n',
@@ -125,15 +125,6 @@ def _do_parse(s, conn):
         except BadCommandError:
             ret = block_codes.BLKCMD_ERROR_BADCOMMAND
             cmd.usage(conn)
-        except Exception as e:
-            #t = traceback.format_exc()
-            #print(t)
-            print('command that caused exception was: %s' % s)
-            raise
-            conn.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
-            conn.write_nowrap('Error info: exception %s; command was "%s"\n' % (str(e), s))
-            conn.loseConnection('exception')
-            ret = block_codes.BLKCMD_ERROR_BADCOMMAND
         else:
             ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper(), block_codes.BLKCMD_SUCCESS)
     if d:

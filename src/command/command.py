@@ -19,10 +19,9 @@
 import admin
 import channel
 import global_
+import config
 
 from twisted.internet import defer
-
-from config import config
 
 # parameter format (taken from Lasker)
 # w - a word

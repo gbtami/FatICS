@@ -19,7 +19,8 @@
 
 import re
 
-from block_codes import BLOCK_START, BLOCK_SEPARATOR, BLOCK_END, BLKCMD_ERROR_NOSEQUENCE
+from block_codes import (BLOCK_START, BLOCK_SEPARATOR,
+    BLOCK_END, BLKCMD_ERROR_NOSEQUENCE)
 
 if 1:
     def send_block(identifier, code, output, conn):

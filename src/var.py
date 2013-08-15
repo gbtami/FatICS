@@ -23,8 +23,7 @@ import datetime
 import formula
 import global_
 import partner
-
-from config import config
+import config
 
 ivar_number = {}
 
@@ -177,7 +176,7 @@ class PromptVar(StringVar):
             raise BadVarError()
         assert(not self.is_ivar)
         if val is None:
-            val = 'fics% '
+            val = config.prompt
         else:
             val += ' '
 
@@ -366,6 +365,7 @@ class VarList(object):
         IntVar("style", 1, min=1, max=12).persist().add_as_var()
         IntVar("kiblevel", 0, min=0, max=9999).add_as_var()
         StringVar("interface", None).add_as_var()
+        StringVar("busy", None).add_as_var()
         PromptVar("prompt", config.prompt).add_as_var()
 
         LangVar("lang", "en").persist().add_as_var()

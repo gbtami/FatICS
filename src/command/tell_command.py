@@ -34,10 +34,18 @@ class ToldMixin(object):
             elif u.session.game.gtype == EXAMINED:
                 conn.write(_("(told %s, who is examining a game)\n") % u.name)
             else:
+                # XXX who is setting up a position
                 assert(False)
+        elif u.vars['busy']:
+            conn.write(_("(told %(name)s, who %(busy)s (idle: %(mins)d mins))\n") %
+                       {'busy': u.vars['busy'], 'name': u.name,
+                       # XXX original FICS prints "secs" or "mins"
+                       'mins': (u.session.get_idle_time() // 60)})
         elif u.session.get_idle_time() >= 180:
-            conn.write(_("(told %s, who has been idle for %d minutes)\n") %
-                       (u.name, (u.session.get_idle_time() / 60)))
+            conn.write(_("(told %(name)s, who has been idle %(mins)d mins)\n") %
+                       {'name': u.name,
+                       # XXX original FICS prints "secs" or "mins"
+                       'mins': (u.session.get_idle_time() // 60)})
         else:
             conn.write(_("(told %s)\n") % u.name)
 

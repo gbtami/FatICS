@@ -30,11 +30,10 @@ import speed_variant
 import global_
 import server
 import db
+import config
 import find_user
 
 from twisted.internet import defer, threads
-
-from config import config
 
 
 class UsernameException(Exception):

@@ -85,6 +85,9 @@ class Finger(Command):
                 conn.write(_('On for: %s   Idle: %s\n')
                     % (time_format.hms_words(u.session.get_online_time()),
                         time_format.hms_words(u.session.get_idle_time())))
+                if u.vars['busy']:
+                    conn.write(_('(%(name)s %(busy)s)\n' % {
+                        'name': u.name, 'busy': u.vars['busy']}))
                 if u.vars['silence']:
                     conn.write(_('%s is in silence mode.\n') % u.name)
 

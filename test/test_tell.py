@@ -89,12 +89,12 @@ class TellTest(Test):
         self.close(t2)
 
     def test_tell_idle(self):
-        self._skip('slow test')
         t = self.connect_as_admin()
-        time.sleep(181)
         t2 = self.connect_as_guest()
+        t.write('asetidle admin 3\n')
+        self.expect('set to 180', t)
         t2.write('tell admin hello\n')
-        self.expect('(told admin, who has been idle for 3 minutes)', t2)
+        self.expect('(told admin, who has been idle 3 mins)', t2)
         self.close(t2)
         self.close(t)
 

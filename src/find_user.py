@@ -22,7 +22,7 @@ from twisted.internet import defer
 
 import trie
 import global_
-from config import config
+import config
 import db
 import user
 

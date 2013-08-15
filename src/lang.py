@@ -18,6 +18,7 @@
 
 import gettext
 
+
 def get_langs():
     return {
         'en': gettext.NullTranslations(),

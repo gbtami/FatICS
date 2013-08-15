@@ -21,10 +21,10 @@ import filter_
 import global_
 import db
 import find_user
+import config
 
 from twisted.internet import defer
 
-from config import config
 
 # return a user object if one exists; otherwise make a
 # guest user
