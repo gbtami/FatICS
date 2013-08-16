@@ -21,7 +21,9 @@ import copy
 import random
 from array import array
 
-from game_constants import *
+from game_constants import (WHITE, BLACK, valid_sq, rank, file_)
+from game_constants import (A1, C1, D1, E1, F1, G1, H1,
+    A8, C8, D8, E8, F8, G8, H8)
 from base_variant import BaseVariant, IllegalMoveError
 
 """
@@ -80,7 +82,7 @@ def str_to_sq(s):
 
 
 def sq_to_str(sq):
-    return 'abcdefgh'[file(sq)] + '12345678'[rank(sq)]
+    return 'abcdefgh'[file_(sq)] + '12345678'[rank(sq)]
 
 
 def piece_is_white(pc):
@@ -118,7 +120,7 @@ class Zobrist(object):
         return self._piece[(self._piece_index[pc] << 7) | sq]
 
     def ep_hash(self, ep):
-        return self._ep[file(ep)]
+        return self._ep[file_(ep)]
 
     def castle_hash(self, flags):
         assert(flags & ~0xf == 0)
@@ -285,7 +287,7 @@ class Move(object):
         elif self.pc in ['P', 'p']:
             san = ''
             if self.is_capture or self.is_ep:
-                san += 'abcdefgh'[file(self.fr)] + 'x'
+                san += 'abcdefgh'[file_(self.fr)] + 'x'
             san += sq_to_str(self.to)
             if self.prom:
                 san += '=' + self.prom.upper()
@@ -296,9 +298,9 @@ class Move(object):
             assert(len(ambigs) >= 1)
             if len(ambigs) > 1:
                 r = rank(self.fr)
-                f = file(self.fr)
+                f = file_(self.fr)
                 # try disambiguating with file
-                if len(filter(lambda sq: file(sq) == f, ambigs)) == 1:
+                if len(filter(lambda sq: file_(sq) == f, ambigs)) == 1:
                     san += 'abcdefgh'[f]
                 elif len(filter(lambda sq: rank(sq) == r, ambigs)) == 1:
                     san += '12345678'[r]
@@ -1108,7 +1110,7 @@ class Position(object):
                     raise IllegalMoveError('bad pawn capture')
 
             f = 'abcdefgh'.index(m.group(1))
-            if f == file(to) - 1:
+            if f == file_(to) - 1:
                 if self.wtm:
                     fr = to - 0x11
                     if self.board[fr] != 'P':
@@ -1117,7 +1119,7 @@ class Position(object):
                     fr = to + 0xf
                     if self.board[fr] != 'p':
                         raise IllegalMoveError('bad pawn capture')
-            elif f == file(to) + 1:
+            elif f == file_(to) + 1:
                 if self.wtm:
                     fr = to - 0xf
                     if self.board[fr] != 'P':
@@ -1154,7 +1156,7 @@ class Position(object):
                 if len(froms) <= 1:
                     raise IllegalMoveError('unnecessary disambiguation')
                 f = 'abcdefgh'.index(m.group(2))
-                froms = filter(lambda sq: file(sq) == f, froms)
+                froms = filter(lambda sq: file_(sq) == f, froms)
 
             if m.group(3):
                 r = '12345678'.index(m.group(3))

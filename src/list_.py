@@ -86,7 +86,7 @@ class TitleList(SystemUserList):
     def __init__(self, params):
         MyList.__init__(self, params['title_name'], params['title_public'])
         self.id = params['title_id']
-        self.descr = params['title_descr']
+        #self.descr = params['title_descr']
 
     @defer.inlineCallbacks
     def add(self, item, conn):

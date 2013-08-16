@@ -29,7 +29,7 @@ import variant
 import global_
 import db
 
-from game_constants import WHITE, BLACK, opp, PLAYED, EXAMINED, file
+from game_constants import WHITE, BLACK, opp, PLAYED, EXAMINED, file_
 
 
 def find_free_slot():
@@ -428,7 +428,7 @@ class Game(object):
         # the double-push if there is a pseudo-legal en passant capture.
         if self.variant.pos.ep:
             conn.write(_('  Double pawn push occurred on the %s-file.\n') %
-                'abcdefgh'[file(self.variant.pos.ep)])
+                'abcdefgh'[file_(self.variant.pos.ep)])
         else:
             conn.write(_("  Double pawn push didn't occur.\n"))
 
@@ -449,7 +449,7 @@ class PlayedGame(Game):
         self.players = set([self.white, self.black])
         super(PlayedGame, self).__init__()
 
-        self.flip = False
+        #self.flip = False
         self.private = False
         self.rated_str = 'rated' if self.rated else 'unrated'
 

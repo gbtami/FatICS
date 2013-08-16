@@ -33,14 +33,16 @@ from twisted.internet import defer
 @defer.inlineCallbacks
 def get_user(name, conn):
     u = None
+    # Currently there is no way to set the langauge at the login
+    # login prompt, but maybe that could change with a %lang or so.
     if name.lower() in ['g', 'guest']:
         u = user.GuestUser(None)
         conn.write(_('\nLogging you in as "%s"; you may use this name to play unrated games.\n(After logging in, do "help register" for more info on how to register.)\n\nPress return to enter the server as "%s":\n') % (u.name, u.name))
     elif name:
         try:
             u = yield find_user.exact(name)
-        except user.UsernameException as e:
-            conn.write('\n' + e.reason + '\n')
+        except find_user.UsernameException as e:
+            conn.write(_('\n%s  Try again.\n') % e.reason)
         else:
             if u:
                 if u.is_guest:

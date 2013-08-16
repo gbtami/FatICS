@@ -35,11 +35,6 @@ import config
 from twisted.internet import defer, threads
 
 
-class UsernameException(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-
-
 class BaseUser(object):
     def __init__(self):
         self.is_online = False

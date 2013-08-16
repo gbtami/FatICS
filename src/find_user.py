@@ -32,6 +32,11 @@ class AmbiguousException(Exception):
         self.names = names
 
 
+class UsernameException(Exception):
+    def __init__(self, reason):
+        self.reason = reason
+
+
 _username_re = re.compile('^[a-zA-Z]+$')
 
 
@@ -39,11 +44,13 @@ def check_name(name, min_len):
     """ Check whether a string is a valid user name. """
     # XXX "try again" should be specific to logging in
     if len(name) < min_len:
-        raise user.UsernameException(_('Names should be at least %d characters long.  Try again.\n') % min_len)
+        raise UsernameException(_('Names should be at least %d characters long.')
+            % min_len)
     elif len(name) > config.max_login_name_len:
-        raise user.UsernameException(_('Names should be at most %d characters long.  Try again.\n') % config.max_login_name_len)
+        raise UsernameException(_('Names should be at most %d characters long.')
+            % config.max_login_name_len)
     elif not _username_re.match(name):
-        raise user.UsernameException(_('Names should only consist of lower and upper case letters.  Try again.\n'))
+        raise UsernameException(_('Names should only consist of lower and upper case letters.'))
 
 
 class Online(object):
@@ -174,7 +181,7 @@ def online_by_prefix_for_user(name, conn):
         if name.endswith('!'):
             name = name[:-1]
             if not name:
-                raise user.UsernameException(name)
+                raise UsernameException(name)
             return online_exact_for_user(name, conn)
 
         check_name(name, 2)
@@ -188,7 +195,7 @@ def online_by_prefix_for_user(name, conn):
                 % name)
         return u
 
-    except user.UsernameException as e:
+    except UsernameException as e:
         # XXX we check the length more than once
         if len(name) < 2:
             conn.write(_('You need to specify at least %d characters of the name.\n') % 2)
@@ -250,7 +257,7 @@ def exact_for_user(name, conn):
     """ Like exact(), but writes an error message on failure. """
     try:
         u = yield exact(name)
-    except user.UsernameException:
+    except UsernameException:
         conn.write(_('"%s" is not a valid handle.\n') % name)
         defer.returnValue(None)
     if not u:
@@ -271,7 +278,7 @@ def by_prefix_for_user(name, conn):
     if name.endswith('!'):
         name = name[:-1]
         if not name:
-            raise user.UsernameException(name)
+            raise UsernameException(name)
         u = yield exact_for_user(name, conn)
         defer.returnValue(u)
 
@@ -286,7 +293,7 @@ def by_prefix_for_user(name, conn):
             defer.returnValue(None)
         defer.returnValue(u)
 
-    except user.UsernameException as e:
+    except UsernameException as e:
         # XXX we check the length more than once
         if len(name) < 2:
             conn.write(_('You need to specify at least %d characters of the name.\n') % 2)

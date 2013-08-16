@@ -26,7 +26,9 @@ import random
 from array import array
 
 import db
-from game_constants import *
+from game_constants import (WHITE, BLACK, valid_sq, rank, file_)
+from game_constants import (A1, C1, D1, F1, G1, H1,
+    A8, C8, D8, F8, G8, H8)
 from variant.base_variant import BaseVariant, IllegalMoveError
 
 """
@@ -76,7 +78,7 @@ def str_to_sq(s):
 
 
 def sq_to_str(sq):
-    return 'abcdefgh'[file(sq)] + '12345678'[rank(sq)]
+    return 'abcdefgh'[file_(sq)] + '12345678'[rank(sq)]
 
 
 def piece_is_white(pc):
@@ -112,7 +114,7 @@ class Zobrist(object):
         return self._piece[(self._piece_index[pc] << 7) | sq]
 
     def ep_hash(self, ep):
-        return self._ep[file(ep)]
+        return self._ep[file_(ep)]
 
     def castle_hash(self, flags):
         assert(flags & ~0xf == 0)
@@ -312,7 +314,7 @@ class Move(object):
         elif self.pc in ['P', 'p']:
             san = ''
             if self.is_capture or self.is_ep:
-                san += 'abcdefgh'[file(self.fr)] + 'x'
+                san += 'abcdefgh'[file_(self.fr)] + 'x'
             san += sq_to_str(self.to)
             if self.prom:
                 san += '=' + self.prom.upper()
@@ -325,9 +327,9 @@ class Move(object):
             assert(len(ambigs) >= 1)
             if len(ambigs) > 1:
                 r = rank(self.fr)
-                f = file(self.fr)
+                f = file_(self.fr)
                 # try disambiguating with file
-                if len(filter(lambda sq: file(sq) == f, ambigs)) == 1:
+                if len(filter(lambda sq: file_(sq) == f, ambigs)) == 1:
                     san += 'abcdefgh'[f]
                 elif len(filter(lambda sq: rank(sq) == r, ambigs)) == 1:
                     san += '12345678'[r]
@@ -404,13 +406,13 @@ class Position(object):
         self.history = PositionHistory()
         self.set_pos(fen)
 
-    def _set_aside_rook_file(self, v):
+    def _set_aside_rook_file_(self, v):
         if self.aside_rook_file is None:
             self.aside_rook_file = v
         else:
             assert(self.aside_rook_file == v)
 
-    def _set_hside_rook_file(self, v):
+    def _set_hside_rook_file_(self, v):
         if self.hside_rook_file is None:
             self.hside_rook_file = v
         else:
@@ -486,7 +488,7 @@ class Position(object):
                             raise BadFenError()
                         for sq in range(H1, self.king_pos[1], -1):
                             if self.board[sq] == 'R':
-                                self._set_hside_rook_file(file(sq))
+                                self._set_hside_rook_file_(file_(sq))
                                 break
                         assert(self.hside_rook_file is not None)
                         w_oo = True
@@ -495,7 +497,7 @@ class Position(object):
                             raise BadFenError()
                         for sq in range(A1, self.king_pos[1]):
                             if self.board[sq] == 'R':
-                                self._set_aside_rook_file(file(sq))
+                                self._set_aside_rook_file_(file_(sq))
                                 break
                         assert(self.aside_rook_file is not None)
                         w_ooo = True
@@ -504,7 +506,7 @@ class Position(object):
                             raise BadFenError()
                         for sq in range(H8, self.king_pos[0], -1):
                             if self.board[sq] == 'r':
-                                self._set_hside_rook_file(file(sq))
+                                self._set_hside_rook_file_(file_(sq))
                                 break
                         assert(self.hside_rook_file is not None)
                         b_oo = True
@@ -513,7 +515,7 @@ class Position(object):
                             raise BadFenError()
                         for sq in range(A8, self.king_pos[1]):
                             if self.board[sq] == 'r':
-                                self._set_aside_rook_file(file(sq))
+                                self._set_aside_rook_file_(file_(sq))
                                 break
                         assert(self.aside_rook_file is not None)
                         b_ooo = True
@@ -525,20 +527,20 @@ class Position(object):
                             sq = 0x70 + f
                             assert(self.board[sq] == 'r')
                             if sq < self.king_pos[0]:
-                                self.set_aside_rook_file(f)
+                                self.set_aside_rook_file_(f)
                                 b_ooo = True
                             else:
-                                self.set_hside_rook_file(f)
+                                self.set_hside_rook_file_(f)
                                 b_oo = True
                         else:
                             sq = 'ABCDEFGH'.find(c)
                             assert(sq >= 0)
                             assert(self.board[sq] == 'R')
                             if sq < self.king_pos[1]:
-                                self.set_aside_rook_file(f)
+                                self.set_aside_rook_file_(f)
                                 w_ooo = True
                             else:
-                                self.set_hside_rook_file(f)
+                                self.set_hside_rook_file_(f)
                                 w_oo = True
 
                 self.castle_flags = to_castle_flags(w_oo, w_ooo,
@@ -551,22 +553,22 @@ class Position(object):
 
                 if w_oo:
                     assert(rank(self.king_pos[1]) == 0)
-                    assert(file(self.king_pos[1]) < self.hside_rook_file)
+                    assert(file_(self.king_pos[1]) < self.hside_rook_file)
                     self.castle_mask[self.hside_rook_file] = (
                         to_castle_flags(False, True, True, True))
                 if w_ooo:
                     assert(rank(self.king_pos[1]) == 0)
-                    assert(self.aside_rook_file < file(self.king_pos[1]))
+                    assert(self.aside_rook_file < file_(self.king_pos[1]))
                     self.castle_mask[self.aside_rook_file] = (
                         to_castle_flags(True, False, True, True))
                 if b_oo:
                     assert(rank(self.king_pos[0]) == 7)
-                    assert(file(self.king_pos[0]) < self.hside_rook_file)
+                    assert(file_(self.king_pos[0]) < self.hside_rook_file)
                     self.castle_mask[0x70 + self.hside_rook_file] = (
                         to_castle_flags(True, True, False, True))
                 if b_ooo:
                     assert(rank(self.king_pos[0]) == 7)
-                    assert(self.aside_rook_file < file(self.king_pos[0]))
+                    assert(self.aside_rook_file < file_(self.king_pos[0]))
                     self.castle_mask[0x70 + self.aside_rook_file] = (
                         to_castle_flags(True, True, True, False))
 
@@ -1082,7 +1084,7 @@ class Position(object):
                     raise IllegalMoveError('bad pawn capture')
 
             f = 'abcdefgh'.index(m.group(1))
-            if f == file(to) - 1:
+            if f == file_(to) - 1:
                 if self.wtm:
                     fr = to - 0x11
                     if self.board[fr] != 'P':
@@ -1091,7 +1093,7 @@ class Position(object):
                     fr = to + 0xf
                     if self.board[fr] != 'p':
                         raise IllegalMoveError('bad pawn capture')
-            elif f == file(to) + 1:
+            elif f == file_(to) + 1:
                 if self.wtm:
                     fr = to - 0xf
                     if self.board[fr] != 'P':
@@ -1130,7 +1132,7 @@ class Position(object):
                 if len(froms) <= 1:
                     raise IllegalMoveError('unnecessary disambiguation')
                 f = 'abcdefgh'.index(m.group(2))
-                froms = filter(lambda sq: file(sq) == f, froms)
+                froms = filter(lambda sq: file_(sq) == f, froms)
 
             if m.group(3):
                 r = '12345678'.index(m.group(3))
@@ -1280,6 +1282,7 @@ class Position(object):
         stm_str = 'w' if self.wtm else 'b'
 
         castling = ''
+        assert(False) # XXX
         if check_castle_flags(True, True):
             castling += 'K'
         if check_castle_flags(True, False):

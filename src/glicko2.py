@@ -111,9 +111,9 @@ class Player:
         x0 = a
 
         #print('a is %f, delta %f, rdsq %f, v %f' % (a, delta, rd_squared, v))
-        q = 0
+        #q = 0
         while 1:
-            q += 1
+            #q += 1
             d = rd_squared + v + math.exp(x0)
             h1 = (-(x0 - a) / math.pow(tau, 2) - 0.5 * math.exp(x0) / d +
                 0.5 * math.exp(x0) * math.pow(delta / d, 2))

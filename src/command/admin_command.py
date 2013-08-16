@@ -55,7 +55,7 @@ class Addplayer(Command):
         [name, email, real_name] = args
         try:
             u = yield find_user.exact(name)
-        except user.UsernameException:
+        except find_user.UsernameException:
             conn.write(_('"%s" is not a valid handle.\n') % name)
             return
         if u:

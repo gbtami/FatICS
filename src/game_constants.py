@@ -44,7 +44,7 @@ def rank(sq):
     return sq // 0x10
 
 
-def file(sq):
+def file_(sq):
     return sq % 8
 
 

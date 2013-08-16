@@ -20,7 +20,6 @@
 from .command import ics_command, Command
 
 import match
-import user
 import game
 import speed_variant
 import global_
@@ -125,7 +124,7 @@ class Getpi(Command):
             else:
                 # do nothing
                 pass
-        except user.UsernameException:
+        except find_user.UsernameException:
             # do nothing
             pass
 
@@ -150,7 +149,7 @@ class Getgi(Command):
             else:
                 # do nothing
                 pass
-        except user.UsernameException:
+        except find_user.UsernameException:
             # do nothing
             pass
 

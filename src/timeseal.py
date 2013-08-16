@@ -106,12 +106,12 @@ class Timeseal(object):
 
         return False
 
-    def print_stats(self):
+    '''def print_stats(self):
         return
         if self.zipseal_in > 0:
             print("compression statistics: %d in, %d out, ratio = %.3f" %
                 (self.zipseal_in, self.zipseal_out,
-                    float(self.zipseal_out) / self.zipseal_in))
+                    float(self.zipseal_out) / self.zipseal_in))'''
 
 timeseal = Timeseal()
 
