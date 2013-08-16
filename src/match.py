@@ -530,6 +530,7 @@ class Challenge(Offer, MatchStringParser):
                 raise MatchError(_("%s is playing a game.\n") % b.name)
 
         if not a.vars_['open']:
+            # XXX this returns a deferred that we should probably yield
             global_.vars_['open'].set(a, '1')
 
     def __eq__(self, other):

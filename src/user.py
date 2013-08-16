@@ -144,6 +144,7 @@ class BaseUser(object):
         else:
             if v.name in self.vars_:
                 del self.vars_[v.name]
+        return defer.succeed(None)
 
     def set_formula(self, v, val):
         self.vars_[v.name] = val
@@ -371,13 +372,13 @@ class RegUser(BaseUser):
         for num in range(1, 10):
             self.vars_['f' + str(num)] = None
 
-        for f in db.user_get_formula(self.id):
+        for f in (yield db.user_get_formula(self.id)):
             if f['num'] == 0:
                 self.vars_['formula'] = f['f']
             else:
                 self.vars_['f' + str(f['num'])] = f['f']
         assert('formula' in self.vars_)
-        for note in db.user_get_notes(self.id):
+        for note in (yield db.user_get_notes(self.id)):
             self.notes[note['num']] = note['txt']
         self._rating = None
         self.tz = pytz.timezone(self.vars_['tzone'])
@@ -509,10 +510,12 @@ class RegUser(BaseUser):
     def remove(self):
         return db.user_delete(self.id)
 
+    @defer.inlineCallbacks
     def set_var(self, v, val):
         BaseUser.set_var(self, v, val)
         if v.is_persistent:
-            db.user_set_var(self.id, v.name, val)
+            yield db.user_set_var(self.id, v.name, val)
+        defer.returnValue(None)
 
     def set_formula(self, v, val):
         BaseUser.set_formula(self, v, val)
@@ -520,7 +523,7 @@ class RegUser(BaseUser):
 
     def set_note(self, v, val):
         BaseUser.set_note(self, v, val)
-        db.user_set_note(self.id, v.name, val)
+        return db.user_set_note(self.id, v.name, val)
 
     def set_alias(self, name, val):
         BaseUser.set_alias(self, name, val)
@@ -803,11 +806,13 @@ def make_passwd():
     return ret
 
 
+@defer.inlineCallbacks
 def add_user(name, email, passwd, real_name):
     pwhash = bcrypt.hashpw(passwd, bcrypt.gensalt())
-    user_id = db.user_add(name, email, pwhash, real_name, admin.Level.user)
+    user_id = yield db.user_add(name, email, pwhash, real_name,
+        admin.Level.user)
     for chid in global_.channels.get_default_channels():
         db.channel_add_user(chid, user_id)
-    return user_id
+    defer.returnValue(user_id)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

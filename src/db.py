@@ -98,17 +98,14 @@ if 1:
         defer.returnValue(rows[0])
 
     def user_set_var(user_id, name, val):
-        cursor = db.cursor()
         up = """UPDATE user SET %s""" % name
-        cursor = query(cursor, up + """=%s WHERE user_id=%s""", (val, user_id))
-        cursor.close()
+        d = adb.runOperation(up + """=%s WHERE user_id=%s""",
+            (val, user_id))
+        return d
 
     def user_get_formula(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT num,f FROM formula WHERE user_id=%s ORDER BY num ASC""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""SELECT num,f FROM formula WHERE user_id=%s ORDER BY num ASC""",
+            (user_id,))
 
     def user_set_formula(user_id, name, val):
         # ON DUPLICATE KEY UPDATE is probably not very portable to
@@ -127,24 +124,23 @@ if 1:
         cursor.close()
 
     def user_get_notes(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT num,txt FROM note WHERE user_id=%s ORDER BY num ASC""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""SELECT num,txt FROM note WHERE user_id=%s ORDER BY num ASC""", (user_id,))
 
+    # comments
     def user_set_note(user_id, name, val):
         num = int(name, 10)
         assert(num >= 1 and num <= 10)
-        cursor = db.cursor()
         if val is not None:
-            cursor = query(cursor, """INSERT INTO note SET user_id=%s,num=%s,txt=%s ON DUPLICATE KEY UPDATE txt=%s""", (user_id, num, val, val))
+            d = adb.runOperation("""INSERT INTO note SET user_id=%s,num=%s,txt=%s ON DUPLICATE KEY UPDATE txt=%s""",
+                    (user_id, num, val, val,))
         else:
-            cursor = query(cursor, """DELETE FROM note WHERE user_id=%s AND num=%s""", (user_id, num))
-            if cursor.rowcount != 1:
-                cursor.close()
-                raise DeleteError()
-        cursor.close()
+            def do_del(txn):
+                txn.execute("""DELETE FROM note WHERE user_id=%s AND num=%s""",
+                    (user_id, num))
+                if txn.rowcount != 1:
+                    raise DeleteError()
+            d = adb.runInteraction(do_del)
+        return d
 
     def user_set_alias(user_id, name, val):
         cursor = db.cursor()
@@ -189,15 +185,17 @@ if 1:
                 (prefix + '%', limit))
         return d
 
+    @defer.inlineCallbacks
     def user_add(name, email, passwd, real_name, admin_level):
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO user
-            SET user_name=%s,user_email=%s,user_passwd=%s,user_real_name=%s,
-                user_admin_level=%s""",
-            (name, email, passwd, real_name, admin_level))
-        user_id = cursor.lastrowid
-        cursor.close()
-        return user_id
+        def do_insert(txn):
+            txn.execute("""INSERT INTO user
+                SET user_name=%s,user_email=%s,user_passwd=%s,
+                    user_real_name=%s,user_admin_level=%s""",
+                (name, email, passwd, real_name, admin_level))
+            return txn.lastrowid
+        user_id = yield adb.runInteraction(do_insert)
+        assert(user_id > 0)
+        defer.returnValue(user_id)
 
     def user_set_passwd(uid, passwd):
         d = adb.runOperation("""UPDATE user SET user_passwd=%s

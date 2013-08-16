@@ -34,7 +34,10 @@ class Iset(Command):
         [name, val] = args
         try:
             v = global_.ivars.get(name)
-            v.set(conn.user, val)
+            d = v.set(conn.user, val)
+            # v.set() should always return a deferred that
+            # is already fired for ivars
+            assert(d.called)
         except trie.NeedMore as e:
             assert(len(e.matches) >= 2)
             conn.write(_('Ambiguous ivariable "%(ivname)s". Matches: %(matches)s\n') % {'ivname': name, 'matches': ' '.join([v.name for v in e.matches])})
@@ -46,12 +49,13 @@ class Iset(Command):
 
 @ics_command('set', 'wT', admin.Level.user)
 class Set(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         # val can be None if the user gave no value
         [name, val] = args
         try:
             v = global_.vars_.get(name)
-            v.set(conn.user, val)
+            yield v.set(conn.user, val)
         except trie.NeedMore as e:
             assert(len(e.matches) >= 2)
             conn.write(_('Ambiguous variable "%(vname)s". Matches: %(matches)s\n') % {'vname': name, 'matches': ' '.join([v.name for v in e.matches])})
@@ -59,6 +63,7 @@ class Set(Command):
             conn.write(_('No such variable "%s".\n') % name)
         except var.BadVarError:
             conn.write(_('Bad value given for variable "%s".\n') % v.name)
+        defer.returnValue(None)
 
 
 @ics_command('ivariables', 'o', admin.Level.user)
@@ -139,8 +144,10 @@ class Variables(Command):
 
 @ics_command('style', 'd', admin.Level.user)
 class Style(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         #conn.write('Warning: the "style" command is deprecated.  Please use "set style" instead.\n')
-        global_.vars_['style'].set(conn.user, str(args[0]))
+        yield global_.vars_['style'].set(conn.user, str(args[0]))
+        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

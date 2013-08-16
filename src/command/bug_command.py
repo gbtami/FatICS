@@ -63,7 +63,10 @@ class Partner(Command):
                 return
             if not conn.user.vars_['bugopen']:
                 conn.write(_('Setting you open for bughouse.\n'))
-                global_.vars_['bugopen'].set(conn.user, '1')
+                # A deferred is returned for API reasons, but it is
+                # not really needed here.
+                d = global_.vars_['bugopen'].set(conn.user, '1')
+                assert(d.called)
 
             partner.Partner(conn.user, u)
 

@@ -133,6 +133,7 @@ def _do_parse(s, conn):
                 cmd.usage(conn)
                 fail.trap(BadCommandError)
                 return block_codes.BLKCMD_ERROR_BADCOMMAND
+            return fail
         d.addCallback(lambda d: ret)
         d.addErrback(handleErr)
         return d

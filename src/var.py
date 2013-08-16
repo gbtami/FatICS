@@ -16,6 +16,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import copy
 import pytz
 import datetime
@@ -68,12 +70,13 @@ def _set_gin_var(user, val):
 
 
 def _set_open_var(u, val):
-    for offer in u.session.offers_sent[:]:
-        if offer.name == 'match offer':
-            offer.withdraw_open()
-    for offer in u.session.offers_received[:]:
-        if offer.name == 'match offer':
-            offer.decline_open()
+    if not val:
+        for offer in u.session.offers_sent[:]:
+            if offer.name == 'match offer':
+                offer.withdraw_open()
+        for offer in u.session.offers_received[:]:
+            if offer.name == 'match offer':
+                offer.decline_open()
     if u.session.partner:
         if val:
             # original FICS doesn't seem to notify in this case, but
@@ -141,12 +144,15 @@ class Var(object):
         is set or unset. """
         self._hook = func
 
+    # XXX this should probably be renamed to set_
+    @defer.inlineCallbacks
     def set(self, user, val):
         """ This checks whether the given value for a var is legal and
         sets a user's value of the var.  Returns the message to display to
         the user. On an error, raises BadVarError. """
         if self._hook:
             self._hook(user, val)
+        defer.returnValue(None)
 
 
 class StringVar(Var):
@@ -154,13 +160,14 @@ class StringVar(Var):
         Var.__init__(self, name, default)
         self.max_len = max_len
 
+    @defer.inlineCallbacks
     def set(self, user, val):
         if val is not None and len(val) > self.max_len:
             raise BadVarError()
         if self.is_ivar:
             user.session.set_ivar(self, val)
         else:
-            user.set_var(self, val)
+            yield user.set_var(self, val)
         if val is None:
             user.write(_('''%s unset.\n''') % self.name)
         else:
@@ -168,9 +175,11 @@ class StringVar(Var):
                 % {'name': self.name, 'val': val}))
         if self._hook:
             self._hook(user, val)
+        defer.returnValue(None)
 
 
 class PromptVar(StringVar):
+    @defer.inlineCallbacks
     def set(self, user, val):
         if val is not None and len(val) > self.max_len - 1:
             raise BadVarError()
@@ -180,19 +189,22 @@ class PromptVar(StringVar):
         else:
             val += ' '
 
-        user.set_var(self, val)
+        yield user.set_var(self, val)
         user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
+        defer.returnValue(None)
 
 
 class LangVar(StringVar):
+    @defer.inlineCallbacks
     def set(self, user, val):
         if val not in global_.langs:
             raise BadVarError()
         assert(not self.is_ivar)
-        user.set_var(self, val)
+        yield user.set_var(self, val)
         # Start using the new language right away.
         global_.langs[val].install(names=['ngettext'])
         user.write(_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val})
+        defer.returnValue(None)
 
 
 class FormulaVar(Var):
@@ -203,9 +215,10 @@ class FormulaVar(Var):
         self.num = num
         self.is_formula_or_note = True
 
+    @defer.inlineCallbacks
     def set(self, user, val):
         if val is None:
-            user.set_formula(self, val)
+            yield user.set_formula(self, val)
             user.write(_('''%s unset.\n''') % self.name)
         else:
             if len(val) > self.max_len:
@@ -216,6 +229,7 @@ class FormulaVar(Var):
                 raise BadVarError()
             user.set_formula(self, val)
             user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
+        defer.returnValue(None)
 
 
 class NoteVar(Var):
@@ -225,25 +239,28 @@ class NoteVar(Var):
         Var.__init__(self, name, default)
         self.is_formula_or_note = True
 
+    @defer.inlineCallbacks
     def set(self, user, val):
         if val is not None and len(val) > self.max_len:
             raise BadVarError()
-        user.set_note(self, val)
+        yield user.set_note(self, val)
         if val is None:
             user.write(_('''Note %s unset.\n''') % self.name)
         else:
             user.write((_('''Note %(name)s set: %(val)s\n''') %
                 {'name': self.name, 'val': val}))
+        defer.returnValue(None)
 
 
 class TzoneVar(Var):
+    @defer.inlineCallbacks
     def set(self, user, val):
         if val is None:
             val = 'UTC'
         elif val not in pytz.common_timezones:
             raise BadVarError()
         user.tz = pytz.timezone(val)
-        user.set_var(self, val)
+        yield user.set_var(self, val)
         if val == 'UTC':
             info = ''
         else:
@@ -251,6 +268,7 @@ class TzoneVar(Var):
                 tzinfo=pytz.utc).astimezone(user.tz).strftime(' (%Z, UTC%z)')
         user.write(_('''Time zone set to "%(val)s"%(info)s.\n''') %
             {'val': val, 'info': info})
+        defer.returnValue(None)
 
 
 class IntVar(Var):
@@ -260,6 +278,7 @@ class IntVar(Var):
         self.min = min
         self.max = max
 
+    @defer.inlineCallbacks
     def set(self, user, val):
         try:
             val = int(val, 10)
@@ -270,13 +289,14 @@ class IntVar(Var):
         if self.is_ivar:
             user.session.set_ivar(self, val)
         else:
-            user.set_var(self, val)
+            yield user.set_var(self, val)
         if self.name == 'style':
             user.write(_('''Style %s set.\n''') % val)
         else:
             user.write(_("%(name)s set to %(val)s.\n") % {'name': self.name, 'val': val})
         if self._hook:
             self._hook(user, val)
+        defer.returnValue(None)
 
 
 class BoolVar(Var):
@@ -287,6 +307,7 @@ class BoolVar(Var):
         self.on_msg = on_msg
         self.off_msg = off_msg
 
+    @defer.inlineCallbacks
     def set(self, user, val):
         if val is None:
             # toggle
@@ -306,7 +327,7 @@ class BoolVar(Var):
         if self.is_ivar:
             user.session.set_ivar(self, val)
         else:
-            user.set_var(self, val)
+            yield user.set_var(self, val)
         if val:
             if self.on_msg is not None:
                 user.write(_(self.on_msg))
@@ -319,6 +340,7 @@ class BoolVar(Var):
                 user.write(_("%s unset.\n") % self.name)
         if self._hook:
             self._hook(user, val)
+        defer.returnValue(None)
 
 
 class VarList(object):

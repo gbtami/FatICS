@@ -63,7 +63,7 @@ class Addplayer(Command):
                 % u.name)
         else:
             passwd = user.make_passwd()
-            user_id = user.add_user(name, email, passwd, real_name)
+            user_id = yield user.add_user(name, email, passwd, real_name)
             # disabled just to speed up testing
             if False:
                 db.add_comment_async(conn.user.id, user_id,
@@ -329,7 +329,7 @@ class Asetv(Command):
             return
         try:
             v = global_.vars_.get(args[1])
-            v.set(u, args[2])
+            yield v.set(u, args[2])
         except trie.NeedMore as e:
             conn.write(_('Ambiguous variable "%(vname)s". Matches: %(matches)s\n') % {'vname': args[1], 'matches': ' '.join([v.name for v in e.matches])})
         except KeyError:
@@ -420,8 +420,9 @@ class Ftell(Command):
 
 @ics_command('hideinfo', '', admin.Level.admin)
 class Hideinfo(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
-        global_.vars_['hideinfo'].set(conn.user, None)
+        yield global_.vars_['hideinfo'].set(conn.user, None)
 
 
 @ics_command('shutdown', 'p', admin.Level.admin)
