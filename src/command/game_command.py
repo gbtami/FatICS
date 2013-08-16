@@ -121,15 +121,12 @@ class Eco(Command, GameMixin):
                 if not self.eco_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid ECO code.\n"))
                 else:
-                    d = db.look_up_eco(args[1])
-                    #d.addErrback(err, "err!")
-                    rows = yield d
+                    rows = yield db.look_up_eco(args[1])
             elif args[0] == 'n':
                 if not self.nic_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid NIC code.\n"))
                 else:
-                    d = db.look_up_nic(args[1])
-                    rows = yield d
+                    rows = yield db.look_up_nic(args[1])
             else:
                 self.usage(conn)
                 defer.returnValue(block_codes.BLKCMD_ERROR_BADCOMMAND)

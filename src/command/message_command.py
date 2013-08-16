@@ -19,7 +19,9 @@
 
 import re
 
-import user
+from twisted.internet import defer
+
+import find_user
 import email
 import db
 
@@ -49,11 +51,13 @@ class FormatMessage(object):
 @ics_command('clearmessages', 'n')
 class Clearmessages(Command):
     range_re = re.compile('(\d+)-(\d+)')
+
     @requires_registration
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is None:
             conn.write(_('Use "clearmessages *" to clear all your messages.\n'))
-            return
+            defer.returnValue(None)
 
         if args[0] == '*':
             count = db.clear_messages_all(conn.user.id)
@@ -62,7 +66,7 @@ class Clearmessages(Command):
             count = db.clear_messages_range(conn.user.id, i, i)
             if count == 0:
                 conn.write(_('There is no such message.\n'))
-                return
+                defer.returnValue(None)
         else:
             m = self.range_re.match(args[0])
             if m:
@@ -70,12 +74,12 @@ class Clearmessages(Command):
                 # sanity checks
                 if start < 1 or start > end or end > 9999:
                     conn.write(_('Invalid message range.\n'))
-                    return
+                    defer.returnValue(None)
                 count = db.clear_messages_range(conn.user.id, start, end)
             else:
-                sender = user.find_by_prefix_for_user(args[0], conn)
+                sender = yield find_user.by_prefix_for_user(args[0], conn)
                 if not sender:
-                    return
+                    defer.returnValue(None)
                 count = db.clear_messages_from_to(sender.id, conn.user.id)
 
         conn.write(ngettext('Cleared %d message.\n',
@@ -85,15 +89,16 @@ class Clearmessages(Command):
 @ics_command('fmessage', 'wd')
 class Fmessage(Command, FormatMessage):
     @requires_registration
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.is_muted:
             conn.write(_('You are muted.\n'))
             return
-        u2 = user.find_by_prefix_for_user(args[0], conn)
+        u2 = yield find_user.by_prefix_for_user(args[0], conn)
         if u2:
             if conn.user.name in u2.censor and not conn.user.is_admin():
                 conn.write(_('%s is censoring you.\n') % u2.name)
-                return
+                defer.returnValue(None)
             msgs = db.get_messages_range(conn.user.id, args[1], args[1])
             if msgs:
                 msg = msgs[0]
@@ -118,7 +123,9 @@ class Fmessage(Command, FormatMessage):
 @ics_command('messages', 'nT')
 class Messages(Command, FormatMessage):
     range_re = re.compile('(\d+)-(\d+)')
+
     @requires_registration
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is None:
             # display all messages
@@ -150,7 +157,7 @@ class Messages(Command, FormatMessage):
                 msgs = db.get_messages_range(conn.user.id, i, i)
                 if not msgs:
                     conn.write(_('There is no such message.\n'))
-                    return
+                    defer.returnValue(None)
             except ValueError:
                 m = self.range_re.match(args[0])
                 if m:
@@ -158,15 +165,15 @@ class Messages(Command, FormatMessage):
                     # sanity checks
                     if start < 1 or start > end or end > 9999:
                         conn.write(_('Invalid message range.\n'))
-                        return
+                        defer.returnValue(None)
                     msgs = db.get_messages_range(conn.user.id, start, end)
                 else:
-                    u2 = user.find_by_prefix_for_user(args[0], conn)
+                    u2 = yield find_user.by_prefix_for_user(args[0], conn)
                     if not u2:
-                        return
+                        defer.returnValue(None)
                     if u2.is_guest:
                         conn.write(_('Only registered players can have messages.\n'))
-                        return
+                        defer.returnValue(None)
                     msgs = db.get_messages_from_to(conn.user.id, u2.id)
                     if not msgs:
                         conn.write(_('You have no messages to %s.\n') % u2.name)
@@ -179,7 +186,7 @@ class Messages(Command, FormatMessage):
                     msgs = db.get_messages_from_to(u2.id, conn.user.id)
                     if not msgs:
                         conn.write(_('You have no messages from %s.\n') % u2.name)
-                        return
+                        defer.returnValue(None)
                     else:
                         conn.write(_('Messages from %s:\n') % u2.name)
 
@@ -191,17 +198,17 @@ class Messages(Command, FormatMessage):
         else:
             """ Send a message.  Note that the message may be localized
             differently for the sender and receiver. """
-            to = user.find_by_prefix_for_user(args[0], conn)
+            to = yield find_user.by_prefix_for_user(args[0], conn)
             if to:
                 if conn.user.is_muted:
                     conn.write(_('You are muted.\n'))
-                    return
+                    defer.returnValue(None)
                 if to.is_guest:
                     conn.write(_('Only registered players can have messages.\n'))
-                    return
+                    defer.returnValue(None)
                 if conn.user.name in to.censor and not conn.user.is_admin():
                     conn.write(_('%s is censoring you.\n') % to.name)
-                    return
+                    defer.returnValue(None)
                 message_id = db.send_message(conn.user.id, to.id, args[1])
                 msg = db.get_message(message_id)
                 msg_str_to = self._format_msg(msg, to) # localized for receiver
@@ -218,5 +225,6 @@ class Messages(Command, FormatMessage):
                 if to.is_online:
                     to.write_('The following message was received:\n')
                     to.write(msg_str_to)
+        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

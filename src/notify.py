@@ -18,8 +18,6 @@
 
 import global_
 
-import db
-
 
 def notify_users(user, arrived):
     """ Send a message to all users notified about the given user. """
@@ -35,7 +33,7 @@ def notify_users(user, arrived):
                 % ' '.join((n.name for n in nlist)))
 
         # XXX don't call DB here
-        for adj in db.get_adjourned(user.id):
+        for adj in user.adjourned:
             if adj['white_user_id'] == user.id:
                 opp_name = adj['black_name']
             else:

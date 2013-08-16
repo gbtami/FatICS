@@ -94,12 +94,6 @@ class Online(object):
             u = None
         return u
 
-    def find_exact_for_user(self, name, conn):
-        u = self.find_exact(name)
-        if not u:
-            conn.write(_('No player named "%s" is online.\n') % name)
-        return u
-
     def find_part(self, prefix):
         assert(not self.is_online(prefix))
         prefix = prefix.lower()
@@ -118,58 +112,60 @@ class Online(object):
         return len(self._online_names)
 
 
-# XXX there is no need to return a deferred when
-# online_only == True, to that case should probable
-# be moved into separate functions
-@defer.inlineCallbacks
-def exact(name, online_only=False):
-    """ async version of find_by_name_exact() """
-    check_name(name, config.min_login_name_len)
-    u = global_.online.find_exact(name)
-    if not u and not online_only:
-        dbu = yield db.user_get_async(name)
-        if dbu:
-            u = user.RegUser(dbu)
-        else:
-            u = None
-    defer.returnValue(u)
+def online_exact(name):
+    """ Find an online user, looking only for exact matches. """
+
+    # Currently we do not check whether the username is valid
+    # when looking for an exact match to an online user, because
+    # it is inexpensive to just check the dict of online users.
+    # But we check that the name is valid in other cases,
+    # so maybe we should check it here as well for consistency.
+
+    #check_name(name, config.min_login_name_len)
+
+    return global_.online.find_exact(name)
 
 
-@defer.inlineCallbacks
-def _by_prefix_async(name, online_only):
-    """ Find a user but allow the name to be abbreviated if
-    it is unambiguous; prefer online users to offline. """
+def online_exact_for_user(name, conn):
+    """ Find an online user, looking for exact matches only.
+    Write a friendly error message to the user if none is found. """
+    u = online_exact(name)
+    if not u:
+        conn.write(_('No player named "%s" is online.\n') % name)
+    return u
+
+
+def _online_by_prefix(name):
+    """ Find an online user, looking for exact or prefix
+    matches.  Raise an AmbiguousException if a prefix is
+    ambiguous. """
+
     check_name(name, 2)
 
     u = None
 
     # first try an exact match
     if len(name) >= config.min_login_name_len:
-        u = yield exact(name, online_only=online_only)
+        #print 'going for exact'
+        u = online_exact(name)
+        '''if u:
+            print 'got! %s' % u.name
+        else:
+            print 'got NOTHING' '''
     if not u:
         # failing that, try a prefix match
         ulist = global_.online.find_part(name)
         if len(ulist) == 1:
             u = ulist[0]
         elif len(ulist) > 1:
-            # When there are multiple matching users
-            # online, don't bother searching for offline
-            # users who also match. We have already confirmed
-            # that there are no exact matches.
             raise AmbiguousException([u.name for u in ulist])
-
-    if not u and not online_only:
-        ulist = yield db.user_get_by_prefix(name)
-        if len(ulist) == 1:
-            u = user.RegUser(ulist[0])
-        elif len(ulist) > 1:
-            raise AmbiguousException([u['user_name'] for u in ulist])
-    defer.returnValue(u)
+    return u
 
 
-@defer.inlineCallbacks
-def by_prefix_for_user(name, conn, online_only=False):
-    """ async version of find_by_prefix_for_user() """
+def online_by_prefix_for_user(name, conn):
+    """ Find an online user, looking for exact or prefix
+    matches.  Write a friendly error message to the user if
+    none is found.  Return a deferred that fires with the result. """
 
     try:
         # Original FICS interprets a name ending with ! as an exact name
@@ -179,46 +175,127 @@ def by_prefix_for_user(name, conn, online_only=False):
             name = name[:-1]
             if not name:
                 raise user.UsernameException(name)
-            u = yield exact_for_user(name, conn, online_only)
-            defer.returnValue(u)
+            return online_exact_for_user(name, conn)
 
-        if len(name) < 2:
-            conn.write(_('You need to specify at least %d characters of the name.\n') % 2)
-            defer.returnValue(None)
-        u = yield _by_prefix_async(name, online_only)
-        #if not u:
-        #    conn.write(_('No player named "%s" is online.\n') % name)
+        check_name(name, 2)
+        u = _online_by_prefix(name)
         if not u:
-            if online_only:
-                conn.write(_('No player matching the name "%s" is online.\n')
-                    % name)
-            else:
-                conn.write(_('There is no player matching the name "%s".\n')
-                    % name)
-        defer.returnValue(u)
+            # XXX perhaps this message should make it clear that there
+            # is not even any user with a prefix match
+            #conn.write(_('No player matching the name "%s" is online.\n')
+            #    % name)
+            conn.write(_('No player named "%s" is online.\n')
+                % name)
+        return u
 
     except user.UsernameException as e:
-        #conn.write(_('"%s" is not a valid handle: %s\n') % (name, e.reason))
-        conn.write(_('"%s" is not a valid handle.\n') % name)
+        # XXX we check the length more than once
+        if len(name) < 2:
+            conn.write(_('You need to specify at least %d characters of the name.\n') % 2)
+            return None
+        else:
+            #conn.write(_('"%s" is not a valid handle: %s\n') % (name, e.reason))
+            conn.write(_('"%s" is not a valid handle.\n') % name)
     except AmbiguousException as e:
         conn.write(_("""Ambiguous name "%s". Matches: %s\n""") %
             (name, ' '.join(e.names)))
-    defer.returnValue(None)
 
 
 @defer.inlineCallbacks
-def exact_for_user(name, conn, online_only=False):
+def exact(name):
+    """ Find a user, offline or online, looking only for exact
+    matches.  Return a deferred that fires with the result. """
+
+    check_name(name, config.min_login_name_len)
+    u = global_.online.find_exact(name)
+    if not u:
+        dbu = yield db.user_get_async(name)
+        if dbu:
+            u = user.RegUser(dbu)
+            yield u.finish_init()
+        else:
+            u = None
+    defer.returnValue(u)
+
+
+@defer.inlineCallbacks
+def _by_prefix(name):
+    """ Find a user, offline or online, looking for exact or prefix
+    matches.  Prefer online users to offline. Raise an
+    AmbiguousException if name is an ambiguous prefix. Return a deferred
+    that fires with the result. """
+
+    try:
+        u = _online_by_prefix(name)
+    except AmbiguousException:
+        # When there are multiple matching users
+        # online, don't bother searching for offline
+        # users who also match. We have already confirmed
+        # that there are no exact matches.
+        raise
+
+    # look for offline matches
+    if not u:
+        ulist = yield db.user_get_by_prefix(name)
+        if len(ulist) == 1:
+            u = user.RegUser(ulist[0])
+            yield u.finish_init()
+        elif len(ulist) > 1:
+            raise AmbiguousException([u['user_name'] for u in ulist])
+    defer.returnValue(u)
+
+
+@defer.inlineCallbacks
+def exact_for_user(name, conn):
     """ Like exact(), but writes an error message on failure. """
     try:
-        u = yield exact(name, online_only)
+        u = yield exact(name)
     except user.UsernameException:
         conn.write(_('"%s" is not a valid handle.\n') % name)
         defer.returnValue(None)
     if not u:
-        if online_only:
-            conn.write(_('No player named "%s" is online.\n') % name)
-        else:
-            conn.write(_('There is no player matching the name "%s".\n') % name)
+        conn.write(_('There is no player matching the name "%s".\n') % name)
     defer.returnValue(u)
+
+
+@defer.inlineCallbacks
+def by_prefix_for_user(name, conn):
+    """ Find a user, offline or online, looking for exact or prefix
+    matches.  Prefer online users to offline.  Print a friendly error
+    message if none is found.  Return a deferred that fires with
+    the result. """
+
+    # Original FICS interprets a name ending with ! as an exact name
+    # that is not an abbreviation.  I don't see this documented anywhere
+    # but Babas uses this for private tells.
+    if name.endswith('!'):
+        name = name[:-1]
+        if not name:
+            raise user.UsernameException(name)
+        u = yield exact_for_user(name, conn)
+        defer.returnValue(u)
+
+    try:
+        check_name(name, 2)
+        u = yield _by_prefix(name)
+        #if not u:
+        #    conn.write(_('No player named "%s" is online.\n') % name)
+        if not u:
+            conn.write(_('There is no player matching the name "%s".\n')
+                    % name)
+            defer.returnValue(None)
+        defer.returnValue(u)
+
+    except user.UsernameException as e:
+        # XXX we check the length more than once
+        if len(name) < 2:
+            conn.write(_('You need to specify at least %d characters of the name.\n') % 2)
+        else:
+            #conn.write(_('"%s" is not a valid handle: %s\n') % (name, e.reason))
+            conn.write(_('"%s" is not a valid handle.\n') % name)
+    except AmbiguousException as e:
+        conn.write(_("""Ambiguous name "%s". Matches: %s\n""") %
+            (name, ' '.join(e.names)))
+
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

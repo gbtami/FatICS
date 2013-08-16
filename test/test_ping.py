@@ -33,7 +33,7 @@ class TestPing(Test):
         self.expect('not using zipseal', t)
 
         t.write('ping admin\n')
-        self.expect('No player matching the name "admin" is online.', t)
+        self.expect('No player named "admin" is online.', t)
 
         self.close(t)
 

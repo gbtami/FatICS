@@ -128,7 +128,13 @@ def _do_parse(s, conn):
         else:
             ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper(), block_codes.BLKCMD_SUCCESS)
     if d:
+        def handleErr(fail):
+            if fail.check(BadCommandError):
+                cmd.usage(conn)
+                fail.trap(BadCommandError)
+                return block_codes.BLKCMD_ERROR_BADCOMMAND
         d.addCallback(lambda d: ret)
+        d.addErrback(handleErr)
         return d
     else:
         return defer.succeed(ret)

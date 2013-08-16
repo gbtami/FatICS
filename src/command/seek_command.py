@@ -21,7 +21,7 @@ import global_
 import seek
 import match
 import game
-import user
+import find_user
 
 from parser import BadCommandError
 from game_constants import opp, EXAMINED
@@ -121,7 +121,7 @@ class Play(Command):
 
         ad = None
         if isinstance(args[0], basestring):
-            u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+            u = find_user.online_by_prefix_for_user(args[0], conn)
             if u:
                 if not u.session.seeks:
                     conn.write(_("%s isn't seeking any games.\n") % u.name)
@@ -177,6 +177,7 @@ class Play(Command):
             else:
                 ad.a.write_('\n%s accepts your seek.\n', (conn.user.name,))
                 ad.accept(conn.user)
+
 
 #  7 1500 SomePlayerA         5   2 rated   blitz      [white]  1300-9999 m
 

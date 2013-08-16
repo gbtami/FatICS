@@ -23,7 +23,6 @@ import calendar # for timegm
 
 import admin
 import rating
-import user
 import history
 import time_format
 import db
@@ -177,11 +176,9 @@ class Finger(Command):
 
 @ics_command('ping', 'o')
 class Ping(Command):
-    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u2 = yield find_user.by_prefix_for_user(args[0], conn,
-                online_only=True)
+            u2 = find_user.online_by_prefix_for_user(args[0], conn)
         else:
             u2 = conn.user
 
@@ -202,21 +199,24 @@ class Ping(Command):
 
 @ics_command('history', 'o')
 class History(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         u = None
         if args[0] is not None:
-            u = user.find_by_prefix_for_user(args[0], conn, min_len=2)
+            u = yield find_user.by_prefix_for_user(args[0], conn) #, min_len=2)
         else:
             u = conn.user
         if u:
             history.show_for_user(u, conn)
+        defer.returnValue(None)
 
 
 @ics_command('logons', 'o')
 class Logons(Command, LogMixin):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u2 = user.find_by_prefix_for_user(args[0], conn)
+            u2 = yield find_user.by_prefix_for_user(args[0], conn)
         else:
             u2 = conn.user
         if u2:
@@ -225,6 +225,7 @@ class Logons(Command, LogMixin):
                 conn.write('%s has not logged on.\n' % u2.name)
             else:
                 self._display_log(log, conn)
+        defer.returnValue(None)
 
 
 @ics_command('llogons', 'p')

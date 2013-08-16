@@ -386,7 +386,10 @@ class TestMatch(Test):
         t.write('withdraw\n')
 
         t.write('match 1 0 admin white\n')
-        self.expect('"1" is not a valid handle', t)
+        self.expect('You need to specify at least', t)
+
+        t.write('match 11 0 admin white\n')
+        self.expect('"11" is not a valid handle', t)
 
         self.close(t)
         self.close(t2)

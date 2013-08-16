@@ -19,9 +19,9 @@
 
 from .command import Command, ics_command
 
-import user
 import global_
 import admin
+import find_user
 
 from game_constants import PLAYED, EXAMINED
 
@@ -91,7 +91,7 @@ class TellCommand(Command, ToldMixin):
                         conn.user.write(_('''(Not sent because you are not in channel %s.)\n''') % ch.id)
                         ch = None
             else:
-                u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+                u = find_user.online_by_prefix_for_user(args[0], conn)
 
         if ch:
             count = ch.tell(args[1], conn.user)

@@ -24,6 +24,7 @@ import user
 import game
 import speed_variant
 import global_
+import find_user
 
 from parser import BadCommandError
 from game_constants import PLAYED
@@ -35,10 +36,10 @@ class Rmatch(Command):
         if not conn.user.has_title('TD'):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
-        u1 = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u1 = find_user.online_by_prefix_for_user(args[0], conn)
         if not u1:
             return
-        u2 = user.find_by_prefix_for_user(args[1], conn, online_only=True)
+        u2 = find_user.online_by_prefix_for_user(args[1], conn)
         if not u2:
             return
         # ignore censor lists, noplay lists, and open var
@@ -60,7 +61,7 @@ class Tournset(Command):
         if not conn.user.has_title('TD'):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
-        u2 = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u2 = find_user.online_by_prefix_for_user(args[0], conn)
         if not u2:
             return
         # XXX how to handle guests?
@@ -84,7 +85,7 @@ class Robserve(Command):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
 
-        u2 = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u2 = find_user.online_by_prefix_for_user(args[0], conn)
         if not u2:
             return
 

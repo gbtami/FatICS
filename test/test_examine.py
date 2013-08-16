@@ -321,6 +321,9 @@ class TestMexamine(Test):
         self.expect('Usage: ', t)
 
         t.write('mex 1\n')
+        self.expect('You need to specify at least', t)
+
+        t.write('mex 11\n')
         self.expect('not a valid handle', t)
 
         self.close(t)

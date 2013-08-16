@@ -19,7 +19,7 @@
 
 from .command import Command, ics_command
 
-import user
+import find_user
 
 from parser import BadCommandError
 
@@ -27,7 +27,7 @@ from parser import BadCommandError
 @ics_command('summon', 'w')
 class Summon(Command):
     def run(self, args, conn):
-        u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(args[0], conn)
         if not u:
             return
         if u == conn.user:

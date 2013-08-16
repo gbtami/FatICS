@@ -172,6 +172,20 @@ class TestIdlenotify(Test):
         self.close(t)
         self.close(t2)
 
+    @with_player('TestPlayer')
+    def test_idlenotify_remove(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as('testplayer')
+
+        t2.write('+idlenot admin\n')
+        self.expect('admin added', t2)
+
+        t2.write('-idlenot admin\n')
+        self.expect('admin removed', t2)
+
+        self.close(t2)
+        self.close(t)
+
     def test_idlenotify_depart(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
@@ -201,11 +215,11 @@ class TestIdlenotify(Test):
         t.write('+idlenot 33\n')
         self.expect('"33" is not a valid handle.', t)
         t.write('+idlenot admin\n')
-        self.expect('No player matching the name "admin" is online', t)
+        self.expect('No player named "admin" is online', t)
         t.write('+idlenot guestefgh\n')
         self.expect("idlenotify yourself.", t)
         t.write('-idlenotify testplayer\n')
-        self.expect('No player matching the name "testplayer" is online', t)
+        self.expect('No player named "testplayer" is online', t)
         self.close(t)
 
 class TestSummon(Test):

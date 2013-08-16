@@ -19,7 +19,7 @@
 
 import match
 import admin
-import user
+import find_user
 import speed_variant
 import global_
 
@@ -37,7 +37,7 @@ class Match(Command):
             else:
                 conn.write(_("You can't challenge while you are playing a game.\n"))
             return
-        u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(args[0], conn)
         if not u:
             return
         if u == conn.user:
@@ -45,6 +45,7 @@ class Match(Command):
             return
 
         match.Challenge(conn.user, u, args[1])
+
 
 # TODO: parameters?
 

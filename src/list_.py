@@ -168,28 +168,26 @@ class NotifyList(MyList):
 
 
 class IdlenotifyList(MyList):
-    @defer.inlineCallbacks
     def add(self, item, conn):
-        u = yield find_user.by_prefix_for_user(item, conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(item, conn)
         if u:
             if u == conn.user:
                 raise ListError(_('You cannot idlenotify yourself.\n'))
             if conn.user in u.session.idlenotified_by:
                 raise ListError(_('%s is already on your idlenotify list.\n')
                     % u.name)
-            yield conn.user.add_idlenotification(u)
+            conn.user.add_idlenotification(u)
             conn.write(_('%s added to your idlenotify list.\n') % u.name)
-        defer.returnValue(None)
+        return defer.succeed(None)
 
-    @defer.inlineCallbacks
     def sub(self, item, conn):
-        u = yield find_user.by_prefix_for_user(item, conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(item, conn)
         if u:
             if conn.user not in u.session.idlenotified_by:
                 raise ListError(_('%s is not on your idlenotify list.\n') % u.name)
             conn.user.remove_idlenotification(u)
             conn.write(_('%s removed from your idlenotify list.\n') % u.name)
-        defer.returnValue(None)
+        return defer.succeed(None)
 
     def show(self, conn):
         notlist = conn.session.idlenotifying

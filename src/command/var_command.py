@@ -17,13 +17,15 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 from .command import ics_command, Command
 
 import var
-import user
 import trie
 import admin
 import global_
+import find_user
 
 
 @ics_command('iset', 'wS', admin.Level.user)
@@ -65,8 +67,7 @@ class Ivariables(Command):
         if args[0] is None:
             u = conn.user
         else:
-            u = user.find_by_prefix_for_user(args[0], conn,
-                online_only=True)
+            u = find_user.online_by_prefix_for_user(args[0], conn)
 
         if not u:
             return
@@ -88,11 +89,12 @@ class Ivariables(Command):
 
 @ics_command('variables', 'o', admin.Level.user)
 class Variables(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is None:
             u = conn.user
         else:
-            u = user.find_by_prefix_for_user(args[0], conn)
+            u = yield find_user.by_prefix_for_user(args[0], conn)
 
         if not u:
             return
@@ -132,6 +134,7 @@ class Variables(Command):
         if u.vars['formula']:
             conn.write('Formula: %s\n' % u.vars['formula'])
         conn.write("\n")
+        defer.returnValue(None)
 
 
 @ics_command('style', 'd', admin.Level.user)

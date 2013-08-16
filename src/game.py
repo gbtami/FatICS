@@ -19,7 +19,7 @@
 import random
 import datetime
 
-import user
+import find_user
 import rating
 import speed_variant
 import clock
@@ -53,7 +53,7 @@ def from_name_or_number(arg, conn):
             conn.write(_("There is no such game.\n"))
     except ValueError:
         # user name
-        u = user.find_by_prefix_for_user(arg, conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(arg, conn)
         if u:
             if not u.session.game:
                 conn.write(_("%s is not playing or examining a game.\n")

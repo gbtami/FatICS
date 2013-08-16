@@ -17,7 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import user
+import find_user
 import partner
 import global_
 import speed_variant
@@ -39,7 +39,7 @@ class Partner(Command):
             else:
                 conn.write(_('You do not have a bughouse partner.\n'))
         else:
-            u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+            u = find_user.online_by_prefix_for_user(args[0], conn)
             if not u:
                 return
 

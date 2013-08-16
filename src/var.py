@@ -112,7 +112,7 @@ class Var(object):
         assert(name == name.lower())
         self.name = name
         self.default = default
-        self.db_store = lambda user_id, name, val: None
+        #self.db_store = lambda user_id, name, val: None
         self.is_persistent = False
         self.is_formula_or_note = False
         self._hook = None

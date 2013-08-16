@@ -382,6 +382,7 @@ class BanTest(Test):
         t.write('+ban testplayer\n')
         self.expect('TestPlayer added to the ban list.', t)
         self.expect('Note: TestPlayer is online.', t)
+        # XXX original FICS also sends "You have been added to the ban list by admin."
         t.write('+ban testplayer\n')
         self.expect('TestPlayer is already on the ban list.', t)
         t.write('nuke testplayer\n')
@@ -985,7 +986,7 @@ class FtellTest(Test):
         self.expect('You were not forwarding a conversation.', t)
 
         t.write('ftell doesnotexist\n')
-        self.expect('no player matching', t)
+        self.expect('No player named "doesnotexist" is online', t)
 
         t.write('ftell admin\n')
         self.expect('talking to yourself', t)
@@ -1055,7 +1056,7 @@ class ChkipTest(Test):
         t.write('chkip\n')
         self.expect('Usage:', t)
         t.write('chkip doesnotexist\n')
-        self.expect('no player', t)
+        self.expect('No player named "doesnotexist" is online', t)
         t.write('chkip admin\n')
         self.expect_re('admin +%s' % LOCAL_IP, t)
         t.write('chkip %s\n' % LOCAL_IP)

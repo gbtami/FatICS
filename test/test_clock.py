@@ -41,6 +41,9 @@ class TestTime(Test):
         t.write('time\n')
         self.expect('You are not playing', t)
 
+        t.write('time admin\n')
+        self.expect('admin is not playing', t)
+
         t.write('match testp white 0+1\n')
         self.expect('Challenge:', t2)
         t2.write('accept\n')

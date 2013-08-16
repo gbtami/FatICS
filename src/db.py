@@ -75,18 +75,6 @@ if 1:
             cursor.execute(*args)
             return cursor
 
-    def user_get(name):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT
-                user_id,user_name,user_passwd,user_first_login,user_last_logout,
-                user_admin_level, user_email,user_real_name,user_banned,
-                user_muzzled,user_cmuzzled,user_muted,user_notebanned,
-                user_ratedbanned,user_playbanned,user_total_time_online
-            FROM user WHERE user_name=%s""", (name,))
-        row = cursor.fetchone()
-        cursor.close()
-        return row
-
     def user_get_async(name):
         d = adb.runQuery("""SELECT
                 user_id,user_name,user_passwd,user_first_login,user_last_logout,

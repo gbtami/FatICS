@@ -99,9 +99,11 @@ class TestEco(Test):
         t = self.connect_as_guest()
 
         t.write('eco n\n')
-        self.expect('No player named "n" is online', t)
+        self.expect('You need to specify at least', t)
         t.write('eco e\n')
-        self.expect('No player named "e" is online', t)
+        self.expect('You need to specify at least', t)
+        t.write('eco no\n')
+        self.expect('No player named "no" is online', t)
         t.write('eco a b\n')
         self.expect('Usage:', t)
         t.write('eco A00\n')

@@ -21,8 +21,8 @@ from .command import ics_command, Command
 from parser import BadCommandError
 
 import game
-import user
 import global_
+import find_user
 
 from game_constants import EXAMINED, PLAYED
 
@@ -58,8 +58,7 @@ class Follow(Command):
                 # no need to change conn.user.session.pfollow
                 conn.write(_("You will not follow any player's games.\n"))
         else:
-            u2 = user.find_by_prefix_for_user(args[0], conn,
-                online_only=True)
+            u2 = find_user.online_by_prefix_for_user(args[0], conn)
             if u2:
                 if u2 == conn.user:
                     conn.write(_("You can't follow your own games.\n"))
@@ -128,8 +127,7 @@ class Pfollow(Command):
                 # no need to change conn.user.session.pfollow
                 conn.write(_("You will not follow any player's partner's games.\n"))
         else:
-            u2 = user.find_by_prefix_for_user(args[0], conn,
-                online_only=True)
+            u2 = find_user.online_by_prefix_for_user(args[0], conn)
             if u2:
                 if conn.user.session.following:
                     if u2 == conn.user.session.following and conn.user.session.pfollow:

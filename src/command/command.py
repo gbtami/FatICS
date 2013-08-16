@@ -80,8 +80,9 @@ def requires_registration(f):
     def check_reg(self, args, conn):
         if conn.user.is_guest:
             conn.write(_("Only registered players can use the %s command.\n") % self.name)
+            return None
         else:
-            f(self, args, conn)
+            return f(self, args, conn)
     return check_reg
 
 

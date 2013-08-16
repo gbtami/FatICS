@@ -66,25 +66,28 @@ class TellTest(Test):
 
         self.close(t)
 
-    @with_player('auser')
+    @with_player('aduser')
     def test_ambiguous_tell(self):
-        t = self.connect_as('auser')
+        t = self.connect_as('aduser')
         t2 = self.connect_as_guest()
 
         # not ambiguous when admin is offline
-        t2.write('tell a blah blah\n')
+        t2.write('tell ad blah blah\n')
         self.expect('tells you: blah blah', t)
-        self.expect('(told auser)', t2)
+        self.expect('(told aduser)', t2)
 
         t3 = self.connect_as_admin()
         t2.write('tell a blah blah\n')
+        self.expect('You need to specify at least', t2)
+
+        t2.write('tell ad blah blah\n')
         self.expect('Ambiguous name', t2)
 
         self.close(t)
         self.close(t3)
 
-        t2.write('tell a blah blah\n')
-        self.expect('No player named "a" is online', t2)
+        t2.write('tell ad blah blah\n')
+        self.expect('No player named "ad" is online', t2)
 
         self.close(t2)
 

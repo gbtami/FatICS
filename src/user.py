@@ -31,7 +31,6 @@ import global_
 import server
 import db
 import config
-import find_user
 
 from twisted.internet import defer, threads
 
@@ -363,8 +362,13 @@ class RegUser(BaseUser):
         self.is_muted = u['user_muted']
         self._total_time_online = u['user_total_time_online']
         self.is_guest = False
-        self.channels = db.user_get_channels(self.id)
-        self.vars = db.user_get_vars(self.id,
+
+    @defer.inlineCallbacks
+    def finish_init(self):
+        """ This is broken into a separate function because __init__()
+        cannot be a generator. """
+        self.channels = yield db.user_get_channels(self.id)
+        self.vars = yield db.user_get_vars(self.id,
             global_.varlist.get_persistent_var_names())
 
         self.vars['formula'] = None
@@ -381,6 +385,7 @@ class RegUser(BaseUser):
             self.notes[note['num']] = note['txt']
         self._rating = None
         self.tz = pytz.timezone(self.vars['tzone'])
+        defer.returnValue(None)
 
     def _get_censor(self):
         if self._censor is None:
@@ -427,6 +432,8 @@ class RegUser(BaseUser):
             for dbu in db.user_get_notifiers(self.id)])
 
         BaseUser.log_on(self, conn)
+
+        self.adjourned = db.get_adjourned(self.id)
 
         notify.notify_users(self, arrived=True)
 
@@ -776,106 +783,6 @@ class GuestUser(BaseUser):
 
     def get_rating(self, speed_variant):
         return rating.NoRating(is_guest=True)
-
-
-def find_by_name_exact(name,
-        min_len=config.min_login_name_len, online_only=False):
-    """Find a user, accepting only exact matches. """
-    find_user.check_name(name, min_len)
-    u = global_.online.find_exact(name)
-    if u:
-        assert(u.is_online)
-    if not u and not online_only:
-        dbu = db.user_get(name)
-        if dbu:
-            u = RegUser(dbu)
-    return u
-
-
-def find_by_name_exact_for_user(name, conn, min_len=config.min_login_name_len,
-        online_only=False):
-    """ Like find_by_name_exact, but writes an error message
-    on failure. """
-    u = None
-    try:
-        u = find_by_name_exact(name, min_len=min_len, online_only=online_only)
-    except UsernameException:
-        conn.write(_('"%s" is not a valid handle.\n') % name)
-    else:
-        if not u:
-            conn.write(_('There is no player matching the name "%s".\n') % name)
-    return u
-
-
-def _find_by_prefix(name, online_only=False):
-    """ Find a user but allow the name to be abbreviated if
-    it is unambiguous; if the name is not an exact match, prefer
-    online users to offline. """
-    u = None
-
-    # first try an exact match
-    if len(name) >= config.min_login_name_len:
-        u = find_by_name_exact(name, min_len=2, online_only=online_only)
-    else:
-        find_user.check_name(name, 1)
-    if not u:
-        # failing that, try a prefix match
-        ulist = global_.online.find_part(name)
-        if len(ulist) == 1:
-            u = ulist[0]
-            if u and online_only:
-                assert(u.is_online)
-        elif len(ulist) > 1:
-            # when there are multiple matching users
-            # online, don't bother searching for offline
-            # users who also match
-            raise find_user.AmbiguousException([u.name for u in ulist])
-
-    if u and online_only:
-        assert(u.is_online)
-    if not u and not online_only:
-        ulist = db.user_get_matching(name)
-        if len(ulist) == 1:
-            u = RegUser(ulist[0])
-        elif len(ulist) > 1:
-            raise find_user.AmbiguousException([u['user_name'] for u in ulist])
-    return u
-
-
-def find_by_prefix_for_user(name, conn, min_len=0, online_only=False):
-    """ Like _find_by_prefix(), but writes a friendly error message on
-    failure. """
-
-    u = None
-    try:
-        # Original FICS interprets a name ending with ! as an exact name
-        # that is not an abbreviation.  I don't see this documented anywhere
-        # but Babas uses this for private tells.
-        if name.endswith('!'):
-            name = name[:-1]
-            if not name:
-                raise UsernameException(name)
-            return find_by_name_exact_for_user(name, conn,
-                min_len=min_len, online_only=online_only)
-
-        if len(name) < min_len:
-            conn.write(_('You need to specify at least %d characters of the name.\n') % min_len)
-        else:
-            u = _find_by_prefix(name, online_only=online_only)
-            if online_only:
-                if not u:
-                    conn.write(_('No player named "%s" is online.\n') % name)
-                    u = None
-                else:
-                    assert(u.is_online)
-            elif not u:
-                conn.write(_('There is no player matching the name "%s".\n') % name)
-    except UsernameException:
-        conn.write(_('"%s" is not a valid handle.\n') % name)
-    except find_user.AmbiguousException as e:
-        conn.write(_("""Ambiguous name "%s". Matches: %s\n""") %
-            (name, ' '.join(e.names)))
-    return u
 
 
 # test whether a string meets the requirements for a password

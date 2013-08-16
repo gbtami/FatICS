@@ -64,8 +64,10 @@ class Addplayer(Command):
         else:
             passwd = user.make_passwd()
             user_id = user.add_user(name, email, passwd, real_name)
-            #db.add_comment(conn.user.id, user_id,
-            #    'Player added by %s using addplayer.' % conn.user.name)
+            # disabled just to speed up testing
+            if False:
+                db.add_comment_async(conn.user.id, user_id,
+                    'Player added by %s using addplayer.' % conn.user.name)
             conn.write(A_('Added: >%s< >%s< >%s< >%s<\n')
                 % (name, real_name, email, passwd))
 
@@ -283,7 +285,7 @@ class Asetrealname(Command):
 class Nuke(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
-        u = global_.online.find_exact_for_user(args[0], conn)
+        u = find_user.online_exact_for_user(args[0], conn)
         if u:
             if not admin.check_user_operation(conn.user, u):
                 conn.write("You need a higher adminlevel to nuke %s!\n"
@@ -301,7 +303,7 @@ class Nuke(Command):
 class Pose(Command):
     def run(self, args, conn):
         adminuser = conn.user
-        u2 = global_.online.find_exact_for_user(args[0], conn)
+        u2 = find_user.online_exact_for_user(args[0], conn)
         if u2:
             if not admin.check_user_operation(adminuser, u2):
                 conn.write(A_('You can only pose as players below your adminlevel.\n'))
@@ -399,7 +401,7 @@ class Ftell(Command):
                 ch.tell(A_("I will no longer be forwarding the conversation between *%s* and myself.") % conn.session.ftell.name, conn.user)
                 conn.session.ftell = None
         else:
-            u = user.find_by_prefix_for_user(args[0], conn)
+            u = find_user.online_by_prefix_for_user(args[0], conn)
             if u:
                 if u == conn.user:
                     conn.write(A_('Nobody wants to listen to you talking to yourself! :-)\n'))
@@ -454,7 +456,7 @@ class Chkip(Command):
             raise BadCommandError
 
         if not args[0][0].isdigit():
-            u = user.find_by_prefix_for_user(args[0], conn)
+            u = find_user.online_by_prefix_for_user(args[0], conn)
             if u:
                 ip_pat = u.session.conn.ip
             else:
@@ -487,9 +489,8 @@ class Chkip(Command):
 class Asetidle(Command):
     """ Set a player's idle time. I implemented it to help with testing, but
     maybe there could be other uses. """
-    @defer.inlineCallbacks
     def run(self, args, conn):
-        u = yield find_user.by_prefix_for_user(args[0], conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(args[0], conn)
         if args[1] < 0:
             raise BadCommandError
         if u:
