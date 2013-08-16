@@ -107,7 +107,7 @@ class Fmessage(Command, FormatMessage):
                 db.forward_message(conn.user.id, u2.id, message_id)
                 msg_str_u2 = self._format_msg(msg, u2) # localized for receiver
 
-                if u2.vars['mailmess']:
+                if u2.vars_['mailmess']:
                     email.send_mail(conn.user, u2, msg_str_u2)
                     conn.write(_('The following message was forwarded and emailed to %s:\n') % u2.name)
                 else:
@@ -213,7 +213,7 @@ class Messages(Command, FormatMessage):
                 msg = db.get_message(message_id)
                 msg_str_to = self._format_msg(msg, to) # localized for receiver
 
-                if to.vars['mailmess']:
+                if to.vars_['mailmess']:
                     email.send_mail(conn.user, to, msg_str_to)
                     conn.write(_('The following message was sent and emailed to %s:\n') %
                         to.name)

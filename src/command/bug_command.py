@@ -58,10 +58,10 @@ class Partner(Command):
                 conn.write(_('%s already has a partner.\n') % u.name)
                 return
 
-            if not u.vars['bugopen']:
+            if not u.vars_['bugopen']:
                 conn.write(_('%s is not open for bughouse.\n') % u.name)
                 return
-            if not conn.user.vars['bugopen']:
+            if not conn.user.vars_['bugopen']:
                 conn.write(_('Setting you open for bughouse.\n'))
                 global_.vars_['bugopen'].set(conn.user, '1')
 
@@ -126,7 +126,7 @@ class Bugwho(Command):
 
         if u_:
             conn.write(_('Unpartnered players with bugopen on\n'))
-            ulist = sorted([u for u in global_.online if u.vars['bugopen'] and
+            ulist = sorted([u for u in global_.online if u.vars_['bugopen'] and
                 not u.session.partner], key=lambda u: u.name)
             for u in ulist:
                 conn.write('%s %s\n' %

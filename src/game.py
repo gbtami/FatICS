@@ -192,7 +192,7 @@ class Game(object):
             self.send_board(u)
 
     def send_board(self, u, isolated=False):
-        if u.vars['style'] == 12:
+        if u.vars_['style'] == 12:
             if (self.gtype == PLAYED and self.variant.name == 'chess' and
                     u.session.ivars['compressmove'] and
                     self.variant.pos.get_last_move() is not None and
@@ -558,8 +558,8 @@ class PlayedGame(Game):
         # for bughouse, the boards will be sent when the clocks are started
         if self.variant.name != 'bughouse':
             self.send_boards()
-            self.minmovetime = (self.white.vars['minmovetime'] or
-                self.black.vars['minmovetime'])
+            self.minmovetime = (self.white.vars_['minmovetime'] or
+                self.black.vars_['minmovetime'])
             if not self.minmovetime:
                 for p in self.players | self.observers:
                     p.write_("Game %d: All players agree no minimum move time during the game.\n", self.number)
@@ -746,7 +746,7 @@ class PlayedGame(Game):
                         print('adding %f secs to the clock of %s' %
                             (lag_secs, self.bug_link.get_side_user(moved_side)))
                         self.bug_link.clock.moretime(moved_side, lag_secs)
-            if self.get_user_to_move().vars['autoflag']:
+            if self.get_user_to_move().vars_['autoflag']:
                 self.clock.check_flag(self, moved_side)
             if self.is_active:
                 if self.variant.pos.ply > 2:
@@ -910,7 +910,7 @@ class PlayedGame(Game):
         opp = self.get_opp(user)
         opp.write_('\nYour opponent, %s, has lost contact or quit.\n', (user.name,))
         if (user.is_guest or user.has_title('abuser') or
-                (user.vars['noescape'] and opp.vars['noescape'])
+                (user.vars_['noescape'] and opp.vars_['noescape'])
                 or not self.variant.can_adjourn):
             res = '0-1' if side == WHITE else '1-0'
             self.result('%s forfeits by disconnection' % user.name, res)

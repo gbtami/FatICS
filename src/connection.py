@@ -226,7 +226,7 @@ class Connection(basic.LineReceiver):
             self.session.pong(self.session.timeseal_last_timestamp)
             return
 
-        global_.langs[self.user.vars['lang']].install(names=['ngettext'])
+        global_.langs[self.user.vars_['lang']].install(names=['ngettext'])
         d = parser.parse(line, self)
         #if self.user.is_online:
         if self.state == 'prompt':
@@ -292,7 +292,7 @@ class Connection(basic.LineReceiver):
         be read using the "next" command. If the parameter is None,
         continue previous long output."""
         assert(self.state == 'prompt')
-        height = self.user.vars['height']
+        height = self.user.vars_['height']
         assert(height >= 5)
         if s is None:
             s = self.session.next_lines

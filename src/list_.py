@@ -138,7 +138,7 @@ class NotifyList(MyList):
                     % u.name)
             yield conn.user.add_notification(u)
             conn.write(_('%s added to your notify list.\n') % u.name)
-            if u.is_online and u.vars['notifiedby']:
+            if u.is_online and u.vars_['notifiedby']:
                 # new feature: inform the added user
                 u.write_('\nYou have been added to the notify list of %s.\n',
                     (conn.user.name,))

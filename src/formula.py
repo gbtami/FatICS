@@ -345,7 +345,7 @@ class FSymbol(Symbol):
             return None
         old_token = token
         old_nextt = nextt
-        ret = check_formula(chal, chal.b.vars['f' + str(self.num)], self.num)
+        ret = check_formula(chal, chal.b.vars_['f' + str(self.num)], self.num)
         token = old_token
         nextt = old_nextt
         return ret

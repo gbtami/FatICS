@@ -70,9 +70,9 @@ class Online(object):
         assert(name not in self._online_names)
         self._online[name] = u
         self._online_names[name] = u
-        if u.vars['pin']:
+        if u.vars_['pin']:
             self.pin_var.add(u)
-        if u.vars['gin']:
+        if u.vars_['gin']:
             self.gin_var.add(u)
         if u.is_guest:
             self.guest_count += 1

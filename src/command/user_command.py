@@ -39,7 +39,7 @@ from game_constants import EXAMINED, PLAYED
 class LogMixin(object):
     def _display_log(self, log, conn):
         for a in reversed(log):
-            if conn.user.is_admin() and not conn.user.vars['hideinfo']:
+            if conn.user.is_admin() and not conn.user.vars_['hideinfo']:
                 ip = _(' from %s') % a['log_ip']
             else:
                 ip = ''
@@ -63,7 +63,7 @@ class Finger(Command):
             show_ratings = True
             show_comments = False
             show_admin_info = (conn.user.is_admin() and
-                not conn.user.vars['hideinfo'])
+                not conn.user.vars_['hideinfo'])
             for f in flags:
                 if f is None:
                     continue
@@ -84,10 +84,10 @@ class Finger(Command):
                 conn.write(_('On for: %s   Idle: %s\n')
                     % (time_format.hms_words(u.session.get_online_time()),
                         time_format.hms_words(u.session.get_idle_time())))
-                if u.vars['busy']:
+                if u.vars_['busy']:
                     conn.write(_('(%(name)s %(busy)s)\n' % {
-                        'name': u.name, 'busy': u.vars['busy']}))
-                if u.vars['silence']:
+                        'name': u.name, 'busy': u.vars_['busy']}))
+                if u.vars_['silence']:
                     conn.write(_('%s is in silence mode.\n') % u.name)
 
                 if u.session.game:

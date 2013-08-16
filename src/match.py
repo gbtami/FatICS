@@ -216,8 +216,8 @@ class MatchStringParser(object):
         if self.inc is None:
             if self.time is None:
                 # use user-defined defaults
-                self.time = u.vars['time']
-                self.inc = u.vars['inc']
+                self.time = u.vars_['time']
+                self.inc = u.vars_['inc']
             else:
                 # original FICS set the increment to 0 when only an
                 # initial time is given
@@ -393,7 +393,7 @@ class Challenge(Offer, MatchStringParser):
                 (b.name,))
             return
 
-        if not formula.check_formula(self, b.vars['formula']):
+        if not formula.check_formula(self, b.vars_['formula']):
             a.write_('Match request does not meet formula for %s:\n', b.name)
             b.write_('Ignoring (formula): %s\n', challenge_str)
             return
@@ -490,15 +490,15 @@ class Challenge(Offer, MatchStringParser):
                 raise MatchError(_('Your opponent has no partner for bughouse.\n'))
             apart = a.session.partner
             bpart = b.session.partner
-            assert(a.vars['bugopen'])
-            assert(b.vars['bugopen'])
-            assert(apart.vars['bugopen'])
-            assert(bpart.vars['bugopen'])
+            assert(a.vars_['bugopen'])
+            assert(b.vars_['bugopen'])
+            assert(apart.vars_['bugopen'])
+            assert(bpart.vars_['bugopen'])
             if a == bpart:
                 raise MatchError(_('You cannot challenge your partner to bughouse.\n'))
-            if not apart.vars['open'] or apart.session.game:
+            if not apart.vars_['open'] or apart.session.game:
                 raise MatchError(_('Your partner is not available to play right now.\n'))
-            if not bpart.vars['open'] or bpart.session.game:
+            if not bpart.vars_['open'] or bpart.session.game:
                 raise MatchError(_("Your opponent's partner is not available to play right now.\n"))
             assert(b != apart)
             assert(apart != bpart)
@@ -521,7 +521,7 @@ class Challenge(Offer, MatchStringParser):
         """ Test whether an opponent is open to match requests, and
         open the challenging player to match requests if necessary. """
         [a, b] = [self.a, self.b]
-        if not b.vars['open']:
+        if not b.vars_['open']:
             raise MatchError(_("%s is not open to match requests.\n") % b.name)
         if b.session.game:
             if b.session.game.gtype == EXAMINED:
@@ -529,7 +529,7 @@ class Challenge(Offer, MatchStringParser):
             else:
                 raise MatchError(_("%s is playing a game.\n") % b.name)
 
-        if not a.vars['open']:
+        if not a.vars_['open']:
             global_.vars_['open'].set(a, '1')
 
     def __eq__(self, other):
@@ -589,10 +589,10 @@ class Challenge(Offer, MatchStringParser):
             g.bug_link = g2
             g2.variant.pos.bug_link = g.variant.pos
             g.variant.pos.bug_link = g2.variant.pos
-            g.minmovetime = (g.white.vars['minmovetime']
-                or g.black.vars['minmovetime']
-                or g2.white.vars['minmovetime']
-                or g2.black.vars['minmovetime'])
+            g.minmovetime = (g.white.vars_['minmovetime']
+                or g.black.vars_['minmovetime']
+                or g2.white.vars_['minmovetime']
+                or g2.black.vars_['minmovetime'])
             g2.minmovetime = g.minmovetime
             # start clocks immediately for bug
             g.clock.start(WHITE)

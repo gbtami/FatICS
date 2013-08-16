@@ -32,7 +32,7 @@ class Shout(Command):
         if conn.user.is_muted:
             conn.write(_('You are muted.\n'))
             return
-        if not conn.user.vars['shout'] or conn.user.in_silence():
+        if not conn.user.vars_['shout'] or conn.user.in_silence():
             conn.write(_("(Did not shout because you are not listening to shouts)\n"))
         else:
             count = 0
@@ -41,7 +41,7 @@ class Shout(Command):
             dname = conn.user.get_display_name()
             shout_str = "\n%s shouts: %s\n" % (dname, args[0])
             for u in global_.online:
-                if u.vars['shout'] and not u.in_silence() and u != shouter:
+                if u.vars_['shout'] and not u.in_silence() and u != shouter:
                     if name not in u.censor:
                         u.write_prompt(shout_str)
                         count += 1
@@ -59,7 +59,7 @@ class It(Command):
         if conn.user.is_muted:
             conn.write(_('You are muted.\n'))
             return
-        if not conn.user.vars['shout'] or conn.user.in_silence():
+        if not conn.user.vars_['shout'] or conn.user.in_silence():
             conn.write(_("(Did not it-shout because you are not listening to shouts)\n"))
         else:
             count = 0
@@ -68,7 +68,7 @@ class It(Command):
             dname = conn.user.get_display_name()
             shout_str = "\n--> %s %s\n" % (dname, args[0])
             for u in global_.online:
-                if u.vars['shout'] and not u.in_silence() and u != shouter:
+                if u.vars_['shout'] and not u.in_silence() and u != shouter:
                     if name not in u.censor:
                         u.write_prompt(shout_str)
                         count += 1
@@ -87,7 +87,7 @@ class Cshout(Command):
         if conn.user.is_muted:
             conn.write(_('You are muted.\n'))
             return
-        if not conn.user.vars['cshout'] or conn.user.in_silence():
+        if not conn.user.vars_['cshout'] or conn.user.in_silence():
             conn.write(_("(Did not c-shout because you are not listening to c-shouts)\n"))
         else:
             count = 0
@@ -96,7 +96,7 @@ class Cshout(Command):
             dname = conn.user.get_display_name()
             shout_str = "\n%s c-shouts: %s\n" % (dname, args[0])
             for u in global_.online:
-                if u.vars['cshout'] and not u.in_silence() and u != shouter:
+                if u.vars_['cshout'] and not u.in_silence() and u != shouter:
                     if name not in u.censor:
                         u.write_prompt(shout_str)
                         count += 1

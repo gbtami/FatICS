@@ -50,15 +50,15 @@ class Channel(object):
         #if user.is_chmuzzled:
         #    user.write(_('You are muzzled in all channels.\n'))
         if (self.id == 1 and not user.is_guest and user.is_newbie()
-            and user.vars['interface']):
+            and user.vars_['interface']):
             # show interface string in ch 1 for newbies
-            msg = '[%s] %s' % (user.vars['interface'], msg)
+            msg = '[%s] %s' % (user.vars_['interface'], msg)
         msg = '\n%s(%d): %s\n' % (user.get_display_name(), self.id, msg)
         is_guest = user.is_guest
         count = 0
         name = user.name
         for u in self.online:
-            if is_guest and not u.vars['ctell']:
+            if is_guest and not u.vars_['ctell']:
                 continue
             if not u.hears_channels():
                 continue

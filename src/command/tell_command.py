@@ -36,9 +36,9 @@ class ToldMixin(object):
             else:
                 # XXX who is setting up a position
                 assert(False)
-        elif u.vars['busy']:
+        elif u.vars_['busy']:
             conn.write(_("(told %(name)s, who %(busy)s (idle: %(mins)d mins))\n") %
-                       {'busy': u.vars['busy'], 'name': u.name,
+                       {'busy': u.vars_['busy'], 'name': u.name,
                        # XXX original FICS prints "secs" or "mins"
                        'mins': (u.session.get_idle_time() // 60)})
         elif u.session.get_idle_time() >= 180:
@@ -100,7 +100,7 @@ class TellCommand(Command, ToldMixin):
             if conn.user.name in u.censor and not conn.user.is_admin():
                 conn.write(_("%s is censoring you.\n") % u.name)
                 # TODO: notify admins they are censored
-            elif conn.user.is_guest and not u.vars['tell']:
+            elif conn.user.is_guest and not u.vars_['tell']:
                 conn.write(_('''Player "%s" isn't listening to unregistered users' tells.\n''' % u.name))
             else:
                 u.write_('\n%s tells you: %s\n',

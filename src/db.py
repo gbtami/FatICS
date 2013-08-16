@@ -91,13 +91,11 @@ if 1:
         d.addCallback(gotRows)
         return d
 
+    @defer.inlineCallbacks
     def user_get_vars(user_id, vnames):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, ("SELECT %s" % ','.join(vnames)) +
+        rows = yield adb.runQuery(("SELECT %s" % ','.join(vnames)) +
             " FROM user WHERE user_id=%s", (user_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        return row
+        defer.returnValue(rows[0])
 
     def user_set_var(user_id, name, val):
         cursor = db.cursor()

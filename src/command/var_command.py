@@ -99,26 +99,26 @@ class Variables(Command):
         if not u:
             return
 
-        u.vars['disp_tzone'] = u.vars['tzone'][0:8] if (u == conn.user or
+        u.vars_['disp_tzone'] = u.vars_['tzone'][0:8] if (u == conn.user or
             conn.user.is_admin()) else '???'
 
         conn.write(_("Variable settings of %s:\n\n") % u.name)
-        conn.write('time=%(time)d       private=?     shout=%(shout)d         pin=%(pin)d           style=%(style)d \n' % u.vars)
-        conn.write('inc=%(inc)d       jprivate=?    cshout=%(cshout)d        notifiedby=%(notifiedby)d    flip=?\n' % u.vars)
-        conn.write('rated=?                    kibitz=%(kibitz)d        availinfo=?     highlight=?\n' % u.vars)
-        conn.write('open=%(open)d       automail=?    kiblevel=?      availmin=?      bell=%(bell)d\n' % u.vars)
-        conn.write('pgn=?        tell=%(tell)d        availmax=?      width=%(width)d \n' % u.vars)
-        conn.write('bugopen=%(bugopen)d                  ctell=%(ctell)d         gin=%(gin)d           height=%(height)d \n' % u.vars)
-        conn.write('mailmess=%(mailmess)d                 seek=%(seek)d          ptime=%(ptime)d\n' % u.vars)
-        conn.write('tourney=?    messreply=?   chanoff=%(chanoff)d       showownseek=%(showownseek)d   tzone=%(disp_tzone)s\n' % u.vars)
-        conn.write('provshow=?                 silence=%(silence)d                       Lang=%(lang)s\n' % u.vars)
-        conn.write('autoflag=%(autoflag)d   unobserve=?   echo=?          examine=%(examine)d\n' % u.vars)
-        conn.write('minmovetime=%(minmovetime)d              tolerance=?     noescape=%(noescape)d      notakeback=?\n' % u.vars)
+        conn.write('time=%(time)d       private=?     shout=%(shout)d         pin=%(pin)d           style=%(style)d \n' % u.vars_)
+        conn.write('inc=%(inc)d       jprivate=?    cshout=%(cshout)d        notifiedby=%(notifiedby)d    flip=?\n' % u.vars_)
+        conn.write('rated=?                    kibitz=%(kibitz)d        availinfo=?     highlight=?\n' % u.vars_)
+        conn.write('open=%(open)d       automail=?    kiblevel=?      availmin=?      bell=%(bell)d\n' % u.vars_)
+        conn.write('pgn=?        tell=%(tell)d        availmax=?      width=%(width)d \n' % u.vars_)
+        conn.write('bugopen=%(bugopen)d                  ctell=%(ctell)d         gin=%(gin)d           height=%(height)d \n' % u.vars_)
+        conn.write('mailmess=%(mailmess)d                 seek=%(seek)d          ptime=%(ptime)d\n' % u.vars_)
+        conn.write('tourney=?    messreply=?   chanoff=%(chanoff)d       showownseek=%(showownseek)d   tzone=%(disp_tzone)s\n' % u.vars_)
+        conn.write('provshow=?                 silence=%(silence)d                       Lang=%(lang)s\n' % u.vars_)
+        conn.write('autoflag=%(autoflag)d   unobserve=?   echo=?          examine=%(examine)d\n' % u.vars_)
+        conn.write('minmovetime=%(minmovetime)d              tolerance=?     noescape=%(noescape)d      notakeback=?\n' % u.vars_)
 
         if u.is_online:
-            conn.write(_('\nPrompt: %s\n') % u.vars['prompt'])
-            if u.vars['interface']:
-                conn.write(_('Interface: %s\n') % u.vars['interface'])
+            conn.write(_('\nPrompt: %s\n') % u.vars_['prompt'])
+            if u.vars_['interface']:
+                conn.write(_('Interface: %s\n') % u.vars_['interface'])
             if u.session.partner:
                 conn.write(_('Bughouse partner: %s\n') % u.session.partner.name)
             if u.session.following:
@@ -129,10 +129,10 @@ class Variables(Command):
 
         for i in range(1, 10):
             fname = 'f' + str(i)
-            if u.vars[fname]:
-                conn.write(' %s: %s\n' % (fname, u.vars[fname]))
-        if u.vars['formula']:
-            conn.write('Formula: %s\n' % u.vars['formula'])
+            if u.vars_[fname]:
+                conn.write(' %s: %s\n' % (fname, u.vars_[fname]))
+        if u.vars_['formula']:
+            conn.write('Formula: %s\n' % u.vars_['formula'])
         conn.write("\n")
         defer.returnValue(None)
 

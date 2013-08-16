@@ -1416,7 +1416,7 @@ class Bughouse(BaseVariant):
                 machine_str = '\n' + g.variant.get_b1('B%s' % pc.upper())
                 nonmachine_str = "\nGame %d: %s received %s -> [%s]\n" % (g.number, g.get_side_user(BLACK), pc.upper(), holding_black)
             for p in g.observers | g.players:
-                if p.vars['style'] == 12:
+                if p.vars_['style'] == 12:
                     p.write_nowrap(machine_str)
                     # Ugly: original FICS sends a prompt here.
                     # A possible alternative would be chomping off

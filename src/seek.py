@@ -242,13 +242,13 @@ class Seek(MatchStringParser):
         count = 0
         for u in global_.online:
             assert(u.is_online)
-            assert('formula' in u.vars)
+            assert('formula' in u.vars_)
             if not u.session.game:
                 # seekinfo
                 if u.session.ivars['seekinfo']:
                     u.write_nowrap(seekinfo_str)
 
-                if u.vars['seek']:
+                if u.vars_['seek']:
                     # showownseek is both a variable and an ivariable
                     if self.rated and (u.is_guest or u.is_ratedbanned):
                         continue
@@ -258,7 +258,7 @@ class Seek(MatchStringParser):
                         continue
                     if u.censor_or_noplay(self.a):
                         continue
-                    if u == self.a and not (u.vars['showownseek']
+                    if u == self.a and not (u.vars_['showownseek']
                             and u.session.ivars['showownseek']):
                         continue
                     count += 1
@@ -282,7 +282,7 @@ class Seek(MatchStringParser):
         try:
             if self.formula:
                 #f = self.a.vars['formula']
-                if not formula.check_formula(self, self.b.vars['formula']):
+                if not formula.check_formula(self, self.b.vars_['formula']):
                     return False
             return True
         finally:
@@ -295,7 +295,7 @@ class Seek(MatchStringParser):
         assert(self.b is None)
         self.b = b
         try:
-            return formula.check_formula(self, b.vars['formula'])
+            return formula.check_formula(self, b.vars_['formula'])
         finally:
             self.b = None
 

@@ -57,7 +57,7 @@ def notify_users(user, arrived):
         else:
             u.write_("\nNotification: %s has departed.\n", name)
 
-    if user.vars['notifiedby']:
+    if user.vars_['notifiedby']:
         if arrived:
             user.write(_('The following players were notified of your arrival: %s\n')
                 % ' '.join((n.name for n in nlist)))
@@ -66,7 +66,7 @@ def notify_users(user, arrived):
                 % ' '.join((n.name for n in nlist)))
 
     for u in user.session.notifiers_online - nlist:
-        if u.vars['notifiedby']:
+        if u.vars_['notifiedby']:
             if arrived:
                 u.write_("\nNotification: %s has arrived and isn't on your notify list.\n", name)
             else:

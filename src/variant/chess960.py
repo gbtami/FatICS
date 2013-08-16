@@ -1282,14 +1282,14 @@ class Position(object):
         stm_str = 'w' if self.wtm else 'b'
 
         castling = ''
-        assert(False) # XXX
-        if check_castle_flags(True, True):
+        assert(False) # XXX currently this function is not used
+        if self.check_castle_flags(True, True):
             castling += 'K'
-        if check_castle_flags(True, False):
+        if self.check_castle_flags(True, False):
             castling += 'Q'
-        if check_castle_flags(False, True):
+        if self.check_castle_flags(False, True):
             castling += 'k'
-        if check_castle_flags(False, False):
+        if self.check_castle_flags(False, False):
             castling += 'q'
         if castling == '':
             castling = '-'

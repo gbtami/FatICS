@@ -37,7 +37,7 @@ def _set_nowrap(user, val):
     if val:
         user.session.conn.transport.disableWrapping()
     else:
-        user.session.conn.transport.enableWrapping(user.vars['width'])
+        user.session.conn.transport.enableWrapping(user.vars_['width'])
 
 
 def _set_pin_ivar(user, val):
@@ -293,7 +293,7 @@ class BoolVar(Var):
             if self.is_ivar:
                 val = not user.session.ivars[self.name]
             else:
-                val = not user.vars[self.name]
+                val = not user.vars_[self.name]
         else:
             val = val.lower()
             if val == 'on':

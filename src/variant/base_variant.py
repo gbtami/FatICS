@@ -35,7 +35,7 @@ class BaseVariant(object):
             side = BLACK
         else:
             side = WHITE
-        if user.vars['flip']:
+        if user.vars_['flip']:
             side = opp(side)
 
         s = []

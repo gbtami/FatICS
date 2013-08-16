@@ -60,7 +60,7 @@ def _do_parse(s, conn):
         s = s[2:].lstrip()
     else:
         conn.session.last_command_time = time.time()
-        conn.user.vars['busy'] = None
+        conn.user.vars_['busy'] = None
         if conn.session.idlenotified_by:
             for u in conn.session.idlenotified_by:
                 u.write_('\nNotification: %s has unidled.\n',

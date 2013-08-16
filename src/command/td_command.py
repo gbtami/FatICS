@@ -68,7 +68,7 @@ class Tournset(Command):
         if args[1] not in [0, 1]:
             raise BadCommandError
 
-        u2.vars['tourney'] = str(args[1])
+        u2.vars_['tourney'] = str(args[1])
         if args[1]:
             u2.write_('\n%s has set your tourney variable to ON.\n',
                 (conn.user.name,))

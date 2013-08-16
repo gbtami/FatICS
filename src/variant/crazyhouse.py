@@ -1378,7 +1378,7 @@ class Crazyhouse(BaseVariant):
                 nonmachine_str = "\nGame %d: %s received %s -> [%s]\n" % (self.game.number, self.game.get_side_user(BLACK), pc.upper(), holding_black)
 
             for p in self.game.observers | self.game.players:
-                if p.vars['style'] == 12:
+                if p.vars_['style'] == 12:
                     p.write_nowrap(machine_str)
                     # Ugly: original FICS sends a prompt here.
                     # A possible alternative would be chomping off

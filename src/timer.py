@@ -50,7 +50,7 @@ def heartbeat():
         if g.gtype == PLAYED and g.clock.is_ticking:
             u = g.get_user_to_move()
             opp = g.get_opp(u)
-            if opp.vars['autoflag']:
+            if opp.vars_['autoflag']:
                 # TODO: send auto-flagging message a la original fics.
                 g.clock.check_flag(g, g.get_user_side(u))
 

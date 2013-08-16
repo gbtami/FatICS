@@ -36,9 +36,9 @@ class KibitzCommand(Command):
         count = 0
         rat = conn.user.get_rating(g.speed_variant)
         for u in plist:
-            if not u.vars['kibitz']:
+            if not u.vars_['kibitz']:
                 continue
-            if (u.vars['kiblevel'] and int(rat) < u.vars['kiblevel']
+            if (u.vars_['kiblevel'] and int(rat) < u.vars_['kiblevel']
                     and not conn.user.is_admin()):
                 continue
             if (conn.user.name in u.censor
@@ -63,7 +63,7 @@ class WhisperCommand(Command):
         if g.gtype == EXAMINED:
             plist |= g.players
         for u in plist:
-            if (u.vars['kiblevel'] and int(rat) < u.vars['kiblevel']
+            if (u.vars_['kiblevel'] and int(rat) < u.vars_['kiblevel']
                     and not conn.user.is_admin()):
                 continue
             if (conn.user.name in u.censor
