@@ -123,11 +123,18 @@ class Var(object):
 
     def add_as_var(self):
         global_.vars_[self.name] = self
+        if self.is_persistent:
+            global_.var_defaults.default_vars[self.name] = self.default
+            if not self.is_formula_or_note:
+                global_.var_defaults.persistent_vars.add(self.name)
+        else:
+            global_.var_defaults.transient_vars[self.name] = self.default
         self.is_ivar = False
         return self
 
     def add_as_ivar(self, number=None):
         global_.ivars[self.name] = self
+        global_.var_defaults.default_ivars[self.name] = self.default
         if number is not None:
             ivar_number[number] = self
         self.is_ivar = True
@@ -354,124 +361,112 @@ class BoolVar(Var):
         defer.returnValue(None)
 
 
-class VarList(object):
-    def __init__(self):
-        self.init_vars()
-        self.init_ivars()
+def init_vars():
+    BoolVar("shout", True, N_("You will now hear shouts.\n"), N_("You will not hear shouts.\n")).persist().add_as_var()
+    BoolVar("cshout", True, N_("You will now hear cshouts.\n"), N_("You will not hear cshouts.\n")).persist().add_as_var()
+    BoolVar("tell", True, N_("You will now hear direct tells from unregistered users.\n"), N_("You will not hear direct tells from unregistered users.\n")).persist().add_as_var()
+    BoolVar("ctell", True, N_("You will now hear channel tells from unregistered users.\n"), N_("You will not hear channel tells from unregistered users.\n")).persist().add_as_var()
+    BoolVar("chanoff", False, N_("You will not hear channel tells.\n"), N_("You will now hear channel tells.\n")).persist().add_as_var()
 
-    def init_vars(self):
-        BoolVar("shout", True, N_("You will now hear shouts.\n"), N_("You will not hear shouts.\n")).persist().add_as_var()
-        BoolVar("cshout", True, N_("You will now hear cshouts.\n"), N_("You will not hear cshouts.\n")).persist().add_as_var()
-        BoolVar("tell", True, N_("You will now hear direct tells from unregistered users.\n"), N_("You will not hear direct tells from unregistered users.\n")).persist().add_as_var()
-        BoolVar("ctell", True, N_("You will now hear channel tells from unregistered users.\n"), N_("You will not hear channel tells from unregistered users.\n")).persist().add_as_var()
-        BoolVar("chanoff", False, N_("You will not hear channel tells.\n"), N_("You will now hear channel tells.\n")).persist().add_as_var()
+    BoolVar("open", True, N_("You are now receiving match requests.\n"), N_("You are no longer receiving match requests.\n")).persist().add_as_var().set_hook(_set_open_var)
+    BoolVar("bugopen", False, N_("You are now open for bughouse.\n"), N_("You are not open for bughouse.\n")).persist().add_as_var().set_hook(_set_bugopen_var)
+    BoolVar("silence", False, N_("You will now play games in silence.\n"), N_("You will not play games in silence.\n")).persist().add_as_var()
+    BoolVar("bell", True, N_("You will now hear beeps.\n"), N_("You will not hear beeps.\n")).persist().add_as_var()
+    BoolVar("autoflag", True, N_("Auto-flagging enabled.\n"), N_("Auto-flagging disabled.\n")).persist().add_as_var()
+    BoolVar("ptime", False, N_("Your prompt will now show the time.\n"), N_("Your prompt will now not show the time.\n")).persist().add_as_var()
+    BoolVar("kibitz", True, N_("You will now hear kibitzes.\n"), N_("You will not hear kibitzes.\n")).persist().add_as_var()
+    BoolVar("notifiedby", True, N_("You will now hear if people notify you, but you don't notify them.\n"), N_("You will not hear if people notify you, but you don't notify them.\n")).persist().add_as_var()
+    BoolVar("minmovetime", True, N_("You will request minimum move time when games start.\n"), N_("You will not request minimum move time when games start.\n")).persist().add_as_var()
+    BoolVar("noescape", True, N_("You will request noescape when games start..\n"), N_("You will not request noescape when games start.\n")).persist().add_as_var()
+    BoolVar("seek", True, N_("You will now see seek ads.\n"), N_("You will not see seek ads.\n")).persist().add_as_var()
+    #BoolVar("echo", True, N_("You will not hear communications echoed.\n"), N_("You will now not hear communications echoed.\n")).persist().add_as_var()
+    BoolVar("examine", False, N_("You will now enter examine mode after a game.\n"), N_("You will now not enter examine mode after a game.\n")).persist().add_as_var()
+    BoolVar("mailmess", False, N_("Your messages will be mailed to you.\n"), N_("Your messages will not be mailed to you.\n")).persist().add_as_var()
+    BoolVar("showownseek", False, N_("You will now see your own seeks.\n"), N_("You will not see your own seeks.\n")).persist().add_as_var()
+    BoolVar("pin", False, N_("You will now hear logins/logouts.\n"), N_("You will not hear logins/logouts.\n")).persist().add_as_var().set_hook(_set_pin_var)
+    BoolVar("gin", False, N_("You will now hear game results.\n"), N_("You will not hear game results.\n")).persist().add_as_var().set_hook(_set_gin_var)
+    # TODO: highlight
 
-        BoolVar("open", True, N_("You are now receiving match requests.\n"), N_("You are no longer receiving match requests.\n")).persist().add_as_var().set_hook(_set_open_var)
-        BoolVar("bugopen", False, N_("You are now open for bughouse.\n"), N_("You are not open for bughouse.\n")).persist().add_as_var().set_hook(_set_bugopen_var)
-        BoolVar("silence", False, N_("You will now play games in silence.\n"), N_("You will not play games in silence.\n")).persist().add_as_var()
-        BoolVar("bell", True, N_("You will now hear beeps.\n"), N_("You will not hear beeps.\n")).persist().add_as_var()
-        BoolVar("autoflag", True, N_("Auto-flagging enabled.\n"), N_("Auto-flagging disabled.\n")).persist().add_as_var()
-        BoolVar("ptime", False, N_("Your prompt will now show the time.\n"), N_("Your prompt will now not show the time.\n")).persist().add_as_var()
-        BoolVar("kibitz", True, N_("You will now hear kibitzes.\n"), N_("You will not hear kibitzes.\n")).persist().add_as_var()
-        BoolVar("notifiedby", True, N_("You will now hear if people notify you, but you don't notify them.\n"), N_("You will not hear if people notify you, but you don't notify them.\n")).persist().add_as_var()
-        BoolVar("minmovetime", True, N_("You will request minimum move time when games start.\n"), N_("You will not request minimum move time when games start.\n")).persist().add_as_var()
-        BoolVar("noescape", True, N_("You will request noescape when games start..\n"), N_("You will not request noescape when games start.\n")).persist().add_as_var()
-        BoolVar("seek", True, N_("You will now see seek ads.\n"), N_("You will not see seek ads.\n")).persist().add_as_var()
-        #BoolVar("echo", True, N_("You will not hear communications echoed.\n"), N_("You will now not hear communications echoed.\n")).persist().add_as_var()
-        BoolVar("examine", False, N_("You will now enter examine mode after a game.\n"), N_("You will now not enter examine mode after a game.\n")).persist().add_as_var()
-        BoolVar("mailmess", False, N_("Your messages will be mailed to you.\n"), N_("Your messages will not be mailed to you.\n")).persist().add_as_var()
-        BoolVar("showownseek", False, N_("You will now see your own seeks.\n"), N_("You will not see your own seeks.\n")).persist().add_as_var()
-        BoolVar("pin", False, N_("You will now hear logins/logouts.\n"), N_("You will not hear logins/logouts.\n")).persist().add_as_var().set_hook(_set_pin_var)
-        BoolVar("gin", False, N_("You will now hear game results.\n"), N_("You will not hear game results.\n")).persist().add_as_var().set_hook(_set_gin_var)
-        # TODO: highlight
+    # not persistent
+    BoolVar("tourney", False, N_("Your tournament variable is now set.\n"), N_("Your tournament variable is no longer set.\n")).add_as_var()
+    BoolVar("flip", False, N_("Flip on.\n"), N_("Flip off.\n")).add_as_var()
+    BoolVar("hideinfo", False, N_("Private user information now not shown.\n"), N_("Private user information now shown.\n")).persist().add_as_var()
 
-        # not persistent
-        BoolVar("tourney", False, N_("Your tournament variable is now set.\n"), N_("Your tournament variable is no longer set.\n")).add_as_var()
-        BoolVar("flip", False, N_("Flip on.\n"), N_("Flip off.\n")).add_as_var()
-        BoolVar("hideinfo", False, N_("Private user information now not shown.\n"), N_("Private user information now shown.\n")).persist().add_as_var()
+    IntVar("time", 2, min=0).persist().add_as_var()
+    IntVar("inc", 12, min=0).persist().add_as_var()
+    IntVar("height", 24, min=5, max=240).persist().add_as_var()
+    IntVar("width", 79, min=32, max=240).persist().add_as_var()
 
-        IntVar("time", 2, min=0).persist().add_as_var()
-        IntVar("inc", 12, min=0).persist().add_as_var()
-        IntVar("height", 24, min=5, max=240).persist().add_as_var()
-        IntVar("width", 79, min=32, max=240).persist().add_as_var()
+    IntVar("style", 1, min=1, max=12).persist().add_as_var()
+    IntVar("kiblevel", 0, min=0, max=9999).add_as_var()
+    StringVar("interface", None).add_as_var()
+    StringVar("busy", None).add_as_var()
+    PromptVar("prompt", config.prompt).add_as_var()
 
-        IntVar("style", 1, min=1, max=12).persist().add_as_var()
-        IntVar("kiblevel", 0, min=0, max=9999).add_as_var()
-        StringVar("interface", None).add_as_var()
-        StringVar("busy", None).add_as_var()
-        PromptVar("prompt", config.prompt).add_as_var()
+    LangVar("lang", "en").persist().add_as_var()
 
-        LangVar("lang", "en").persist().add_as_var()
+    for i in range(0, 10):
+        FormulaVar(i).persist().add_as_var()
 
-        for i in range(0, 10):
-            FormulaVar(i).persist().add_as_var()
+    # 0 is a pseudo-var used to insert new notes
+    NoteVar('0', None).add_as_var()
+    for i in range(1, 11):
+        NoteVar(str(i), None).persist().add_as_var()
 
-        # 0 is a pseudo-var used to insert new notes
-        NoteVar('0', None).add_as_var()
-        for i in range(1, 11):
-            NoteVar(str(i), None).persist().add_as_var()
+    TzoneVar("tzone", "UTC").persist().add_as_var()
 
-        TzoneVar("tzone", "UTC").persist().add_as_var()
 
-        self.default_vars = {}
-        self.transient_vars = {}
-        self.persistent_vars = set()
-        for var in global_.vars_.itervalues():
-            if var.is_persistent:
-                self.default_vars[var.name] = var.default
-                if not var.is_formula_or_note:
-                    self.persistent_vars.add(var.name)
-            else:
-                self.transient_vars[var.name] = var.default
+def init_ivars():
+    # "help iv_list" on original FICS has this list
+    BoolVar("compressmove", False).add_as_ivar(0)
+    BoolVar("audiochat", False).add_as_ivar(1)
+    BoolVar("seekremove", False).add_as_ivar(2)
+    BoolVar("defprompt", False).add_as_ivar(3)
+    BoolVar("lock", False).add_as_ivar(4)
+    BoolVar("startpos", False).add_as_ivar(5)
+    BoolVar("block", False).add_as_ivar(6)
+    BoolVar("gameinfo", False).add_as_ivar(7)
+    BoolVar("xdr", False).add_as_ivar(8) # ignored
+    BoolVar("pendinfo", False).add_as_ivar(9)
+    BoolVar("graph", False).add_as_ivar(10)
+    BoolVar("seekinfo", False).add_as_ivar(11)
+    BoolVar("extascii", False).add_as_ivar(12)
+    BoolVar("nohighlight", False).add_as_ivar(13)
+    BoolVar("highlight", False).add_as_ivar(14)
+    BoolVar("showserver", False).add_as_ivar(15)
+    BoolVar("pin", False).add_as_ivar(16).set_hook(_set_pin_ivar)
+    BoolVar("ms", False).add_as_ivar(17)
+    BoolVar("pinginfo", False).add_as_ivar(18)
+    BoolVar("boardinfo", False).add_as_ivar(19)
+    BoolVar("extuserinfo", False).add_as_ivar(20)
+    BoolVar("seekca", False).add_as_ivar(21)
+    BoolVar("showownseek", True).add_as_ivar(22)
+    BoolVar("premove", False).add_as_ivar(23)
+    BoolVar("smartmove", False).add_as_ivar(24)
+    BoolVar("movecase", False).add_as_ivar(25)
+    BoolVar("suicide", False).add_as_ivar(26)
+    BoolVar("crazyhouse", False).add_as_ivar(27)
+    BoolVar("losers", False).add_as_ivar(28)
+    BoolVar("wildcastle", False).add_as_ivar(29)
+    BoolVar("fr", False).add_as_ivar(30)
+    BoolVar("nowrap", False).add_as_ivar(31).set_hook(_set_nowrap)
+    BoolVar("allresults", False).add_as_ivar(32)
+    BoolVar("obsping", False).add_as_ivar(33) # ignored
+    BoolVar("singleboard", False).add_as_ivar(34)
 
-    def init_ivars(self):
-        # "help iv_list" on original FICS has this list
-        BoolVar("compressmove", False).add_as_ivar(0)
-        BoolVar("audiochat", False).add_as_ivar(1)
-        BoolVar("seekremove", False).add_as_ivar(2)
-        BoolVar("defprompt", False).add_as_ivar(3)
-        BoolVar("lock", False).add_as_ivar(4)
-        BoolVar("startpos", False).add_as_ivar(5)
-        BoolVar("block", False).add_as_ivar(6)
-        BoolVar("gameinfo", False).add_as_ivar(7)
-        BoolVar("xdr", False).add_as_ivar(8) # ignored
-        BoolVar("pendinfo", False).add_as_ivar(9)
-        BoolVar("graph", False).add_as_ivar(10)
-        BoolVar("seekinfo", False).add_as_ivar(11)
-        BoolVar("extascii", False).add_as_ivar(12)
-        BoolVar("nohighlight", False).add_as_ivar(13)
-        BoolVar("highlight", False).add_as_ivar(14)
-        BoolVar("showserver", False).add_as_ivar(15)
-        BoolVar("pin", False).add_as_ivar(16).set_hook(_set_pin_ivar)
-        BoolVar("ms", False).add_as_ivar(17)
-        BoolVar("pinginfo", False).add_as_ivar(18)
-        BoolVar("boardinfo", False).add_as_ivar(19)
-        BoolVar("extuserinfo", False).add_as_ivar(20)
-        BoolVar("seekca", False).add_as_ivar(21)
-        BoolVar("showownseek", True).add_as_ivar(22)
-        BoolVar("premove", False).add_as_ivar(23)
-        BoolVar("smartmove", False).add_as_ivar(24)
-        BoolVar("movecase", False).add_as_ivar(25)
-        BoolVar("suicide", False).add_as_ivar(26)
-        BoolVar("crazyhouse", False).add_as_ivar(27)
-        BoolVar("losers", False).add_as_ivar(28)
-        BoolVar("wildcastle", False).add_as_ivar(29)
-        BoolVar("fr", False).add_as_ivar(30)
-        BoolVar("nowrap", False).add_as_ivar(31).set_hook(_set_nowrap)
-        BoolVar("allresults", False).add_as_ivar(32)
-        BoolVar("obsping", False).add_as_ivar(33) # ignored
-        BoolVar("singleboard", False).add_as_ivar(34)
+    # These do not seem to have numbers.
+    BoolVar("atomic", True).add_as_ivar()
+    BoolVar("vthighlight", False).add_as_ivar()
 
-        # These do not seem to have numbers.
-        BoolVar("atomic", True).add_as_ivar()
-        BoolVar("vthighlight", False).add_as_ivar()
+    # The original FICS ivariables command displays "xml=0", but
+    # does not allow setting an xml ivariable.
 
-        # The original FICS ivariables command displays "xml=0", but
-        # does not allow setting an xml ivariable.
 
-        self.default_ivars = {}
-        for ivar in global_.ivars.itervalues():
-            self.default_ivars[ivar.name] = ivar.default
+class Defaults(object):
+    default_ivars = {}
+    default_vars = {}
+    transient_vars = {}
+    persistent_vars = set()
 
     def get_persistent_var_names(self):
         """ For reading a user's vars from the database;

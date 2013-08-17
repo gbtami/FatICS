@@ -36,7 +36,7 @@ class Session(object):
         self.use_timeseal = False
         self.use_zipseal = False
         self.check_for_timeseal = True
-        self.ivars = global_.varlist.get_default_ivars()
+        self.ivars = global_.var_defaults.get_default_ivars()
         self.closed = False
 
     def set_user(self, user):

@@ -624,7 +624,7 @@ if 1:
                 raise DeleteError()
         return adb.runInteraction(do_del)
 
-    def user_get_notified(user_id):
+    '''def user_get_notified(user_id):
         cursor = db.cursor(cursors.DictCursor)
         cursor = query(cursor, """SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notified) WHERE notifier=%s""", (user_id,))
         rows = cursor.fetchall()
@@ -635,16 +635,15 @@ if 1:
         cursor = db.cursor(cursors.DictCursor)
         cursor = query(cursor, """SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notifier) WHERE notified=%s""", (user_id,))
         rows = cursor.fetchall()
-        return rows
+        return rows'''
 
-    '''
     def user_get_notified(user_id):
         return adb.runQuery("""SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notified) WHERE notifier=%s""",
             (user_id,))
 
     def user_get_notifiers(user_id):
         return adb.runQuery("""SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notifier) WHERE notified=%s""",
-            (user_id,))'''
+            (user_id,))
 
     # game notifications
     @defer.inlineCallbacks

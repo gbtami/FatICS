@@ -22,10 +22,10 @@
 import find_user
 import trie
 import list_
-import var
 import filter_
 import lang
 import channel
+import var
 
 # bughouse partners
 partners = []
@@ -45,7 +45,9 @@ seeks = {}
 # player variables and ivariables
 vars_ = trie.Trie()
 ivars = trie.Trie()
-varlist = var.VarList()
+var_defaults = var.Defaults()
+var.init_vars()
+var.init_ivars()
 
 # lists
 lists = trie.Trie()

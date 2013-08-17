@@ -20,9 +20,9 @@ import time
 import re
 import twisted.internet.interfaces
 
-from twisted.python import log
+#from twisted.python import log
 from twisted.protocols import basic
-from twisted.internet import reactor
+from twisted.internet import reactor, defer, task
 from zope.interface import implements
 
 import telnet
@@ -41,7 +41,7 @@ class Connection(basic.LineReceiver):
     # the telnet transport changes all '\r\n' to '\n',
     # so we can just use '\n' here
     delimiter = '\n'
-    MAX_LENGTH = 1024
+    MAX_LEN = 1023
     state = 'prelogin'
     user = None
     logged_in_again = False
@@ -85,6 +85,8 @@ class Connection(basic.LineReceiver):
 
     def lineReceived(self, line):
         #print('((%s,%s))\n' % (self.state, repr(line)))
+        if len(line) > self.MAX_LEN:
+            line = line[:self.MAX_LEN]
 
         if self.session.use_timeseal:
             (t, dline) = timeseal.decode_timeseal(line)
@@ -106,20 +108,39 @@ class Connection(basic.LineReceiver):
 
         self.session.timeseal_last_timestamp = t
         if self.state:
-            getattr(self, "handleLine_" + self.state)(dline)
+            d = getattr(self, "handleLine_" + self.state)(dline)
+            if d:
+                # if we get a deferred, pause this connection until
+                # it fires
+                self.pauseProducing()
+                def unpause(x):
+                    self.resumeProducing()
+                def err(e):
+                    print('last line was: %s\n' % line)
+                    e.printTraceback()
+                    assert(False)
+                    self.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
+                    self.write_nowrap('Error info: exception %s; line was "%s"\n' %
+                        (e.getErrorMessage(), line))
+
+                    self.loseConnection('error')
+                d.addCallback(unpause)
+                d.addErrback(err)
 
     def handleLine_prelogin(self, line):
         """ Shouldn't happen normally. """
-        self.log('got line in prelogin state')
+        self.log('got line in prelogin state: %s' % line)
 
     def handleLine_quitting(self, line):
         # ignore
-        pass
+        self.log('got line in quitting state: %s' % line)
 
+    @defer.inlineCallbacks
     def handleLine_login(self, line):
-        self.timeout_check.cancel()
-        self.timeout_check = reactor.callLater(config.login_timeout, self.login_timeout)
         self.session.login_last_command = time.time()
+        self.timeout_check.cancel()
+        self.timeout_check = reactor.callLater(config.login_timeout,
+            self.login_timeout)
         if self.session.check_for_timeseal:
             self.session.check_for_timeseal = False
             (t, dec) = timeseal.decode_timeseal(line)
@@ -145,73 +166,56 @@ class Connection(basic.LineReceiver):
             self.session.set_ivars_from_str(m.group(1))
             return
         name = line.strip()
-        d = login.get_user(name, self)
-        self.pauseProducing()
-        def lookedUpUser(u):
-            if self.state != 'quitting':
-                if self.state != 'login':
-                    print('expected login state, but got %s' % self.state)
-                assert(self.state == 'login')
-                if u:
-                    self.claimed_user = u
-                    self.state = 'passwd'
-                    # hide password
-                    self.transport.will(telnet.ECHO)
-                else:
-                    self.write("\nlogin: ")
-                self.resumeProducing()
-        d.addCallback(lookedUpUser)
-        def err(e):
-            #e.printTraceback()
-            log.err()
-            print('error: %s' % e)
-            assert(False)
-            self.loseConnection('error')
-        d.addErrback(err)
+        u = yield login.get_user(name, self)
+        if self.state != 'quitting':
+            if self.state != 'login':
+                print('expected login state, but got %s' % self.state)
+            assert(self.state == 'login')
+            if u:
+                self.claimed_user = u
+                self.state = 'passwd'
+                # hide password
+                self.transport.will(telnet.ECHO)
+            else:
+                self.write("\nlogin: ")
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def handleLine_passwd(self, line):
         self.timeout_check.cancel()
-        self.timeout_check = reactor.callLater(config.login_timeout, self.login_timeout)
+        self.timeout_check = reactor.callLater(config.login_timeout,
+            self.login_timeout)
         self.session.login_last_command = time.time()
         self.transport.wont(telnet.ECHO)
         self.write('\n')
         if self.claimed_user.is_guest:
             # ignore whatever was entered in place of a password
-            self.prompt()
+            yield self.prompt()
         else:
             passwd = line.strip()
             if len(passwd) == 0:
                 self.login()
             else:
-                d = self.claimed_user.check_passwd(passwd)
-                self.pauseProducing()
-                def gotValue(ret):
-                    if ret:
-                        # password was correct
-                        self.prompt()
-                        self.resumeProducing()
-                    else:
-                        print('wrong password from %s for user %s' % (self.ip,
-                            self.claimed_user.name))
-                        self.write('\n**** Invalid password! ****\n\n')
-                        def resume():
-                            self.login()
-                            self.resumeProducing()
-                        reactor.callLater(3, resume)
-                d.addCallback(gotValue)
-                def err(e):
-                    e.printTraceback()
-                    print('error: %s' % e)
-                    assert(False)
-                    self.loseConnection('error')
-                d.addErrback(err)
+                ret = yield self.claimed_user.check_passwd(passwd)
+                if ret:
+                    # password was correct
+                    yield self.prompt()
+                else:
+                    print('wrong password from %s for user %s' % (self.ip,
+                        self.claimed_user.name))
+                    self.write('\n**** Invalid password! ****\n\n')
+                    def resume():
+                        self.login()
+                    yield task.deferLater(reactor, 3, resume)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def prompt(self):
         """ Enter the prompt state, running commands from the client. """
         self.timeout_check.cancel()
         self.timeout_check = None
         self.user = self.claimed_user
-        self.user.log_on(self)
+        yield self.user.log_on(self)
         assert(self.user.is_online)
         if self.user.is_admin():
             self.session.commands = global_.admin_commands
@@ -220,33 +224,21 @@ class Connection(basic.LineReceiver):
 
         self.state = 'prompt'
         self.user.write_prompt()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def handleLine_prompt(self, line):
         if line == TIMESEAL_PONG:
             self.session.pong(self.session.timeseal_last_timestamp)
             return
 
         global_.langs[self.user.vars_['lang']].install(names=['ngettext'])
-        d = parser.parse(line, self)
-        #if self.user.is_online:
-        if self.state == 'prompt':
-            self.pauseProducing()
-            def resume(d):
-                if self.state != 'quitting':
-                    assert(self.user)
-                    self.resumeProducing()
-                    if self.user:
-                        self.user.write_prompt()
-            d.addCallback(resume)
-            def err(e):
-                print('last command was: %s\n' % line)
-                e.printTraceback()
-                self.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
-                self.write_nowrap('Error info: exception %s; command was "%s"\n' %
-                    (e.getErrorMessage(), line))
-
-                self.loseConnection('error')
-            d.addErrback(err)
+        yield parser.parse(line, self)
+        if self.state != 'quitting':
+            assert(self.user)
+            if self.user:
+                self.user.write_prompt()
+        defer.returnValue(None)
 
     def loseConnection(self, reason):
         self.state = 'quitting'

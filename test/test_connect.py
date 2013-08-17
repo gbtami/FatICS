@@ -31,6 +31,13 @@ class ConnectTest(Test):
         self.expect('login:', t, "login prompt")
         t.close()
 
+    def test_long_line(self):
+        t = self.connect()
+        self.expect('login:', t)
+        t.write(('A' * 1025) + '\n')
+        self.expect(' should be at most ', t)
+        t.close()
+
 class LoginTest(Test):
     def test_login(self):
         t = self.connect()
@@ -119,6 +126,7 @@ class LoginTest(Test):
         logged in. """
         t = self.connect_as_admin()
         t2 = self.connect()
+        self.expect('login: ', t2)
         t2.write('admin\nwrongpass\n')
         self.expect('*** Invalid password! ***', t2)
 
