@@ -88,14 +88,14 @@ class TellCommand(Command, ToldMixin):
                 else:
                     if conn.user not in ch.online and (
                             not conn.user.has_title('TD')):
-                        conn.user.write(_('''(Not sent because you are not in channel %s.)\n''') % ch.id)
+                        conn.user.write(_('''(Not sent because you are not in channel %s.)\n''') % ch.id_)
                         ch = None
             else:
                 u = find_user.online_by_prefix_for_user(args[0], conn)
 
         if ch:
             count = ch.tell(args[1], conn.user)
-            conn.write(ngettext('(told %d player in channel %d)\n', '(told %d players in channel %d)\n', count) % (count, ch.id))
+            conn.write(ngettext('(told %d player in channel %d)\n', '(told %d players in channel %d)\n', count) % (count, ch.id_))
         elif u:
             if conn.user.name in u.censor and not conn.user.is_admin():
                 conn.write(_("%s is censoring you.\n") % u.name)

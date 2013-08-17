@@ -203,10 +203,8 @@ if 1:
         return d
 
     def user_set_admin_level(uid, level):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE user
+        return adb.runOperation("""UPDATE user
             SET user_admin_level=%s WHERE user_id=%s""", (str(level), uid))
-        cursor.close()
 
     def user_set_first_login(uid):
         cursor = db.cursor()

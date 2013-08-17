@@ -305,7 +305,7 @@ class Challenge(Offer, MatchStringParser):
         if a.is_guest or b.is_guest:
             self.adjourned = None
         else:
-            self.adjourned = db.get_adjourned_between(a.id, b.id)
+            self.adjourned = db.get_adjourned_between(a.id_, b.id_)
         if self.adjourned:
             if tags or args:
                 a.write_('You have an adjourned game with %s.  You cannot start a new game until you finish it.\n', b.name)

@@ -139,7 +139,7 @@ def update_ratings(game, white_score, black_score):
 
 
 def show_ratings(user, conn):
-    rows = db.user_get_ratings(user.id)
+    rows = db.user_get_ratings(user.id_)
     if not rows:
         conn.write(_('%s has not played any rated games.\n\n') % user.name)
     else:

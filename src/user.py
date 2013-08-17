@@ -174,6 +174,7 @@ class BaseUser(object):
 
     def set_admin_level(self, level):
         self.admin_level = level
+        return defer.succeed(None)
 
     def is_admin(self):
         return self.admin_level >= admin.Level.admin
@@ -342,7 +343,7 @@ class RegUser(BaseUser):
     def __init__(self, u):
         BaseUser.__init__(self)
         # XXX this should be renamed to self.id_
-        self.id = u['user_id']
+        self.id_ = u['user_id']
         self.name = u['user_name']
         self.passwd_hash = u['user_passwd']
         self.email = u['user_email']
@@ -364,21 +365,21 @@ class RegUser(BaseUser):
     def finish_init(self):
         """ This is broken into a separate function because __init__()
         cannot be a generator. """
-        self.channels = yield db.user_get_channels(self.id)
-        self.vars_ = yield db.user_get_vars(self.id,
+        self.channels = yield db.user_get_channels(self.id_)
+        self.vars_ = yield db.user_get_vars(self.id_,
             global_.varlist.get_persistent_var_names())
 
         self.vars_['formula'] = None
         for num in range(1, 10):
             self.vars_['f' + str(num)] = None
 
-        for f in (yield db.user_get_formula(self.id)):
+        for f in (yield db.user_get_formula(self.id_)):
             if f['num'] == 0:
                 self.vars_['formula'] = f['f']
             else:
                 self.vars_['f' + str(f['num'])] = f['f']
         assert('formula' in self.vars_)
-        for note in (yield db.user_get_notes(self.id)):
+        for note in (yield db.user_get_notes(self.id_)):
             self.notes[note['num']] = note['txt']
         self._rating = None
         self.tz = pytz.timezone(self.vars_['tzone'])
@@ -387,7 +388,7 @@ class RegUser(BaseUser):
     def _get_censor(self):
         if self._censor is None:
             self._censor = set([dbu['user_name'] for dbu in
-                db.user_get_censored(self.id)])
+                db.user_get_censored(self.id_)])
         return self._censor
     _censor = None
     censor = property(fget=_get_censor)
@@ -403,7 +404,7 @@ class RegUser(BaseUser):
         disp_list = []
         self._titles = set()
         self._on_duty_titles = set()
-        for t in db.user_get_titles(self.id):
+        for t in db.user_get_titles(self.id_):
             if t['title_flag'] and t['title_light']:
                 disp_list.append('(%s)' % t['title_flag'])
                 self._on_duty_titles.add(t['title_name'])
@@ -411,7 +412,7 @@ class RegUser(BaseUser):
         self._title_str = ''.join(disp_list)
 
     def toggle_light(self, title_id):
-        db.toggle_title_light(self.id, title_id)
+        db.toggle_title_light(self.id_, title_id)
         self._load_titles()
 
     def log_on(self, conn):
@@ -424,19 +425,19 @@ class RegUser(BaseUser):
 
         # notify
         self.notified = set([dbu['user_name']
-            for dbu in db.user_get_notified(self.id)])
+            for dbu in db.user_get_notified(self.id_)])
         self.notifiers = set([dbu['user_name']
-            for dbu in db.user_get_notifiers(self.id)])
+            for dbu in db.user_get_notifiers(self.id_)])
 
         BaseUser.log_on(self, conn)
 
-        self.adjourned = db.get_adjourned(self.id)
+        self.adjourned = db.get_adjourned(self.id_)
 
         notify.notify_users(self, arrived=True)
 
         if not self.first_login:
-            db.user_set_first_login(self.id)
-            self.first_login = db.user_get_first_login(self.id)
+            db.user_set_first_login(self.id_)
+            self.first_login = db.user_get_first_login(self.id_)
 
         news = db.get_news_since(self.last_logout, is_admin=False)
         if news:
@@ -450,7 +451,7 @@ class RegUser(BaseUser):
             conn.write(_('There are no new news items.\n'))
         conn.write('\n')
 
-        (mcount, ucount) = db.get_message_count(self.id)
+        (mcount, ucount) = db.get_message_count(self.id_)
         assert(mcount >= 0)
         assert(ucount >= 0)
         conn.write(ngettext('You have %(mcount)d message (%(ucount)d unread).\n',
@@ -460,16 +461,16 @@ class RegUser(BaseUser):
 
         # gnotify
         self.gnotifiers = set([dbu['user_name']
-            for dbu in db.user_get_gnotifiers(self.id)])
+            for dbu in db.user_get_gnotifiers(self.id_)])
         self.gnotified = set([dbu['user_name']
-            for dbu in db.user_get_gnotified(self.id)])
+            for dbu in db.user_get_gnotified(self.id_)])
 
-        for a in db.user_get_aliases(self.id):
+        for a in db.user_get_aliases(self.id_):
             self.aliases[a['name']] = a['val']
 
         #self.censor = set([dbu['user_name'] for dbu in
-        #    db.user_get_censored(self.id)])
-        for dbu in db.user_get_noplayed(self.id):
+        #    db.user_get_censored(self.id_)])
+        for dbu in db.user_get_noplayed(self.id_):
             self.noplay.add(dbu['user_name'])
 
         self.get_history()
@@ -477,21 +478,21 @@ class RegUser(BaseUser):
     def log_off(self):
         notify.notify_users(self, arrived=False)
         BaseUser.log_off(self)
-        db.user_add_to_total_time_online(self.id,
+        db.user_add_to_total_time_online(self.id_,
             int(self.session.get_online_time()))
-        db.user_set_last_logout(self.id)
+        db.user_set_last_logout(self.id_)
 
     def get_log(self):
         return db.user_get_log(self.name)
 
     def set_admin_level(self, level):
         BaseUser.set_admin_level(self, level)
-        db.user_set_admin_level(self.id, level)
+        return db.user_set_admin_level(self.id_, level)
 
     @defer.inlineCallbacks
     def set_passwd(self, passwd):
         self.passwd_hash = yield bcrypt.hashpw(passwd, bcrypt.gensalt())
-        yield db.user_set_passwd(self.id, self.passwd_hash)
+        yield db.user_set_passwd(self.id_, self.passwd_hash)
 
     def _check_passwd_thread(self, passwd):
         bhash = bcrypt.hashpw(passwd, self.passwd_hash)
@@ -508,48 +509,48 @@ class RegUser(BaseUser):
         defer.returnValue(ret)
 
     def remove(self):
-        return db.user_delete(self.id)
+        return db.user_delete(self.id_)
 
     @defer.inlineCallbacks
     def set_var(self, v, val):
         BaseUser.set_var(self, v, val)
         if v.is_persistent:
-            yield db.user_set_var(self.id, v.name, val)
+            yield db.user_set_var(self.id_, v.name, val)
         defer.returnValue(None)
 
     def set_formula(self, v, val):
         BaseUser.set_formula(self, v, val)
-        db.user_set_formula(self.id, v.name, val)
+        db.user_set_formula(self.id_, v.name, val)
 
     def set_note(self, v, val):
         BaseUser.set_note(self, v, val)
-        return db.user_set_note(self.id, v.name, val)
+        return db.user_set_note(self.id_, v.name, val)
 
     def set_alias(self, name, val):
         BaseUser.set_alias(self, name, val)
-        db.user_set_alias(self.id, name, val)
+        db.user_set_alias(self.id_, name, val)
 
     @defer.inlineCallbacks
     def add_channel(self, chid):
         BaseUser.add_channel(self, chid)
-        yield db.channel_add_user(chid, self.id)
+        yield db.channel_add_user(chid, self.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_channel(self, id):
         BaseUser.remove_channel(self, id)
-        yield db.channel_del_user(id, self.id)
+        yield db.channel_del_user(id, self.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_title(self, id):
-        yield db.user_add_title(self.id, id)
+        yield db.user_add_title(self.id_, id)
         self._load_titles()
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_title(self, id):
-        yield db.user_del_title(self.id, id)
+        yield db.user_del_title(self.id_, id)
         self._load_titles()
         defer.returnValue(None)
 
@@ -557,61 +558,61 @@ class RegUser(BaseUser):
     def add_notification(self, user):
         BaseUser.add_notification(self, user)
         if not user.is_guest:
-            yield db.user_add_notification(self.id, user.id)
+            yield db.user_add_notification(self.id_, user.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_notification(self, user):
         BaseUser.remove_notification(self, user)
         if not user.is_guest:
-            yield db.user_del_notification(self.id, user.id)
+            yield db.user_del_notification(self.id_, user.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_gnotification(self, user):
         BaseUser.add_gnotification(self, user)
         if not user.is_guest:
-            yield db.user_add_gnotification(self.id, user.id)
+            yield db.user_add_gnotification(self.id_, user.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_gnotification(self, user):
         BaseUser.remove_gnotification(self, user)
         if not user.is_guest:
-            yield db.user_del_gnotification(self.id, user.id)
+            yield db.user_del_gnotification(self.id_, user.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_censor(self, user):
         BaseUser.add_censor(self, user)
         if not user.is_guest:
-            yield db.user_add_censor(self.id, user.id)
+            yield db.user_add_censor(self.id_, user.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_censor(self, user):
         BaseUser.remove_censor(self, user)
         if not user.is_guest:
-            yield db.user_del_censor(self.id, user.id)
+            yield db.user_del_censor(self.id_, user.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_noplay(self, user):
         BaseUser.add_noplay(self, user)
         if not user.is_guest:
-            yield db.user_add_noplay(self.id, user.id)
+            yield db.user_add_noplay(self.id_, user.id_)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_noplay(self, user):
         BaseUser.remove_noplay(self, user)
         if not user.is_guest:
-            yield db.user_del_noplay(self.id, user.id)
+            yield db.user_del_noplay(self.id_, user.id_)
         defer.returnValue(None)
 
     def get_history(self):
         if self._history is None:
-            self._history = [e for e in db.user_get_history(self.id)]
+            self._history = [e for e in db.user_get_history(self.id_)]
         return self._history
 
     def has_title(self, title):
@@ -635,11 +636,11 @@ class RegUser(BaseUser):
         entry = BaseUser.save_history(self, game_id, result_char, user_rating,
             color_char, opp_name, opp_rating, eco, flags, initial_time, inc,
             result_reason, when_ended, movetext, idn)
-        db.user_add_history(entry, self.id)
+        db.user_add_history(entry, self.id_)
 
     def clear_history(self):
         BaseUser.clear_history(self)
-        db.user_del_history(self.id)
+        db.user_del_history(self.id_)
 
     def get_rating(self, speed_variant):
         if self._rating is None:
@@ -651,19 +652,19 @@ class RegUser(BaseUser):
 
     def set_rating(self, speed_variant,
             rating, rd, volatility, win, loss, draw, ltime):
-        db.user_set_rating(self.id, speed_variant.speed.id_,
+        db.user_set_rating(self.id_, speed_variant.speed.id_,
             speed_variant.variant.id_, rating, rd, volatility, win, loss,
             draw, win + loss + draw, ltime)
         self._load_ratings() # TODO: don't reload all ratings
 
     def del_rating(self, sv):
-        db.user_del_rating(self.id, sv.speed.id_, sv.variant.id_)
+        db.user_del_rating(self.id_, sv.speed.id_, sv.variant.id_)
         if self._rating is not None and sv in self._rating:
             del self._rating[sv]
 
     def _load_ratings(self):
         self._rating = {}
-        for row in db.user_get_all_ratings(self.id):
+        for row in db.user_get_all_ratings(self.id_):
             sv = speed_variant.from_ids(row['speed_id'],
                 row['variant_id'])
             self._rating[sv] = rating.Rating(row['rating'],
@@ -672,57 +673,57 @@ class RegUser(BaseUser):
                 row['when_best'])
 
     def set_email(self, email):
-        db.user_set_email(self.id, email)
+        db.user_set_email(self.id_, email)
         self.email = email
 
     def set_real_name(self, real_name):
-        db.user_set_real_name(self.id, real_name)
+        db.user_set_real_name(self.id_, real_name)
         self.real_name = real_name
 
     @defer.inlineCallbacks
     def set_banned(self, val):
         """ Ban or unban this user. """
         self.is_banned = val
-        yield db.user_set_banned(self.id, 1 if val else 0)
+        yield db.user_set_banned(self.id_, 1 if val else 0)
 
     @defer.inlineCallbacks
     def set_muzzled(self, val):
         """ Muzzle or unmuzzle the user (affects shouts). """
         self.is_muzzled = val
-        yield db.user_set_muzzled(self.id, 1 if val else 0)
+        yield db.user_set_muzzled(self.id_, 1 if val else 0)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_cmuzzled(self, val):
         """ Cmuzzle or un-cmuzzle the user (affects c-shouts). """
         self.is_cmuzzled = val
-        yield db.user_set_cmuzzled(self.id, 1 if val else 0)
+        yield db.user_set_cmuzzled(self.id_, 1 if val else 0)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_muted(self, val):
         BaseUser.set_muted(self, val)
-        yield db.user_set_muted(self.id, 1 if val else 0)
+        yield db.user_set_muted(self.id_, 1 if val else 0)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_notebanned(self, val):
         """ Add or remove this user from the noteban list. """
         self.is_notebanned = val
-        yield db.user_set_notebanned(self.id, 1 if val else 0)
+        yield db.user_set_notebanned(self.id_, 1 if val else 0)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_ratedbanned(self, val):
         """ Add or remove this user from the ratedban list. """
         self.is_ratedbanned = val
-        yield db.user_set_ratedbanned(self.id, 1 if val else 0)
+        yield db.user_set_ratedbanned(self.id_, 1 if val else 0)
         defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_playbanned(self, val):
         BaseUser.set_playbanned(self, val)
-        yield db.user_set_playbanned(self.id, 1 if val else 0)
+        yield db.user_set_playbanned(self.id_, 1 if val else 0)
         defer.returnValue(None)
 
     def get_total_time_online(self):
@@ -774,7 +775,7 @@ class GuestUser(BaseUser):
         return [{'log_who_name': self.name,
             'log_when': datetime.datetime.fromtimestamp(self.session.login_time),
             'log_which': 'login', 'log_ip': self.session.conn.ip}]
-        db.user_get_log(self.id)
+        db.user_get_log(self.id_)
 
     def get_history(self):
         assert(self._history is not None)

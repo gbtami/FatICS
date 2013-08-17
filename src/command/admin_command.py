@@ -66,7 +66,7 @@ class Addplayer(Command):
             user_id = yield user.add_user(name, email, passwd, real_name)
             # disabled just to speed up testing
             if False:
-                db.add_comment_async(conn.user.id, user_id,
+                db.add_comment_async(conn.user.id_, user_id,
                     'Player added by %s using addplayer.' % conn.user.name)
             conn.write(A_('Added: >%s< >%s< >%s< >%s<\n')
                 % (name, real_name, email, passwd))
@@ -124,7 +124,7 @@ class Asetadmin(Command):
             elif not admin.check_level(adminuser.admin_level, level):
                 conn.write('''You can't promote someone to or above your adminlevel.\n''')
             else:
-                u.set_admin_level(level)
+                yield u.set_admin_level(level)
                 conn.write('''Admin level of %s set to %d.\n''' %
                     (u.name, level))
                 if u.is_online:
@@ -242,7 +242,7 @@ class Asetemail(Command):
                     return
                 old_email = u.email
                 u.set_email(email)
-                yield db.add_comment_async(adminuser.id, u.id,
+                yield db.add_comment_async(adminuser.id_, u.id_,
                     'Changed email address from "%s" to "%s".' % (
                         old_email, email))
                 if u.is_online:
@@ -272,7 +272,7 @@ class Asetrealname(Command):
             else:
                 old_real_name = u.real_name
                 u.set_real_name(real_name)
-                yield db.add_comment_async(adminuser.id, u.id,
+                yield db.add_comment_async(adminuser.id_, u.id_,
                     'Changed real name from "%s" to "%s".' % (old_real_name, real_name))
                 if u.is_online:
                     u.write_('%(aname)s has changed your real name to "%(real_name)s".\n',
@@ -294,7 +294,7 @@ class Nuke(Command):
                 u.write_('\n\n**** You have been kicked out by %s! ****\n\n', (conn.user.name,))
                 u.session.conn.loseConnection('nuked')
                 if not u.is_guest:
-                    yield db.add_comment_async(conn.user.id, u.id, 'Nuked.')
+                    yield db.add_comment_async(conn.user.id_, u.id_, 'Nuked.')
                 conn.write('Nuked: %s\n' % u.name)
         defer.returnValue(None)
 
@@ -367,7 +367,7 @@ class Addcomment(Command):
             if u.is_guest:
                 conn.write(A_('Unregistered players cannot have comments.\n'))
             else:
-                yield db.add_comment_async(adminuser.id, u.id, args[1])
+                yield db.add_comment_async(adminuser.id_, u.id_, args[1])
                 conn.write(A_('Comment added for %s.\n') % u.name)
 
 
@@ -380,7 +380,7 @@ class Showcomment(Command):
             if u.is_guest:
                 conn.write(A_('Unregistered players cannot have comments.\n'))
             else:
-                comments = yield db.get_comments(u.id)
+                comments = yield db.get_comments(u.id_)
                 if not comments:
                     conn.write(A_('There are no comments for %s.\n') % u.name)
                 else:

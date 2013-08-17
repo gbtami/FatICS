@@ -34,10 +34,10 @@ def notify_users(user, arrived):
 
         # XXX don't call DB here
         for adj in user.adjourned:
-            if adj['white_user_id'] == user.id:
+            if adj['white_user_id'] == user.id_:
                 opp_name = adj['black_name']
             else:
-                assert(adj['black_user_id'] == user.id)
+                assert(adj['black_user_id'] == user.id_)
                 opp_name = adj['white_name']
             assert(opp_name)
             opp = global_.online.find_exact(opp_name)

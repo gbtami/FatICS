@@ -566,13 +566,13 @@ class PlayedGame(Game):
 
     def _resume(self, adj, a, b):
         """ Resume an adjourned game. """
-        if adj['white_user_id'] == a.id:
-            assert(adj['black_user_id'] == b.id)
+        if adj['white_user_id'] == a.id_:
+            assert(adj['black_user_id'] == b.id_)
             self.white = a
             self.black = b
         else:
-            assert(adj['white_user_id'] == b.id)
-            assert(adj['black_user_id'] == a.id)
+            assert(adj['white_user_id'] == b.id_)
+            assert(adj['black_user_id'] == a.id_)
             self.white = b
             self.black = a
         self.white_name = self.white.name
@@ -927,10 +927,10 @@ class PlayedGame(Game):
         the players and observers. """
         data = self.tags.copy()
         data.update({
-            'white_user_id': self.white.id,
+            'white_user_id': self.white.id_,
             #'white_rating': int(self.white_rating),
             'white_clock': self.clock.get_white_time(),
-            'black_user_id': self.black.id,
+            'black_user_id': self.black.id_,
             #'black_rating': int(self.black_rating),
             'black_clock': self.clock.get_black_time(),
             'movetext': self.get_movetext(),

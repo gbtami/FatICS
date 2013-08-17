@@ -277,7 +277,7 @@ if 1:
                 elif char == ',':
                     if user.session.last_tell_ch is None:
                         raise AliasError(_('No previous channel.\n'))
-                    ret.append('%s' % user.session.last_tell_ch.id)
+                    ret.append('%s' % user.session.last_tell_ch.id_)
                 elif char == '_':
                     # from help new_features: $_ in an alias goes to -,
                     # this allows handling of '$2-' vs '$2'-
