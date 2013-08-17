@@ -32,7 +32,6 @@ def notify_users(user, arrived):
             user.write(_('Present company includes: %s\n')
                 % ' '.join((n.name for n in nlist)))
 
-        # XXX don't call DB here
         for adj in user.adjourned:
             if adj['white_user_id'] == user.id_:
                 opp_name = adj['black_name']

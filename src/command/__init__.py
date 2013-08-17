@@ -31,4 +31,7 @@ __all__ = ['admin_command',
 'tell_command', 'var_command',
 'who_command']
 
+for m in __all__:
+    __import__('command.' + m)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

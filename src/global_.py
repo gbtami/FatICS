@@ -66,6 +66,7 @@ commands = trie.Trie()
 admin_commands = trie.Trie()
 
 # load commands
-from command import *
+import command
+command # pacify pyflakes
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

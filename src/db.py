@@ -110,23 +110,24 @@ if 1:
     def user_set_formula(user_id, name, val):
         # ON DUPLICATE KEY UPDATE is probably not very portable to
         # other databases, but this shouldn't be hard to rewrite
-        dbkeys = {'formula': 0, 'f1': 1, 'f2': 2, 'f3': 3, 'f4': 4, 'f5': 5, 'f6': 6, 'f7': 7, 'f8': 8, 'f9': 9}
+        dbkeys = {'formula': 0, 'f1': 1, 'f2': 2, 'f3': 3, 'f4': 4, 'f5': 5,
+            'f6': 6, 'f7': 7, 'f8': 8, 'f9': 9}
         assert(name in dbkeys)
         num = dbkeys[name]
-        cursor = db.cursor()
         if val is not None:
-            cursor = query(cursor, """INSERT INTO formula SET user_id=%s,num=%s,f=%s ON DUPLICATE KEY UPDATE f=%s""", (user_id, num, val, val))
+            d = adb.runQuery("""INSERT INTO formula SET user_id=%s,num=%s,f=%s ON DUPLICATE KEY UPDATE f=%s""",
+                (user_id, num, val, val))
         else:
-            # OK to not actually delete any rows; we are just unsetting an
-            # already unset variable.
-            cursor = query(cursor, """DELETE FROM formula WHERE user_id=%s AND num=%s""", (user_id, num))
-            assert(cursor.rowcount <= 1)
-        cursor.close()
+            # It is OK to not actually delete any rows; in that
+            # case we are just unsetting an already unset variable.
+            d = adb.runOperation("""DELETE FROM formula WHERE user_id=%s AND num=%s""",
+                (user_id, num))
+        return d
 
+    # notes
     def user_get_notes(user_id):
         return adb.runQuery("""SELECT num,txt FROM note WHERE user_id=%s ORDER BY num ASC""", (user_id,))
 
-    # comments
     def user_set_note(user_id, name, val):
         num = int(name, 10)
         assert(num >= 1 and num <= 10)
@@ -141,6 +142,23 @@ if 1:
                     raise DeleteError()
             d = adb.runInteraction(do_del)
         return d
+
+    @defer.inlineCallbacks
+    def user_insert_note(user_id, val):
+        """Insert a new note as note 1."""
+        assert(val is not None)
+        yield adb.runOperation("""DELETE FROM note WHERE user_id=%s AND num=10""",
+            (user_id))
+        # We can't simply increment the note numbers, sincne that would
+        # tempoarily violate the UNIQUE constraint. Instead, cleverly
+        # use two statements.
+        yield adb.runOperation("""UPDATE note SET num=num+10 WHERE user_id=%s""",
+            (user_id))
+        yield adb.runOperation("""UPDATE note SET num=num-9 WHERE user_id=%s""",
+            (user_id))
+        yield adb.runOperation("""INSERT INTO note SET user_id=%s,num=1,txt=%s""",
+            (user_id, val))
+        defer.returnValue(None)
 
     def user_set_alias(user_id, name, val):
         cursor = db.cursor()
@@ -159,6 +177,9 @@ if 1:
         rows = cursor.fetchall()
         cursor.close()
         return rows
+
+    '''def user_get_aliases(user_id):
+        return  adb.runQuery("""SELECT name,val FROM user_alias WHERE user_id=%s ORDER BY name ASC""", (user_id,))'''
 
     def user_get_matching(prefix, limit=8):
         cursor = db.cursor(cursors.DictCursor)
@@ -431,13 +452,6 @@ if 1:
         return adb.runInteraction(do_del)
 
     # comments
-    '''def add_comment(admin_id, user_id, txt):
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO user_comment
-            SET admin_id=%s,user_id=%s,when_added=NOW(),txt=%s""",
-                (admin_id, user_id, txt))
-        cursor.close()'''
-
     @defer.inlineCallbacks
     def add_comment_async(admin_id, user_id, txt):
         yield adb.runOperation("""INSERT INTO user_comment
@@ -622,6 +636,15 @@ if 1:
         cursor = query(cursor, """SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notifier) WHERE notified=%s""", (user_id,))
         rows = cursor.fetchall()
         return rows
+
+    '''
+    def user_get_notified(user_id):
+        return adb.runQuery("""SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notified) WHERE notifier=%s""",
+            (user_id,))
+
+    def user_get_notifiers(user_id):
+        return adb.runQuery("""SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notifier) WHERE notified=%s""",
+            (user_id,))'''
 
     # game notifications
     @defer.inlineCallbacks

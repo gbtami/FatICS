@@ -227,7 +227,7 @@ class FormulaVar(Var):
                 formula.check_formula(None, val, self.num)
             except formula.FormulaError:
                 raise BadVarError()
-            user.set_formula(self, val)
+            yield user.set_formula(self, val)
             user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
         defer.returnValue(None)
 
@@ -243,6 +243,17 @@ class NoteVar(Var):
     def set(self, user, val):
         if val is not None and len(val) > self.max_len:
             raise BadVarError()
+        if self.name == '0':
+            # special case: insert note at position 1
+            if val == None:
+                val = ''
+            yield user.insert_note(val)
+            user.write(_("Inserted line 1 '%s'.\n") % val)
+            defer.returnValue(None)
+        if val is None and int(self.name) not in user.notes:
+            # XXX would it be better to raise an exception?
+            user.write(_('''You do not have that many lines set.\n'''))
+            defer.returnValue(None)
         yield user.set_note(self, val)
         if val is None:
             user.write(_('''Note %s unset.\n''') % self.name)
@@ -395,6 +406,8 @@ class VarList(object):
         for i in range(0, 10):
             FormulaVar(i).persist().add_as_var()
 
+        # 0 is a pseudo-var used to insert new notes
+        NoteVar('0', None).add_as_var()
         for i in range(1, 11):
             NoteVar(str(i), None).persist().add_as_var()
 

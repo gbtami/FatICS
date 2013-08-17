@@ -148,6 +148,7 @@ class BaseUser(object):
 
     def set_formula(self, v, val):
         self.vars_[v.name] = val
+        return defer.succeed(None)
 
     def set_note(self, v, val):
         num = int(v.name, 10)
@@ -156,6 +157,18 @@ class BaseUser(object):
         else:
             if num in self.notes:
                 del self.notes[num]
+        return defer.succeed(None)
+
+    def insert_note(self, val):
+        """Insert a new note as note 1."""
+        assert(val is not None)
+        for i in range(9, 0, -1):
+            try:
+                self.notes[i + 1] = self.notes[i]
+                del self.notes[i]
+            except KeyError:
+                pass
+        self.notes[1] = val
 
     def set_alias(self, name, val):
         if val is not None:
@@ -520,11 +533,15 @@ class RegUser(BaseUser):
 
     def set_formula(self, v, val):
         BaseUser.set_formula(self, v, val)
-        db.user_set_formula(self.id_, v.name, val)
+        return db.user_set_formula(self.id_, v.name, val)
 
     def set_note(self, v, val):
         BaseUser.set_note(self, v, val)
         return db.user_set_note(self.id_, v.name, val)
+
+    def insert_note(self, val):
+        BaseUser.insert_note(self, val)
+        return db.user_insert_note(self.id_, val)
 
     def set_alias(self, name, val):
         BaseUser.set_alias(self, name, val)
