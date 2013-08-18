@@ -308,7 +308,7 @@ class Challenge(Offer, MatchStringParser):
             self.adjourned = db.get_adjourned_between(a.id_, b.id_)
         if self.adjourned:
             if tags or args:
-                a.write_('You have an adjourned game with %s.  You cannot start a new game until you finish it.\n', b.name)
+                a.write(_('You have an adjourned game with %s.  You cannot start a new game until you finish it.\n') % b.name)
                 return
             tags = self.adjourned.copy()
             tags.update({
@@ -352,7 +352,8 @@ class Challenge(Offer, MatchStringParser):
             o.name == self.name and o.equivalent_to(self)), None)
         if o:
             # a already received an identical offer, so just accept it
-            a.write_("Your challenge intercepts %s's challenge.\n", (o.a.name,))
+            a.write(_("Your challenge intercepts %s's challenge.\n")
+                % (o.a.name,))
             b.write_("%s's challenge intercepts your challenge.\n", (a.name,))
             # XXX don't send "Accepting" and "USER accepts" messages?
             o.accept()
@@ -465,7 +466,7 @@ class Challenge(Offer, MatchStringParser):
         if self.rated is None:
             if a.is_guest or b.is_guest or self.clock_name in [
                     'hourglass', 'untimed']:
-                a.write_('Setting match offer to unrated.\n')
+                a.write(_('Setting match offer to unrated.\n'))
                 self.rated = False
             else:
                 # Original FICS uses the 'rated' var, but we default to True

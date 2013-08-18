@@ -435,7 +435,8 @@ class Shutdown(Command):
                 reactor.shuttingDown.cancel()
                 reactor.shuttingDown = False
                 for u in global_.online:
-                    u.write_("\n\n    *** Server shutdown canceled by %s ***\n\n", conn.user.name)
+                    u.write_("\n\n    *** Server shutdown canceled by %s ***\n\n",
+                        (conn.user.name,))
                 return
             mins = 5
         elif args[0] < 0:

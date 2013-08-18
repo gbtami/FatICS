@@ -23,7 +23,8 @@ from test import *
 
 class TestChannel(Test):
     def test_channel_guest(self):
-        t = self.connect_as_guest()
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest()
 
         # guests should be in 53 by default
         t.write('+ch 53\n')
@@ -31,9 +32,12 @@ class TestChannel(Test):
 
         t.write('+ch 1\n')
         self.expect("[1] added to your channel list", t)
+        t2.write('+ch 1\n')
+        self.expect("[1] added to your channel list", t2)
 
         t.write('t 1 foo bar baz\n')
-        self.expect("(1): foo bar baz", t)
+        self.expect("fics% GuestABCD(U)(1): foo bar baz\r\n(told 2 players in channel 1)\r\n", t)
+        self.expect("fics% \r\nGuestABCD(U)(1): foo bar baz\r\n", t2)
 
         t.write('=ch\n')
         self.expect('channel list: 3 channels', t)
@@ -52,6 +56,7 @@ class TestChannel(Test):
         self.expect("Only admins can join channel 0.", t)
 
         self.close(t)
+        self.close(t2)
 
     def test_channel_admin(self):
         t = self.connect_as_admin()

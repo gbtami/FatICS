@@ -67,6 +67,9 @@ channels = channel.ChannelList()
 commands = trie.Trie()
 admin_commands = trie.Trie()
 
+# current user whose command is being handled
+curuser = None
+
 # load commands
 import command
 command # pacify pyflakes

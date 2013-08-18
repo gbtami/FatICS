@@ -84,7 +84,14 @@ class BaseUser(object):
     def write(self, s):
         """ Write a string to the user. """
         assert(self.is_online)
-        self.session.conn.write(s)
+        if self == global_.curuser:
+            if s[0] == '\n':
+                # XXX HACK
+                s = s[1:]
+            self.session.conn.write(s)
+        else:
+            #s = ''.join(('\n', s))
+            self.write_prompt(s)
 
     def write_nowrap(self, s, prompt=False):
         """ Write a string to the user without word wrapping. """
@@ -96,9 +103,15 @@ class BaseUser(object):
     def write_(self, s, args={}):
         """ Like write(), but localizes for this user. """
         #assert(isinstance(args, (list, dict, tuple)))
-        self.session.conn.write(global_.langs[self.vars_['lang']].gettext(s) %
-            args)
-        self.write_prompt()
+        if self == global_.curuser:
+            if s[0] == '\n':
+                # XXX HACK strip off newline at the beginning
+                s = s[1:]
+            self.session.conn.write(s % args)
+        else:
+            self.session.conn.write(global_.langs[self.vars_['lang']].gettext(s) %
+                args)
+            self.write_prompt()
 
     def nwrite_(self, s1, s2, n, args={}):
         self.session.conn.write(

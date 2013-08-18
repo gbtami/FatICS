@@ -126,12 +126,14 @@ class Abort(Offer):
         if len(offers) > 0:
             o = offers[0]
             if o.a == self.a:
-                user.write_('You are already offering to abort game %d.\n', (game.number,))
+                user.write(_('You are already offering to abort game %d.\n')
+                    % (game.number,))
             else:
                 o.accept()
         else:
             game.pending_offers.append(self)
-            user.write_('Requesting to abort game %d.\n', (game.number,))
+            assert(user == global_.curuser)
+            user.write(_('Requesting to abort game %d.\n') % (game.number,))
             self.b.write_('\n%(name)s requests to abort game %(num)d.\n', {
                 'name': user.name, 'num': game.number})
             for p in game.observers:
@@ -168,14 +170,16 @@ class Adjourn(Offer):
         if len(offers) > 0:
             o = offers[0]
             if o.a == self.a:
-                user.write_('You are already offering to adjourn game %d.\n', (game.number,))
+                user.write(_('You are already offering to adjourn game %d.\n')
+                    % (game.number,))
             else:
                 # XXX should we disallow adjourning games in the first few
                 # moves?
                 o.accept()
         else:
             game.pending_offers.append(self)
-            user.write_('Requesting to adjourn game %d.\n', (game.number,))
+            assert(user == global_.curuser)
+            user.write(_('Requesting to adjourn game %d.\n') % (game.number,))
             self.b.write_('\n%s requests to adjourn game %d.\n', (user.name, game.number))
             for p in game.observers:
                 p.write_('\n%s requests to adjourn game %d.\n', (user.name, game.number))
@@ -210,7 +214,7 @@ class Draw(Offer):
         if len(offers) > 0:
             o = offers[0]
             if o.a == self.a:
-                user.write_('You are already offering a draw.\n')
+                user.write(_('You are already offering a draw.\n'))
             else:
                 o.accept()
         else:
@@ -227,7 +231,7 @@ class Draw(Offer):
 
             game.pending_offers.append(self)
             # original FICS sends "Draw request sent."
-            user.write_('Offering a draw to %s.\n', (self.b.name,))
+            user.write(_('Offering a draw to %s.\n') % (self.b.name,))
             self.b.write_('\n%s offers you a draw.\n', (user.name,))
             for p in self.game.observers:
                 p.write_('\nGame %d: %s offers a draw.\n',

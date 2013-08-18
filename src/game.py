@@ -253,7 +253,7 @@ class Game(object):
         """Remove the given user as an observer and notify the user."""
         assert(u in self.observers)
         u.write_('\nRemoving game %d from observation list.\n',
-            self.number)
+            (self.number,))
         u.session.observed.remove(self)
         self.observers.remove(u)
 

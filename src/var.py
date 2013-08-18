@@ -93,13 +93,15 @@ def _set_bugopen_var(u, val):
             if offer.name == 'partnership request':
                 offer.b.write_('\n%s, who was offering a partnership with you, has become unavailable for bughouse.\n', u.name)
                 offer.withdraw(notify=False)
-                u.write_("Partnership offer to %s withdrawn.\n", offer.b.name)
+                u.write(_("Partnership offer to %s withdrawn.\n")
+                    % offer.b.name)
                 offer.b.write_("\nPartnership offer from %s removed.\n", u.name)
         for offer in u.session.offers_received[:]:
             if offer.name == 'partnership request':
                 offer.a.write_('\n%s, whom you were offering a partnership with, has become unavailable for bughouse.\n', u.name)
                 offer.withdraw(notify=False)
-                u.write_("Partnership offer from %s removed.\n", offer.a.name)
+                u.write(_("Partnership offer from %s removed.\n") %
+                    offer.a.name)
                 offer.a.write_("\nPartnership offer to %s withdrawn.\n", u.name)
         if u.session.partner:
             u.session.partner.write_('\nYour partner has become unavailable for bughouse.\n')

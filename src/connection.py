@@ -266,6 +266,7 @@ class Connection(basic.LineReceiver):
             return
 
         global_.langs[self.user.vars_['lang']].install(names=['ngettext'])
+        global_.curuser = self.user
         yield parser.parse(line, self)
         if self.state != 'quitting':
             assert(self.user)

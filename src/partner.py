@@ -52,7 +52,7 @@ class Partner(Offer):
     def accept(self):
         Offer.accept(self)
         self.a.write_("\n%s agrees to be your partner.\n", (self.b.name,))
-        self.b.write_("You agree to be %s's partner.\n", (self.a.name,))
+        self.b.write(_("You agree to be %s's partner.\n") % (self.a.name,))
 
         # end any existing partnerships
         if self.a.session.partner:
@@ -86,14 +86,14 @@ class Partner(Offer):
 
     def withdraw_logout(self):
         Offer.withdraw_logout(self)
-        self.a.write_('Partnership offer to %s withdrawn.\n', (self.b.name,))
+        self.a.write(_('Partnership offer to %s withdrawn.\n') % (self.b.name,))
         self.b.write_('\n%s, who was offering a partnership with you, has departed.\n',
             (self.a.name,))
 
     def decline_logout(self):
         Offer.decline_logout(self)
         self.a.write_('\n%s, whom you were offering a partnership with, has departed.\n', (self.b.name,))
-        self.b.write_('Partnership offer from %s removed.\n', (self.a.name,))
+        self.b.write(_('Partnership offer from %s removed.\n') % (self.a.name,))
 
 
 def end_partnership(p1, p2):

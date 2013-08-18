@@ -85,7 +85,7 @@ class Channel(object):
                 (self.id_, self.topic, self.topic_who_name,
                 user.format_datetime(self.topic_when)))
         else:
-            user.write_('There is no topic for channel %d.\n', (self.id_,))
+            user.write(_('There is no topic for channel %d.\n') % (self.id_,))
 
     def check_owner(self, user):
         """ Check whether a user is an owner of the channel allowed to
