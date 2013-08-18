@@ -34,8 +34,10 @@ class ConnectTest(Test):
     def test_long_line(self):
         t = self.connect()
         self.expect('login:', t)
-        t.write(('A' * 1025) + '\n')
+        t.write(('A' * 1022) + '\n')
         self.expect(' should be at most ', t)
+        t.write(('A' * 1023) + '\n')
+        self.expect('line too long', t)
         t.close()
 
 class LoginTest(Test):

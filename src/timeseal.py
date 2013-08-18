@@ -31,14 +31,16 @@ TIMESEAL_PONG = '\x02\x39' # also known as "\x029" or "9"
 class Timeseal(object):
     _timeseal_pat = re.compile(r'''^(\d+): (.*)\n$''')
     _zipseal_pat = re.compile(r'''^([0-9a-f]+): (.*)\n$''')
-    zipseal_in = 0
-    zipseal_out = 0
+    #zipseal_in = 0
+    #zipseal_out = 0
     def __init__(self):
         self.timeseal = subprocess.Popen(['timeseal/openseal_decoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         self.zipseal_decoder = subprocess.Popen(['timeseal/zipseal_decoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         self.zipseal_encoder = subprocess.Popen(['timeseal/zipseal_encoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 
     def decode_timeseal(self, line):
+        # the decoder process will die if it gets a line that is too long
+        assert(len(line) <= 1022)
         self.timeseal.stdin.write(line + '\n')
         dec = self.timeseal.stdout.readline()
         m = self._timeseal_pat.match(dec)
@@ -50,6 +52,8 @@ class Timeseal(object):
     def decode_zipseal(self, line):
         if not isinstance(line, str):
             line = line.encode('utf-8')
+        # the decoder process will die if it gets a line that is too long
+        assert(len(line) <= 1022)
         self.zipseal_decoder.stdin.write(line + '\n')
         dec = self.zipseal_decoder.stdout.readline()
         m = self._zipseal_pat.match(dec)
@@ -68,8 +72,9 @@ class Timeseal(object):
         except IOError:
             ret = None
         else:
-            self.zipseal_in += len(line)
-            self.zipseal_out += len(ret)
+            pass
+            #self.zipseal_in += len(line)
+            #self.zipseal_out += len(ret)
         return ret
 
     _timeseal_1_re = re.compile('TIMESTAMP\|(.+?)\|(.+?)\|')

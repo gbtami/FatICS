@@ -35,9 +35,9 @@ class ChannelError(Exception):
 class Channel(object):
     def __init__(self, params):
         self.id_ = params['channel_id']
-        assert(type(self.id_) == type(1) or type(self.id_) == type(1L))
+        assert(isinstance(self.id_, (int, long)))
         self.name = params['name']
-        self.desc = params['descr']
+        #self.desc = params['descr']
         if params['topic'] is None:
             self.topic = None
         else:
@@ -50,7 +50,7 @@ class Channel(object):
         #if user.is_chmuzzled:
         #    user.write(_('You are muzzled in all channels.\n'))
         if (self.id_ == 1 and not user.is_guest and user.is_newbie()
-            and user.vars_['interface']):
+                and user.vars_['interface']):
             # show interface string in ch 1 for newbies
             msg = '[%s] %s' % (user.vars_['interface'], msg)
         msg = '\n%s(%d): %s\n' % (user.get_display_name(), self.id_, msg)
@@ -248,7 +248,7 @@ class ChannelList(object):
             self.all[id] = Channel(ch)
 
     def __getitem__(self, key):
-        assert(type(key) == type(1) or type(key) == type(1L))
+        assert(isinstance(key, (int, long)))
         if key < 0 or key > CHANNEL_MAX:
             raise KeyError
         try:

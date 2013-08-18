@@ -725,8 +725,8 @@ class PlayedGame(Game):
             o.decline()
 
         time = 0.0
-        if self.is_active and (self.variant.pos.ply > 1
-            or self.variant.name == 'bughouse'):
+        if self.is_active and (self.variant.pos.ply > 1 or
+                self.variant.name == 'bughouse'):
             moved_side = opp(self.variant.get_turn())
             if self.clock.is_ticking:
                 if conn.user.has_timeseal():

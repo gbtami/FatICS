@@ -216,6 +216,7 @@ class LangVar(StringVar):
 
 class FormulaVar(Var):
     max_len = 1023
+
     def __init__(self, num):
         name = 'formula' if num == 0 else 'f' + str(num)
         super(FormulaVar, self).__init__(name, None)
@@ -252,7 +253,7 @@ class NoteVar(Var):
             raise BadVarError()
         if self.name == '0':
             # special case: insert note at position 1
-            if val == None:
+            if val is None:
                 val = ''
             yield user.insert_note(val)
             user.write(_("Inserted line 1 '%s'.\n") % val)

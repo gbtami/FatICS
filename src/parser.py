@@ -43,11 +43,6 @@ def _do_parse(s, conn):
     assert(conn.user.is_online)
     s = s.strip()
 
-    if not utf8.check_user_utf8(s):
-        conn.write(_("Command ignored: invalid characters.\n"))
-        # no exact code for this situation
-        return defer.succeed(block_codes.BLKCMD_ERROR_BADCOMMAND)
-
     # for testing unicode cleanliness
     #s = s.decode('utf-8')
 

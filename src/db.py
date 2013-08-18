@@ -469,13 +469,11 @@ if 1:
         defer.returnValue(rows)
 
     # channels
-    def user_get_channels(id):
-        cursor = db.cursor() #cursors.DictCursor)
-        cursor = query(cursor, """SELECT channel_id FROM channel_user
-            WHERE user_id=%s""", (id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return [r[0] for r in rows]
+    @defer.inlineCallbacks
+    def user_get_channels(id_):
+        rows = yield adb.runQuery("""SELECT channel_id FROM channel_user
+            WHERE user_id=%s""", (id_,))
+        defer.returnValue([r['channel_id'] for r in rows])
 
     def channel_new(chid, name):
         cursor = db.cursor()

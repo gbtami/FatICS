@@ -20,7 +20,6 @@ import time
 import re
 import twisted.internet.interfaces
 
-#from twisted.python import log
 from twisted.protocols import basic
 from twisted.internet import reactor, defer, task
 from zope.interface import implements
@@ -30,6 +29,7 @@ import parser
 import global_
 import db
 import login
+import utf8
 
 import config
 from timeseal import timeseal, TIMESEAL_PONG
@@ -38,10 +38,12 @@ from session import Session
 
 class Connection(basic.LineReceiver):
     implements(twisted.internet.interfaces.IProtocol)
+    # inherited from parent class:
     # the telnet transport changes all '\r\n' to '\n',
     # so we can just use '\n' here
     delimiter = '\n'
-    MAX_LEN = 1023
+    MAX_LENGTH = 1022
+
     state = 'prelogin'
     user = None
     logged_in_again = False
@@ -83,10 +85,17 @@ class Connection(basic.LineReceiver):
             self.write('You are connected to the backwards-compatibility port for old FICS clients.\nYou will not be able to use zipseal or international characters.\nThis server is not endorsed by freechess.org.\n\n')
         self.write("login: ")
 
+    def lineLengthExceeded(self, line):
+        name = self.user.name if self.user else self.ip
+        print('command ignored: line too long from %s' % name)
+        self.write(_("Command ignored: line too long.\n"))
+
     def lineReceived(self, line):
         #print('((%s,%s))\n' % (self.state, repr(line)))
-        if len(line) > self.MAX_LEN:
-            line = line[:self.MAX_LEN]
+
+        #if len(line) > self.MAX_LENGTH:
+        #    line = line[:self.MAX_LENGTH - 1]
+        assert(len(line) <= self.MAX_LENGTH)
 
         if self.session.use_timeseal:
             (t, dline) = timeseal.decode_timeseal(line)
@@ -95,7 +104,7 @@ class Connection(basic.LineReceiver):
         else:
             t = None
             dline = line
-        if t != None and t < 0:
+        if t is not None and t < 0:
             self.log('timeseal/zipseal error on line: {%r} {%r}' % (line, dline))
             self.write('timeseal error\n')
             self.loseConnection('timeseal error')
@@ -118,7 +127,6 @@ class Connection(basic.LineReceiver):
                 def err(e):
                     print('last line was: %s\n' % line)
                     e.printTraceback()
-                    assert(False)
                     self.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
                     self.write_nowrap('Error info: exception %s; line was "%s"\n' %
                         (e.getErrorMessage(), line))
@@ -232,6 +240,12 @@ class Connection(basic.LineReceiver):
             self.session.pong(self.session.timeseal_last_timestamp)
             return
 
+        if not utf8.check_user_utf8(line):
+            print('command from %s ignored: invalid chars: %r' %
+                (self.user.name, line))
+            self.write(_("Command ignored: invalid characters.\n"))
+            return
+
         global_.langs[self.user.vars_['lang']].install(names=['ngettext'])
         yield parser.parse(line, self)
         if self.state != 'quitting':
@@ -257,7 +271,7 @@ class Connection(basic.LineReceiver):
         # we can print messages such as forfeit by disconnection,
         # but if the user disconnects abruptly then log_off() will be
         # called in connectionLost() instead.
-        if self.user: #and self.user.is_online:
+        if self.user:
             assert(self.user.is_online)
             self.user.log_off()
             self.user = None

@@ -220,9 +220,9 @@ class Seek(MatchStringParser):
 
         # not currently translated, for efficiency
         seek_str = '\n%s (%s) seeking %d %d %s %s%s%s%s%s ("play %d" to respond)\n' % (
-                self.a.name, self.rating, self.tags['time'], self.tags['inc'],
-                rated_str, speed_name, variant_str, clock_str,
-                side_str, mf_str, self.num)
+            self.a.name, self.rating, self.tags['time'], self.tags['inc'],
+            rated_str, speed_name, variant_str, clock_str,
+            side_str, mf_str, self.num)
 
         # original FICS example:
         # <s> 47 w=GuestWWPQ ti=01 rt=0P t=2 i=12 r=u tp=blitz c=W rr=0-9999 a=f f=f
