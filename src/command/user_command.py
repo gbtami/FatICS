@@ -230,6 +230,7 @@ class Logons(Command, LogMixin):
 
 @ics_command('llogons', 'p')
 class Llogons(Command, LogMixin):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
             if args[0] < 0:
@@ -238,16 +239,19 @@ class Llogons(Command, LogMixin):
         else:
             limit = 200
 
-        self._display_log(db.get_log_all(limit), conn)
+        rows = yield db.get_log_all(limit)
+        self._display_log(rows, conn)
+        defer.returnValue(None)
 
 
 @ics_command('handles', 'w')
 class Handles(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if len(args[0]) < 2:
             conn.write(_('You need to specify at least two characters of the name.\n'))
         else:
-            ulist = db.user_get_matching(args[0], limit=100)
+            ulist = yield db.user_get_by_prefix(args[0], limit=100)
             if not ulist:
                 conn.write(_('There is no player matching the name %s.\n') %
                     args[0])
@@ -257,5 +261,6 @@ class Handles(Command):
                 # XXX should print in columns
                 for u in ulist:
                     conn.write('%s\n' % u['user_name'])
+        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

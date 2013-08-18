@@ -36,6 +36,10 @@ from timeseal import timeseal, TIMESEAL_PONG
 from session import Session
 
 
+#class QuitException(Exception):
+#    pass
+
+
 class Connection(basic.LineReceiver):
     implements(twisted.internet.interfaces.IProtocol)
     # inherited from parent class:
@@ -125,8 +129,12 @@ class Connection(basic.LineReceiver):
                 def unpause(x):
                     self.resumeProducing()
                 def err(e):
+                    #if e.check(QuitException):
+                    #    e.trap(QuitException)
+                    #    return None
                     print('last line was: %s\n' % line)
                     e.printTraceback()
+                    assert(False)
                     self.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
                     self.write_nowrap('Error info: exception %s; line was "%s"\n' %
                         (e.getErrorMessage(), line))
@@ -201,7 +209,7 @@ class Connection(basic.LineReceiver):
             yield self.prompt()
         else:
             passwd = line.strip()
-            if len(passwd) == 0:
+            if not passwd:
                 self.login()
             else:
                 ret = yield self.claimed_user.check_passwd(passwd)
@@ -223,12 +231,23 @@ class Connection(basic.LineReceiver):
         self.timeout_check.cancel()
         self.timeout_check = None
         self.user = self.claimed_user
-        yield self.user.log_on(self)
-        assert(self.user.is_online)
+        assert(self.user)
         if self.user.is_admin():
             self.session.commands = global_.admin_commands
         else:
             self.session.commands = global_.commands
+        d = self.user.log_on(self)
+        #def handleQuit(x):
+        #    if self.state == 'quitting':
+        #        raise QuitException
+        #    else:
+        #        return x
+        #d.addCallback(handleQuit)
+        yield d
+        if self.state == 'quitting':
+            defer.returnValue(None)
+        assert(self.user)
+        assert(self.user.is_online)
 
         self.state = 'prompt'
         self.user.write_prompt()
@@ -255,6 +274,9 @@ class Connection(basic.LineReceiver):
         defer.returnValue(None)
 
     def loseConnection(self, reason):
+        if self.state == 'quitting':
+            # already quitting
+            return
         self.state = 'quitting'
         if self.timeout_check:
             self.timeout_check.cancel()

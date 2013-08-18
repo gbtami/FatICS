@@ -17,6 +17,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import admin
 import db
 
@@ -25,10 +27,11 @@ from .command import ics_command, Command
 
 @ics_command('news', 'p', admin.Level.user)
 class News(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
             # TODO? range parameter
-            item = db.get_news_item(args[0])
+            item = yield db.get_news_item(args[0])
             if not item:
                 conn.write(_('News item %d not found.\n') % args[0])
             else:
@@ -37,7 +40,7 @@ class News(Command):
                 conn.write('\n%s\n\n' % item['text'])
                 conn.write(_('Posted by %s.\n' % item['news_poster']))
         else:
-            news = db.get_recent_news(is_admin=False)
+            news = yield db.get_recent_news(is_admin=False)
             if len(news) == 0:
                 conn.write(_('There is no news.\n'))
             else:
@@ -45,15 +48,17 @@ class News(Command):
                 for item in reversed(news):
                     conn.write('%4d (%s) %s\n' % (item['news_id'],
                         item['news_date'], item['news_title']))
+        defer.returnValue(None)
 
 
 @ics_command('cnewsd', 'd', admin.Level.admin)
 class Cnewsd(Command):
     """ Delete the last line of a news item's text. """
+    @defer.inlineCallbacks
     def run(self, args, conn):
         news_id = args[0]
         try:
-            db.del_last_news_line(news_id)
+            yield db.del_last_news_line(news_id)
         except db.DeleteError:
             conn.write(A_('News item %d not found or already has no lines.\n') % news_id)
         else:
@@ -62,6 +67,7 @@ class Cnewsd(Command):
 
 @ics_command('cnewse', 'dp', admin.Level.admin)
 class Cnewse(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         exp = args[1]
         if exp is None:
@@ -70,52 +76,61 @@ class Cnewse(Command):
             conn.write(A_('News expiration dates are not currently supported.\n'))
             return
         try:
-            db.delete_news(args[0])
+            yield db.delete_news(args[0])
         except db.DeleteError:
             conn.write(A_('News item %d not found.\n') % args[0])
         else:
             conn.write(A_('Deleted news item %d.\n') % args[0])
+        defer.returnValue(None)
 
 
 @ics_command('cnewsf', 'dT', admin.Level.admin)
 class Cnewsf(Command):
     """ Add a line to a news item's text. """
+    @defer.inlineCallbacks
     def run(self, args, conn):
         news_id = args[0]
         line = args[1] if args[1] is not None else ''
-        db.add_news_line(news_id, line)
+        yield db.add_news_line(news_id, line)
         conn.write(A_('News item %d updated.\n') % news_id)
+        defer.returnValue(None)
 
 
 @ics_command('cnewsi', 'S', admin.Level.admin)
 class Cnewsi(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if len(args[0]) > 45:
             conn.write(A_('The news title exceeds the 45-character maximum length; not posted.\n'))
             return
-        news_id = db.add_news(args[0], conn.user, is_admin=False)
+        news_id = yield db.add_news(args[0], conn.user, is_admin=False)
         conn.write(A_('Created news item %d.\n') % news_id)
+        defer.returnValue(None)
 
 
 @ics_command('cnewsp', 'd', admin.Level.admin)
 class Cnewsp(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         try:
-            db.set_news_poster(args[0], conn.user)
+            yield db.set_news_poster(args[0], conn.user)
         except db.UpdateError:
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])
+        defer.returnValue(None)
 
 
 @ics_command('cnewst', 'dS', admin.Level.admin)
 class Cnewst(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         try:
-            db.set_news_title(args[0], args[1])
+            yield db.set_news_title(args[0], args[1])
         except db.UpdateError:
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])
+        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

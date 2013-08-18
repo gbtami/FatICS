@@ -100,14 +100,14 @@ class CommandTest(Test):
         t2 = self.connect_as('testplayer')
 
         t.write('nuke testplayer\n')
-        self.expect('You have been kicked out', t2)
+        self.expect('You have been kicked out by admin', t2)
         self.expect('Nuked: TestPlayer', t)
 
         t.write('showcomment testplayer\n')
         self.expect_re('admin at .*: Nuked', t)
 
         self.close(t)
-        self.close(t2)
+        self.expect_EOF(t2)
 
     @with_player('testplayer')
     def test_asetpass(self):

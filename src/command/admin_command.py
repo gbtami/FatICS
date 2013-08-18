@@ -66,7 +66,7 @@ class Addplayer(Command):
             user_id = yield user.add_user(name, email, passwd, real_name)
             # disabled just to speed up testing
             if False:
-                db.add_comment_async(conn.user.id_, user_id,
+                yield db.add_comment_async(conn.user.id_, user_id,
                     'Player added by %s using addplayer.' % conn.user.name)
             conn.write(A_('Added: >%s< >%s< >%s< >%s<\n')
                 % (name, real_name, email, passwd))
@@ -305,6 +305,8 @@ class Pose(Command):
         adminuser = conn.user
         u2 = find_user.online_exact_for_user(args[0], conn)
         if u2:
+            assert(u2.is_online)
+            assert(u2.session.commands)
             if not admin.check_user_operation(adminuser, u2):
                 conn.write(A_('You can only pose as players below your adminlevel.\n'))
             else:

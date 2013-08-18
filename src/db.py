@@ -161,39 +161,21 @@ if 1:
         defer.returnValue(None)
 
     def user_set_alias(user_id, name, val):
-        cursor = db.cursor()
         if val is not None:
-            cursor = query(cursor, """INSERT INTO user_alias SET user_id=%s,name=%s,val=%s ON DUPLICATE KEY UPDATE val=%s""", (user_id, name, val, val))
+            d = adb.runQuery("""INSERT INTO user_alias SET user_id=%s,name=%s,val=%s ON DUPLICATE KEY UPDATE val=%s""",
+                (user_id, name, val, val))
         else:
-            cursor = query(cursor, """DELETE FROM user_alias WHERE user_id=%s AND name=%s""", (user_id, name))
-            if cursor.rowcount != 1:
-                cursor.close()
-                raise DeleteError()
-        cursor.close()
+            def do_del(txn):
+                txn.execute("""DELETE FROM user_alias WHERE user_id=%s AND name=%s""",
+                    (user_id, name))
+                if txn.rowcount != 1:
+                    raise DeleteError()
+            d = adb.runInteraction(do_del)
+        return d
 
     def user_get_aliases(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT name,val FROM user_alias WHERE user_id=%s ORDER BY name ASC""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
-
-    '''def user_get_aliases(user_id):
-        return  adb.runQuery("""SELECT name,val FROM user_alias WHERE user_id=%s ORDER BY name ASC""", (user_id,))'''
-
-    def user_get_matching(prefix, limit=8):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT user_id,user_name,user_passwd,
-                user_first_login,user_last_logout,user_admin_level,
-                user_email,user_real_name,
-                user_banned,user_muzzled,user_cmuzzled,user_muted,
-                user_notebanned,user_ratedbanned,user_playbanned,
-                user_total_time_online
-            FROM user WHERE user_name LIKE %s""" + " LIMIT %s" % limit,
-                (prefix + '%',))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""SELECT name,val FROM user_alias WHERE user_id=%s ORDER BY name ASC""",
+            (user_id,))
 
     def user_get_by_prefix(prefix, limit=8):
         d = adb.runQuery("""SELECT user_id,user_name,user_passwd,
@@ -228,18 +210,14 @@ if 1:
             SET user_admin_level=%s WHERE user_id=%s""", (str(level), uid))
 
     def user_set_first_login(uid):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE user
+        return adb.runOperation("""UPDATE user
             SET user_first_login=NOW() WHERE user_id=%s""", (uid,))
-        cursor.close()
 
+    @defer.inlineCallbacks
     def user_get_first_login(uid):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_first_login
+        rows = yield adb.runQuery("""SELECT user_first_login
             FROM user WHERE user_id=%s""", (uid,))
-        ret = cursor.fetchone()[0]
-        cursor.close()
-        return ret
+        defer.returnValue(rows[0]['user_first_login'])
 
     def user_set_last_logout(uid):
         cursor = db.cursor()
@@ -289,15 +267,11 @@ if 1:
         return rows
 
     def get_log_all(limit):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT log_who_name,log_when,
+        return adb.runQuery("""SELECT log_who_name,log_when,
                 log_which,log_ip
             FROM user_log
             ORDER BY log_when DESC
             LIMIT %s""", (limit,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
     def get_muted_user_names():
         cursor = db.cursor()
@@ -555,7 +529,7 @@ if 1:
 
     @defer.inlineCallbacks
     def channel_add_owner(chid, user_id):
-        yield adb.runQuery("""INSERT INTO channel_owner
+        yield adb.runOperation("""INSERT INTO channel_owner
             SET channel_id=%s,user_id=%s""", (chid, user_id))
         defer.returnValue(None)
 
@@ -924,113 +898,104 @@ if 1:
     # news
     def add_news(title, user, is_admin):
         is_admin = '1' if is_admin else '0'
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO news_index SET news_title=%s,news_poster=%s,news_when=NOW(),news_is_admin=%s""", (title, user.name, is_admin))
-        news_id = cursor.lastrowid
-        cursor.close()
-        return news_id
+        def do_insert(txn):
+            txn.execute("""INSERT INTO news_index SET news_title=%s,news_poster=%s,news_when=NOW(),news_is_admin=%s""",
+                (title, user.name, is_admin))
+            news_id = txn.lastrowid
+            return news_id
+        return adb.runInteraction(do_insert)
 
     def delete_news(news_id):
-        cursor = db.cursor()
-        try:
-            cursor = query(cursor, """DELETE FROM news_index WHERE news_id=%s LIMIT 1""", (news_id,))
-            if cursor.rowcount != 1:
+        def do_del(txn):
+            txn.execute("""DELETE FROM news_index WHERE news_id=%s LIMIT 1""",
+                (news_id,))
+            if txn.rowcount != 1:
                 raise DeleteError()
-            cursor = query(cursor, """DELETE FROM news_line WHERE news_id=%s""", (news_id,))
-        finally:
-            cursor.close()
+            txn.execute("""DELETE FROM news_line WHERE news_id=%s""",
+                (news_id,))
+        return adb.runInteraction(do_del)
 
     def get_recent_news(is_admin):
         is_admin = '1' if is_admin else '0'
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """
+        return adb.runQuery("""
             SELECT news_id,news_title,DATE(news_when) AS news_date,news_poster
             FROM news_index WHERE news_is_admin=%s
             ORDER BY news_id DESC LIMIT 10""", (is_admin,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
     def get_news_since(when, is_admin):
         is_admin = '1' if is_admin else '0'
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """
+        return adb.runQuery("""
             SELECT news_id,news_title,DATE(news_when) as news_date,news_poster
             FROM news_index WHERE news_is_admin=%s AND news_when > %s
             ORDER BY news_id DESC LIMIT 10""", (is_admin, when))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
+    @defer.inlineCallbacks
     def get_news_item(news_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """
+        rows = yield adb.runQuery("""
             SELECT news_id,news_title,DATE(news_when) AS news_date,news_poster
             FROM news_index WHERE news_id=%s""", (news_id,))
-        row = cursor.fetchone()
-        if not row:
-            return None
+        if not rows:
+            defer.returnValue(None)
+        row = rows[0]
 
-        cursor = query(cursor, """SELECT txt FROM news_line
+        lines = yield adb.runQuery("""SELECT txt FROM news_line
             WHERE news_id=%s
             ORDER BY num ASC""", (news_id,))
-        lines = cursor.fetchall()
         row['text'] = '\n'.join([line['txt'] for line in lines])
-        cursor.close()
-        return row
+        defer.returnValue(row)
 
+    @defer.inlineCallbacks
     def add_news_line(news_id, text):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT MAX(num) FROM news_line WHERE news_id=%s""",
+        rows = yield adb.runQuery("""SELECT MAX(num) AS m FROM news_line WHERE news_id=%s""",
             (news_id,))
-        row = cursor.fetchone()
-        if row[0] is None:
+        row = rows[0]
+        if row['m'] is None:
             num = 1
         else:
-            num = row[0] + 1
-        cursor = query(cursor, """INSERT INTO news_line
+            num = row['m'] + 1
+        yield adb.runOperation("""INSERT INTO news_line
             SET news_id=%s,num=%s,txt=%s""", (news_id, num, text))
-        cursor.close()
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def del_last_news_line(news_id):
-        """ Delete the last line of a news item.  Returns False if there
-        is no such item, and raises DeleteError if the item exists
-        but has no lines. """
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT MAX(num) FROM news_line WHERE news_id=%s""",
+        """ Delete the last line of a news item.  Raise DeleteError if
+        there is no such item, or if the item exists but has no lines. """
+        rows = yield adb.runQuery("""
+            SELECT MAX(num) AS m FROM news_line WHERE news_id=%s""",
             (news_id,))
-        num = cursor.fetchone()[0]
-        try:
-            if num is None:
-                raise DeleteError
-            cursor = query(cursor, """DELETE FROM news_line
+        num = rows[0]['m']
+        if num is None:
+            raise DeleteError
+        def do_del(txn):
+            txn.execute("""DELETE FROM news_line
                 WHERE news_id=%s AND num=%s""", (news_id, num))
-            if cursor.rowcount != 1:
+            if txn.rowcount != 1:
                 raise DeleteError
-        finally:
-            cursor.close()
+        yield adb.runInteraction(do_del)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def set_news_poster(news_id, u):
         """ Set the poster of a news item. """
-        try:
-            cursor = db.cursor()
-            cursor = query(cursor, """UPDATE news_index SET news_poster=%s WHERE news_id=%s""",
+        def do_update(txn):
+            txn.execute("""UPDATE news_index SET news_poster=%s WHERE news_id=%s""",
                 (u.name, news_id))
-            if cursor.rowcount != 1:
+            if txn.rowcount != 1:
                 raise UpdateError
-        finally:
-            cursor.close()
+        yield adb.runInteraction(do_update)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def set_news_title(news_id, title):
         """ Set the title of a news item. """
-        try:
-            cursor = db.cursor()
-            cursor = query(cursor, """UPDATE news_index SET news_title=%s WHERE news_id=%s""",
+        def do_update(txn):
+            txn.execute("""UPDATE news_index SET news_title=%s WHERE news_id=%s""",
                 (title, news_id))
-            if cursor.rowcount != 1:
+            if txn.rowcount != 1:
                 raise UpdateError
-        finally:
-            cursor.close()
+        yield adb.runInteraction(do_update)
+        defer.returnValue(None)
 
     # messages
     def _get_next_message_id(cursor, uid):

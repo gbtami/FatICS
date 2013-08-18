@@ -176,6 +176,7 @@ class BaseUser(object):
             self.aliases[name] = val
         else:
             del self.aliases[name]
+        return defer.succeed(None)
 
     def add_channel(self, id_):
         assert(isinstance(id_, (int, long)))
@@ -451,10 +452,10 @@ class RegUser(BaseUser):
         notify.notify_users(self, arrived=True)
 
         if not self.first_login:
-            db.user_set_first_login(self.id_)
-            self.first_login = db.user_get_first_login(self.id_)
+            yield db.user_set_first_login(self.id_)
+            self.first_login = yield db.user_get_first_login(self.id_)
 
-        news = db.get_news_since(self.last_logout, is_admin=False)
+        news = yield db.get_news_since(self.last_logout, is_admin=False)
         if news:
             conn.write(ngettext('There is %d new news item since your last login:\n',
                 'There are %d new news items since your last login:\n', len(news))
@@ -480,7 +481,7 @@ class RegUser(BaseUser):
         self.gnotified = set([dbu['user_name']
             for dbu in db.user_get_gnotified(self.id_)])
 
-        for a in db.user_get_aliases(self.id_):
+        for a in (yield db.user_get_aliases(self.id_)):
             self.aliases[a['name']] = a['val']
 
         #self.censor = set([dbu['user_name'] for dbu in
@@ -548,7 +549,7 @@ class RegUser(BaseUser):
 
     def set_alias(self, name, val):
         BaseUser.set_alias(self, name, val)
-        db.user_set_alias(self.id_, name, val)
+        return db.user_set_alias(self.id_, name, val)
 
     @defer.inlineCallbacks
     def add_channel(self, chid):

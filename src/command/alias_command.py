@@ -17,6 +17,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 from .command import ics_command, Command
 
 MAX_ALIASES = 1024
@@ -24,6 +26,7 @@ MAX_ALIASES = 1024
 
 @ics_command('alias', 'oT')
 class Alias(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is None:
             # show list of aliases
@@ -59,15 +62,17 @@ class Alias(Command):
 
         # set alias value
         was_set = aname in conn.user.aliases
-        conn.user.set_alias(aname, args[1])
+        yield conn.user.set_alias(aname, args[1])
         if was_set:
             conn.write(_('Alias "%s" changed.\n') % aname)
         else:
             conn.write(_('Alias "%s" set.\n') % aname)
+        defer.returnValue(None)
 
 
 @ics_command('unalias', 'w')
 class Unalias(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         aname = args[0]
         if not 1 <= len(aname) < 16:
@@ -77,8 +82,9 @@ class Unalias(Command):
         if aname not in conn.user.aliases:
             conn.write(_('You have no alias "%s".\n') % aname)
         else:
-            conn.user.set_alias(aname, None)
+            yield conn.user.set_alias(aname, None)
             conn.write(_('Alias "%s" unset.\n') % aname)
+        defer.returnValue(None)
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

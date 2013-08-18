@@ -30,7 +30,6 @@ class BadCommandError(Exception):
     pass
 
 import alias
-import utf8
 import trie
 import block
 import block_codes
@@ -41,6 +40,7 @@ _command_re = re.compile(r'^(\S+)(?:\s+(.*))?$')
 def _do_parse(s, conn):
     """ Returns a deferred. """
     assert(conn.user.is_online)
+    assert(conn.session.commands)
     s = s.strip()
 
     # for testing unicode cleanliness
