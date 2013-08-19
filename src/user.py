@@ -460,7 +460,8 @@ class RegUser(BaseUser):
         d = BaseUser.log_on(self, conn)
         assert(d.called)
 
-        self.adjourned = db.get_adjourned(self.id_)
+        adjrows = yield db.get_adjourned(self.id_)
+        self.adjourned = list(adjrows)
 
         notify.notify_users(self, arrived=True)
 
@@ -765,6 +766,25 @@ class RegUser(BaseUser):
         if self.is_online:
             tot += self.session.get_online_time()
         return tot
+
+    def get_adjourned_with(self, u):
+        """Get an adjourned game with u, or None if none exists."""
+        # This assumes that there is never more than one adjourned
+        # game between two users.
+        for adj in self.adjourned:
+            if u.id_ in (adj['white_user_id'], adj['black_user_id']):
+                return adj
+        return None
+
+    def remove_adjourned(self, adj):
+        """Remove the given game from the adjourned game list.  Raise KeyError
+        if no such game."""
+        adj_id = adj['adjourn_id']
+        for i in range(len(self.adjourned) - 1, -1, -1):
+            if self.adjourned[i]['adjourn_id'] == adj_id:
+                del self.adjourned[i]
+                return
+        raise KeyError
 
 
 class GuestUser(BaseUser):

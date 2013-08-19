@@ -54,6 +54,8 @@ class Connection(basic.LineReceiver):
     buffer_output = False
     ivar_pat = re.compile(r'%b([01]{32})')
     timeout_check = None
+    # current defer.Deferred in progress
+    d = None
 
     def connectionMade(self):
         global_.langs['en'].install(names=['ngettext'])
@@ -121,27 +123,31 @@ class Connection(basic.LineReceiver):
 
         self.session.timeseal_last_timestamp = t
         if self.state:
-            d = getattr(self, "handleLine_" + self.state)(dline)
-            if d:
+            self.d = getattr(self, "handleLine_" + self.state)(dline)
+            if self.d:
                 # if we get a deferred, pause this connection until
                 # it fires
                 self.pauseProducing()
                 def unpause(x):
+                    self.d = None
                     self.resumeProducing()
                 def err(e):
-                    #if e.check(QuitException):
-                    #    e.trap(QuitException)
-                    #    return None
+                    if e.check(defer.CancelledError):
+                        print('CanceledError')
+                        e.trap(defer.CancelledError)
+                        return None
                     print('last line was: %s\n' % line)
                     e.printTraceback()
-                    assert(False)
+                    self.d = None
                     self.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
                     self.write_nowrap('Error info: exception %s; line was "%s"\n' %
                         (e.getErrorMessage(), line))
 
+                    assert(False)
                     self.loseConnection('error')
-                d.addCallback(unpause)
-                d.addErrback(err)
+                self.d.addCallback(unpause)
+                if self.d:
+                    self.d.addErrback(err)
 
     def handleLine_prelogin(self, line):
         """ Shouldn't happen normally. """
@@ -278,6 +284,9 @@ class Connection(basic.LineReceiver):
         if self.state == 'quitting':
             # already quitting
             return
+        if self.d:
+            self.d.cancel()
+            self.d = None
         self.state = 'quitting'
         if self.timeout_check:
             self.timeout_check.cancel()
@@ -305,6 +314,9 @@ class Connection(basic.LineReceiver):
 
     def connectionLost(self, reason):
         basic.LineReceiver.connectionLost(self, reason)
+        if self.d:
+            self.d.cancel()
+            self.d = None
         if self.user:
             assert(self.user.is_online)
             if self.logged_in_again:

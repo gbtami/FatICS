@@ -156,8 +156,10 @@ class TestAdjourn(Test):
         self.expect('1 player who has an adjourned game with you is online: TestPlayer', t)
         self.expect('Notification: admin, who has an adjourned game with you, has arrived.', t2)
 
+        self.set_nowrap(t)
+
         t.write('match testplayer 3+0\n')
-        self.expect('You have an adjourned game with TestPlayer.', t)
+        self.expect('You have an adjourned game with TestPlayer.  You cannot start a new game until you finish it.', t)
 
         t.write('match testplayer\n')
         self.expect('Issuing: admin (----) TestPlayer (----) rated blitz 3 4 (adjourned)', t)

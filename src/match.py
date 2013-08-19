@@ -26,7 +26,6 @@ import clock
 import parser
 import formula
 import global_
-import db
 
 from offer import Offer
 from game_constants import WHITE, BLACK, side_to_str, EXAMINED
@@ -305,7 +304,8 @@ class Challenge(Offer, MatchStringParser):
         if a.is_guest or b.is_guest:
             self.adjourned = None
         else:
-            self.adjourned = db.get_adjourned_between(a.id_, b.id_)
+            #self.adjourned = db.get_adjourned_between(a.id_, b.id_)
+            self.adjourned = a.get_adjourned_with(b)
         if self.adjourned:
             if tags or args:
                 a.write(_('You have an adjourned game with %s.  You cannot start a new game until you finish it.\n') % b.name)

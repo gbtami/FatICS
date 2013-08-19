@@ -607,6 +607,8 @@ class PlayedGame(Game):
         self.when_started = adj['when_started']
 
         # clear the game in the database
+        a.remove_adjourned(adj)
+        b.remove_adjourned(adj)
         db.delete_adjourned(adj['adjourn_id'])
 
     def _init_new(self, chal):
@@ -938,6 +940,10 @@ class PlayedGame(Game):
             'ply_count': self.get_ply_count(),
             'variant_id': self.speed_variant.variant.id_,
             'speed_id': self.speed_variant.speed.id_,
+            'speed_name': self.speed_variant.speed.name,
+            'variant_name': self.speed_variant.variant.name,
+            'clock_name': self.clock_name,
+            'idn': self.idn,
             'rated': self.rated,
             'when_started': self.when_started,
             'when_adjourned': datetime.datetime.utcnow()
@@ -954,7 +960,9 @@ class PlayedGame(Game):
         else:
             raise RuntimeError('unable to abbreviate adjournment reason: %s' %
                 reason)
-        db.adjourned_game_add(data)
+        data['adjourn_id'] = db.adjourned_game_add(data)
+        self.white.adjourned.append(data)
+        self.black.adjourned.append(data)
         self.result(reason, '*')
 
     def free(self):

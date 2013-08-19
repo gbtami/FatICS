@@ -778,26 +778,30 @@ if 1:
         return adjourn_id
 
     def get_adjourned(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT adjourn_id,white_user_id,black_user_id,
-                white.user_name as white_name, black.user_name as black_name
+        return adb.runQuery("""SELECT adjourn_id,white_user_id,black_user_id,
+                white_clock,black_clock,eco,speed_name,variant_name,clock_name,
+                adjourned_game.time AS time,adjourned_game.inc AS inc,rated,
+                adjourn_reason,ply_count,movetext,
+                when_started,when_adjourned,idn,overtime_move_num,
+                overtime_bonus,white.user_name as white_name,
+                black.user_name as black_name
             FROM adjourned_game
                 LEFT JOIN user AS white
                     ON (white.user_id = white_user_id)
                 LEFT JOIN user AS black
                     ON (black.user_id = black_user_id)
+                LEFT JOIN variant USING(variant_id)
+                LEFT JOIN speed USING(speed_id)
             WHERE white_user_id=%s or black_user_id=%s""",
             (user_id, user_id))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
-    def get_adjourned_between(id1, id2):
+    '''def get_adjourned_between(id1, id2):
         cursor = db.cursor(cursors.DictCursor)
         cursor = query(cursor, """SELECT adjourn_id,white_user_id,
                 white_clock,black_user_id,black_clock,
                 eco,speed_name,variant_name,
-                clock_name,time,inc,rated,adjourn_reason,ply_count,movetext,
+                clock_name,time,inc,
+                rated,adjourn_reason,ply_count,movetext,
                 when_started,when_adjourned,idn,overtime_move_num,
                 overtime_bonus
             FROM adjourned_game LEFT JOIN variant USING(variant_id)
@@ -807,13 +811,17 @@ if 1:
             (id1, id2, id2, id1))
         row = cursor.fetchone()
         cursor.close()
-        return row
+        return row'''
 
     def delete_adjourned(adjourn_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM adjourned_game WHERE adjourn_id=%s""",
-            adjourn_id)
-        cursor.close()
+        try:
+            cursor = db.cursor()
+            cursor = query(cursor, """DELETE FROM adjourned_game WHERE adjourn_id=%s""",
+                adjourn_id)
+            if cursor.rowcount != 1:
+                raise DeleteError
+        finally:
+            cursor.close()
 
     def user_get_history(user_id):
         cursor = db.cursor(cursors.DictCursor)
