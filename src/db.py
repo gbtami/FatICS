@@ -701,11 +701,7 @@ if 1:
         return adb.runInteraction(do_del)
 
     def user_get_noplayed(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT user_name FROM user LEFT JOIN noplay ON (user.user_id=noplay.noplayed) WHERE noplayer=%s""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""SELECT user_name FROM user LEFT JOIN noplay ON (user.user_id=noplay.noplayed) WHERE noplayer=%s""", (user_id,))
 
     def title_get_all():
         cursor = db.cursor(cursors.DictCursor)
@@ -722,19 +718,26 @@ if 1:
         return [r[0] for r in rows]
 
     # eco
-    def get_eco(hash):
+    def get_eco_sync(hash_):
         cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT eco,long_ FROM eco WHERE hash=%s""", (hash,))
+        cursor = query(cursor, """SELECT eco,long_ FROM eco WHERE hash=%s""", (hash_,))
         row = cursor.fetchone()
         cursor.close()
         return row
 
-    def get_nic(hash):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT nic FROM nic WHERE hash=%s""", (hash,))
-        row = cursor.fetchone()
-        cursor.close()
-        return row
+    @defer.inlineCallbacks
+    def get_eco(hash_):
+        rows = yield adb.runQuery("""SELECT eco,long_ FROM eco WHERE hash=%s""",
+            (hash_,))
+        ret = rows[0] if rows else None
+        defer.returnValue(ret)
+
+    @defer.inlineCallbacks
+    def get_nic(hash_):
+        rows = yield adb.runQuery("""SELECT nic FROM nic WHERE hash=%s""",
+            (hash_,))
+        ret = rows[0] if rows else None
+        defer.returnValue(ret)
 
     def look_up_eco(eco):
         if len(eco) == 3:
@@ -1006,27 +1009,34 @@ if 1:
         defer.returnValue(None)
 
     # messages
-    def _get_next_message_id(cursor, uid):
-        cursor = query(cursor, """SELECT MAX(num)
+    @defer.inlineCallbacks
+    def _get_next_message_id(uid):
+        rows = yield adb.runQuery("""SELECT MAX(num) AS m
             FROM message
             WHERE to_user_id=%s""", (uid,))
-        row = cursor.fetchone()
-        return (row[0] + 1) if row[0] is not None else 1
+        max_ = rows[0]['m']
+        if max_:
+            mid = max_ + 1
+        else:
+            mid = 1
+        defer.returnValue(mid)
 
     def _renumber_messages(cursor, uid):
         """ Renumber the messages for a given user, which is necessary
         when messages are deleted, possibly leaving a gap in the
         existing enumeration. """
-        cursor = query(cursor, """SET @i=0""")
-        cursor = query(cursor, """UPDATE message
-            SET num=(@i := @i + 1)
-            WHERE to_user_id=%s
-            ORDER BY when_sent ASC,message_id ASC""",
-            (uid,))
+        def do_renum(txn):
+            txn.execute( """SET @i=0""")
+            txn.execute("""UPDATE message
+                SET num=(@i := @i + 1)
+                WHERE to_user_id=%s
+                ORDER BY when_sent ASC,message_id ASC""",
+                (uid,))
+        return adb.runInteraction(do_renum)
 
+    @defer.inlineCallbacks
     def get_message(message_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT
+        rows = yield adb.runQuery("""SELECT
                 message_id,num,sender.user_name AS sender_name,
                 forwarder.user_name AS forwarder_name,
                 when_sent,txt,unread
@@ -1036,26 +1046,29 @@ if 1:
                 (message.forwarder_user_id = forwarder.user_id)
             WHERE message_id=%s""",
             (message_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        return row
+        if rows:
+            ret = rows[0]
+        else:
+            ret = None
+        defer.returnValue(ret)
 
+    @defer.inlineCallbacks
     def get_message_count(uid):
         """ Get counts of total and unread messages for a given user. """
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT COUNT(*),SUM(unread)
+        rows = yield adb.runQuery("""SELECT COUNT(*) AS c,
+            SUM(unread) AS s
             FROM message
             WHERE to_user_id=%s""",
             (uid,))
-        ret = cursor.fetchone()
-        if ret[0] == 0:
+        ret = rows[0]
+        if ret['c'] == 0:
             ret = (0, 0)
-        cursor.close()
-        return ret
+        else:
+            ret = (ret['c'], ret['s'])
+        defer.returnValue(ret)
 
     def get_messages_all(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT
+        return adb.runQuery("""SELECT
                 message_id,num,sender.user_name AS sender_name,
                 forwarder.user_name AS forwarder_name,when_sent,txt,unread
             FROM message LEFT JOIN user AS sender
@@ -1065,13 +1078,9 @@ if 1:
             WHERE to_user_id=%s
             ORDER BY num ASC""",
             (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
     def get_messages_unread(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT
+        return adb.runQuery("""SELECT
                 message_id,num,sender.user_name AS sender_name,
                 forwarder.user_name AS forwarder_name,when_sent,txt,unread
             FROM message LEFT JOIN user AS sender
@@ -1081,13 +1090,9 @@ if 1:
             WHERE to_user_id=%s AND unread=1
             ORDER BY num ASC""",
             (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
     def get_messages_range(user_id, start, end):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT
+        return adb.runQuery("""SELECT
                 message_id,num,from_user_id,
                 sender.user_name AS sender_name,
                 forwarder.user_name AS forwarder_name,when_sent,txt,unread
@@ -1098,13 +1103,9 @@ if 1:
             WHERE to_user_id=%s AND num BETWEEN %s AND %s
             ORDER BY num ASC""",
             (user_id, start, end))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
     def get_messages_from_to(from_user_id, to_user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT
+        return adb.runQuery("""SELECT
                 message_id,num,from_user_id,sender.user_name AS sender_name,
                 forwarder.user_name AS forwarder_name,when_sent,txt,unread
             FROM message LEFT JOIN user AS sender ON
@@ -1114,32 +1115,33 @@ if 1:
             WHERE to_user_id=%s AND from_user_id=%s
             ORDER BY num ASC""",
             (to_user_id, from_user_id))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
+    @defer.inlineCallbacks
     def send_message(from_user_id, to_user_id, txt):
-        cursor = db.cursor()
-        num = _get_next_message_id(cursor, to_user_id)
-        cursor = query(cursor, """INSERT INTO message
-            SET from_user_id=%s,to_user_id=%s,num=%s,txt=%s,when_sent=NOW(),
-                unread=1""",
-            (from_user_id, to_user_id, num, txt))
-        message_id = cursor.lastrowid
-        cursor.close()
-        return message_id
+        """Send a message and return the resulting message_id."""
+        num = yield _get_next_message_id(to_user_id)
+        def do_insert(txn):
+            txn.execute("""INSERT INTO message
+                SET from_user_id=%s,to_user_id=%s,num=%s,txt=%s,when_sent=NOW(),
+                    unread=1""",
+                (from_user_id, to_user_id, num, txt))
+            return txn.lastrowid
+        message_id = yield adb.runInteraction(do_insert)
+        defer.returnValue(message_id)
 
+    @defer.inlineCallbacks
     def forward_message(forwarder_user_id, to_user_id, message_id):
-        cursor = db.cursor()
-        num = _get_next_message_id(cursor, to_user_id)
-        cursor = query(cursor, """INSERT INTO message
-            (from_user_id,forwarder_user_id,to_user_id,num,txt,when_sent,unread)
-            (SELECT from_user_id,%s,%s,%s,txt,when_sent,1 FROM message
-                WHERE message_id=%s)""",
-            (forwarder_user_id, to_user_id, num, message_id))
-        message_id = cursor.lastrowid
-        cursor.close()
-        return message_id
+        """Forward a message and return the resulting message_id."""
+        num = yield _get_next_message_id(to_user_id)
+        def do_insert(txn):
+            txn.execute("""INSERT INTO message
+                (from_user_id,forwarder_user_id,to_user_id,num,txt,when_sent,unread)
+                (SELECT from_user_id,%s,%s,%s,txt,when_sent,1 FROM message
+                    WHERE message_id=%s)""",
+                (forwarder_user_id, to_user_id, num, message_id))
+            return txn.lastrowid
+        message_id = yield adb.runInteraction(do_insert)
+        defer.returnValue(message_id)
 
     def set_messages_read_all(uid):
         cursor = db.cursor()

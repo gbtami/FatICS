@@ -50,6 +50,7 @@ class BaseUser(object):
         return hash(self.name)
 
     def log_on(self, conn):
+        assert(not self.is_online)
         self.vars_.update(global_.var_defaults.get_transient_vars())
         self.aliases = {}
         self.gnotified = set()
@@ -445,6 +446,7 @@ class RegUser(BaseUser):
     @defer.inlineCallbacks
     def log_on(self, conn):
         if global_.online.is_online(self.name):
+            assert(self.is_online) # XXX this shows that reorganization is needed
             conn.write(_("**** %s is already logged in; closing the other connection. ****\n" % self.name))
             u = global_.online.find_exact(self.name)
             u.session.conn.write(_("**** %s has arrived; you can't both be logged in. ****\n\n") % self.name)
@@ -481,7 +483,7 @@ class RegUser(BaseUser):
             conn.write(_('There are no new news items.\n'))
         conn.write('\n')
 
-        (mcount, ucount) = db.get_message_count(self.id_)
+        (mcount, ucount) = yield db.get_message_count(self.id_)
         assert(mcount >= 0)
         assert(ucount >= 0)
         conn.write(ngettext('You have %(mcount)d message (%(ucount)d unread).\n',
@@ -500,7 +502,7 @@ class RegUser(BaseUser):
 
         #self.censor = set([dbu['user_name'] for dbu in
         #    db.user_get_censored(self.id_)])
-        for dbu in db.user_get_noplayed(self.id_):
+        for dbu in (yield db.user_get_noplayed(self.id_)):
             self.noplay.add(dbu['user_name'])
 
         self.get_history()
@@ -867,7 +869,7 @@ def add_user(name, email, passwd, real_name):
     user_id = yield db.user_add(name, email, pwhash, real_name,
         admin.Level.user)
     for chid in global_.channels.get_default_channels():
-        db.channel_add_user(chid, user_id)
+        yield db.channel_add_user(chid, user_id)
     defer.returnValue(user_id)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

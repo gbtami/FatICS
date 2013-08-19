@@ -133,7 +133,6 @@ class Connection(basic.LineReceiver):
                     self.resumeProducing()
                 def err(e):
                     if e.check(defer.CancelledError):
-                        print('CanceledError')
                         e.trap(defer.CancelledError)
                         return None
                     print('last line was: %s\n' % line)
@@ -238,6 +237,7 @@ class Connection(basic.LineReceiver):
         self.timeout_check = None
         self.user = self.claimed_user
         assert(self.user)
+        # XXX assert(not self.user.is_online)
         if self.user.is_admin():
             self.session.commands = global_.admin_commands
         else:

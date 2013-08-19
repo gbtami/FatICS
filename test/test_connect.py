@@ -115,12 +115,12 @@ class LoginTest(Test):
         t2 = self.connect()
         t2.write('admin\n%s\n' % admin_passwd)
         self.expect(' is already logged in', t2)
-        self.expect(' has arrived', t)
+        self.expect("admin has arrived; you can't both be logged in", t)
+        self.expect_EOF(t)
 
         t2.write('fi\n')
         self.expect('On for: ', t2)
 
-        self.close(t)
         self.close(t2)
 
     def test_failed_login(self):

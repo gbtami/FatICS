@@ -19,6 +19,8 @@
 import random
 import datetime
 
+from twisted.internet import defer
+
 import find_user
 import rating
 import speed_variant
@@ -266,12 +268,12 @@ class Game(object):
         assert(not self.observers)
         del global_.games[self.number]
 
-    def get_eco(self):
+    def get_eco_sync(self):
         i = min(self.variant.pos.ply, 36)
         row = None
         while i >= self.variant.pos.start_ply:
             hash_ = self.variant.pos.history.get_hash(i)
-            row = db.get_eco(hash_)
+            row = db.get_eco_sync(hash_)
             if row:
                 break
             i -= 1
@@ -281,12 +283,29 @@ class Game(object):
             ret = (0, 'A00', 'Unknown')
         return ret
 
+    @defer.inlineCallbacks
+    def get_eco(self):
+        i = min(self.variant.pos.ply, 36)
+        row = None
+        while i >= self.variant.pos.start_ply:
+            hash_ = self.variant.pos.history.get_hash(i)
+            row = yield db.get_eco(hash_)
+            if row:
+                break
+            i -= 1
+        if row:
+            ret = (i, row['eco'], row['long_'])
+        else:
+            ret = (0, 'A00', 'Unknown')
+        defer.returnValue(ret)
+
+    @defer.inlineCallbacks
     def get_nic(self):
         i = min(self.variant.pos.ply, 36)
         row = None
         while i >= self.variant.pos.start_ply:
             hash_ = self.variant.pos.history.get_hash(i)
-            row = db.get_nic(hash_)
+            row = yield db.get_nic(hash_)
             if row:
                 break
             i -= 1
@@ -294,7 +313,7 @@ class Game(object):
             ret = (i, row['nic'])
         else:
             ret = (0, '-----')
-        return ret
+        defer.returnValue(ret)
 
     def get_movetext(self):
         i = self.variant.pos.start_ply
@@ -936,7 +955,7 @@ class PlayedGame(Game):
             #'black_rating': int(self.black_rating),
             'black_clock': self.clock.get_black_time(),
             'movetext': self.get_movetext(),
-            'eco': self.get_eco()[1],
+            'eco': self.get_eco_sync()[1],
             'ply_count': self.get_ply_count(),
             'variant_id': self.speed_variant.variant.id_,
             'speed_id': self.speed_variant.speed.id_,

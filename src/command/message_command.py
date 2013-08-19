@@ -99,12 +99,12 @@ class Fmessage(Command, FormatMessage):
             if conn.user.name in u2.censor and not conn.user.is_admin():
                 conn.write(_('%s is censoring you.\n') % u2.name)
                 defer.returnValue(None)
-            msgs = db.get_messages_range(conn.user.id_, args[1], args[1])
+            msgs = yield db.get_messages_range(conn.user.id_, args[1], args[1])
             if msgs:
                 msg = msgs[0]
                 message_id = msg['message_id']
                 msg['forwarder_name'] = conn.user.name
-                db.forward_message(conn.user.id_, u2.id_, message_id)
+                yield db.forward_message(conn.user.id_, u2.id_, message_id)
                 msg_str_u2 = self._format_msg(msg, u2) # localized for receiver
 
                 if u2.vars_['mailmess']:
@@ -129,7 +129,7 @@ class Messages(Command, FormatMessage):
     def run(self, args, conn):
         if args[0] is None:
             # display all messages
-            msgs = db.get_messages_all(conn.user.id_)
+            msgs = yield db.get_messages_all(conn.user.id_)
             if not msgs:
                 conn.write(_('You have no messages.\n'))
             else:
@@ -141,7 +141,7 @@ class Messages(Command, FormatMessage):
         elif args[0] == 'u':
             if args[1] is not None:
                 raise BadCommandError
-            msgs = db.get_messages_unread(conn.user.id_)
+            msgs = yield db.get_messages_unread(conn.user.id_)
             if not msgs:
                 conn.write(_('You have no unread messages.\n'))
             else:
@@ -154,7 +154,7 @@ class Messages(Command, FormatMessage):
             # display some messages
             try:
                 i = int(args[0])
-                msgs = db.get_messages_range(conn.user.id_, i, i)
+                msgs = yield db.get_messages_range(conn.user.id_, i, i)
                 if not msgs:
                     conn.write(_('There is no such message.\n'))
                     defer.returnValue(None)
@@ -166,7 +166,7 @@ class Messages(Command, FormatMessage):
                     if start < 1 or start > end or end > 9999:
                         conn.write(_('Invalid message range.\n'))
                         defer.returnValue(None)
-                    msgs = db.get_messages_range(conn.user.id_, start, end)
+                    msgs = yield db.get_messages_range(conn.user.id_, start, end)
                 else:
                     u2 = yield find_user.by_prefix_for_user(args[0], conn)
                     if not u2:
@@ -174,7 +174,7 @@ class Messages(Command, FormatMessage):
                     if u2.is_guest:
                         conn.write(_('Only registered players can have messages.\n'))
                         defer.returnValue(None)
-                    msgs = db.get_messages_from_to(conn.user.id_, u2.id_)
+                    msgs = yield db.get_messages_from_to(conn.user.id_, u2.id_)
                     if not msgs:
                         conn.write(_('You have no messages to %s.\n') % u2.name)
                     else:
@@ -183,7 +183,7 @@ class Messages(Command, FormatMessage):
                             self._write_msg(msg, conn.user)
                     conn.write('\n')
 
-                    msgs = db.get_messages_from_to(u2.id_, conn.user.id_)
+                    msgs = yield db.get_messages_from_to(u2.id_, conn.user.id_)
                     if not msgs:
                         conn.write(_('You have no messages from %s.\n') % u2.name)
                         defer.returnValue(None)
@@ -209,8 +209,9 @@ class Messages(Command, FormatMessage):
                 if conn.user.name in to.censor and not conn.user.is_admin():
                     conn.write(_('%s is censoring you.\n') % to.name)
                     defer.returnValue(None)
-                message_id = db.send_message(conn.user.id_, to.id_, args[1])
-                msg = db.get_message(message_id)
+                message_id = yield db.send_message(conn.user.id_, to.id_,
+                    args[1])
+                msg = yield db.get_message(message_id)
                 msg_str_to = self._format_msg(msg, to) # localized for receiver
 
                 if to.vars_['mailmess']:
