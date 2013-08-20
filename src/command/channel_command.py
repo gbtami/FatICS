@@ -80,6 +80,7 @@ class Chkick(Command):
 @ics_command('chtopic', 'dT', admin.Level.user)
 class Chtopic(Command):
     """ Set or view a channel topic. """
+    @defer.inlineCallbacks
     def run(self, args, conn):
         (chid, topic) = args
         try:
@@ -90,6 +91,7 @@ class Chtopic(Command):
         if topic is None:
             ch.show_topic(conn.user)
         else:
-            ch.set_topic(topic, conn.user)
+            yield ch.set_topic(topic, conn.user)
+        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

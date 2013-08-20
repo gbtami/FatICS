@@ -90,6 +90,7 @@ class Channel(object):
     def check_owner(self, user):
         """ Check whether a user is an owner of the channel allowed to
         perform operations on it, and if not, send an error message. """
+        # XXX maybe this could be done without checking the DB
         if not user.is_admin():
             if not db.channel_is_owner(self.id_, user.id_):
                 user.write(_("You don't have permission to do that.\n"))
@@ -105,14 +106,15 @@ class Channel(object):
 
         return True
 
+    @defer.inlineCallbacks
     def set_topic(self, topic, owner):
         if not self.check_owner(owner):
-            return
+            defer.returnValue(None)
 
         if topic in ['-', '.']:
             # clear the topic
             self.topic = None
-            db.channel_del_topic(self.id_)
+            yield db.channel_del_topic(self.id_)
             for u in self.online:
                 if u.hears_channels():
                     u.write_('\n%s(%d): *** Cleared topic. ***\n',
@@ -122,7 +124,7 @@ class Channel(object):
             self.topic = topic
             self.topic_who_name = owner.name
             self.topic_when = datetime.utcnow()
-            db.channel_set_topic({'channel_id': self.id_,
+            yield db.channel_set_topic({'channel_id': self.id_,
                 'topic': topic, 'topic_who': owner.id_,
                 'topic_when': self.topic_when})
             for u in self.online:
@@ -242,8 +244,8 @@ CHANNEL_MAX = 1 << 31
 
 class ChannelList(object):
     all_ = {}
-    def __init__(self):
-        for ch in db.channel_list():
+    def __init__(self, rows):
+        for ch in rows:
             id_ = ch['channel_id']
             self.all_[id_] = Channel(ch)
 
@@ -273,7 +275,9 @@ class ChannelList(object):
         return [4, 53]
 
 
+@defer.inlineCallbacks
 def init():
-    global_.channels = ChannelList()
+    rows = yield db.get_channel_list()
+    global_.channels = ChannelList(rows)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

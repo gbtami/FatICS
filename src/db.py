@@ -450,26 +450,24 @@ if 1:
         cursor.close()
 
     def channel_add_user(chid, user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO channel_user
+        return adb.runOperation("""INSERT INTO channel_user
             SET user_id=%s,channel_id=%s""", (user_id, chid))
-        cursor.close()
 
     def channel_set_topic(args):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE channel
-            SET topic=%(topic)s,topic_who=%(topic_who)s,
-                topic_when=%(topic_when)s
-            WHERE channel_id=%(channel_id)s""", args)
-        assert(cursor.rowcount == 1)
-        cursor.close()
+        def do_update(txn):
+            txn.execute("""UPDATE channel
+                SET topic=%(topic)s,topic_who=%(topic_who)s,
+                    topic_when=%(topic_when)s
+                WHERE channel_id=%(channel_id)s""", args)
+            assert(txn.rowcount == 1)
+        return adb.runInteraction(do_update)
 
     def channel_del_topic(chid):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE channel SET topic=NULL
-            WHERE channel_id=%s""", chid)
-        assert(cursor.rowcount == 1)
-        cursor.close()
+        def do_update(txn):
+            txn.execute("""UPDATE channel SET topic=NULL
+                WHERE channel_id=%s""", chid)
+            assert(txn.rowcount == 1)
+        return adb.runInteraction(do_update)
 
     def channel_del_user(ch_id, user_id):
         def do_del(txn):
@@ -479,14 +477,10 @@ if 1:
                 raise DeleteError()
         return adb.runInteraction(do_del)
 
-    def channel_list():
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT channel_id,name,descr,
+    def get_channel_list():
+        return adb.runQuery("""SELECT channel_id,name,descr,
             topic,user_name AS topic_who_name,topic_when
             FROM channel LEFT JOIN user ON(channel.topic_who=user.user_id)""")
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
     '''def channel_get_members(id):
         cursor = db.cursor()
@@ -628,21 +622,14 @@ if 1:
         return adb.runInteraction(do_del)
 
     def user_get_gnotified(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT user_name FROM user
+        return adb.runQuery("""SELECT user_name FROM user
             LEFT JOIN user_gnotify ON (user.user_id=user_gnotify.gnotified)
             WHERE gnotifier=%s""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
     def user_get_gnotifiers(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT user_name FROM user
+        return adb.runQuery("""SELECT user_name FROM user
             LEFT JOIN user_gnotify ON (user.user_id=user_gnotify.gnotifier)
             WHERE gnotified=%s""", (user_id,))
-        rows = cursor.fetchall()
-        return rows
 
     # censor
     #@defer.inlineCallbacks

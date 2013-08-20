@@ -90,7 +90,7 @@ command # pacify pyflakes
 @defer.inlineCallbacks
 def init():
     db.init()
-    channel.init()
+    yield channel.init()
     yield filter_.init()
     var.init_vars()
     var.init_ivars()

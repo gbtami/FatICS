@@ -493,9 +493,9 @@ class RegUser(BaseUser):
 
         # gnotify
         self.gnotifiers = set([dbu['user_name']
-            for dbu in db.user_get_gnotifiers(self.id_)])
+            for dbu in (yield db.user_get_gnotifiers(self.id_))])
         self.gnotified = set([dbu['user_name']
-            for dbu in db.user_get_gnotified(self.id_)])
+            for dbu in (yield db.user_get_gnotified(self.id_))])
 
         for a in (yield db.user_get_aliases(self.id_)):
             self.aliases[a['name']] = a['val']
