@@ -49,7 +49,7 @@ class Examine(Command):
             conn.write('TODO: EXAMINE SCRATCH BOARD\n')
             defer.returnValue(None)
 
-        u = yield find_user.by_prefix_for_user(args[0], conn) #, min_len=2)
+        u = yield find_user.by_prefix_for_user(args[0], conn)
         if not u:
             defer.returnValue(None)
 
@@ -71,7 +71,7 @@ class Examine(Command):
                 conn.write('TODO: EXAMINE JOURNAL GAME\n')
                 defer.returnValue(None)
 
-            u2 = yield find_user.by_prefix_for_user(args[1], conn) #, min_len=2)
+            u2 = yield find_user.by_prefix_for_user(args[1], conn)
             if not u2:
                 defer.returnValue(None)
             conn.write('TODO: EXAMINE ADJOURNED GAME\n')

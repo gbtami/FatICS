@@ -109,7 +109,7 @@ class Allobservers(Command):
             conn.write(ngettext(
                 '  %(count)d game displayed (of %(total)d in progress).\n',
                 '  %(count)d games displayed (of %(total)d in progress).\n',
-                    count) % {'count': count, 'total': len(global_.games)})
+                count) % {'count': count, 'total': len(global_.games)})
 
 
 @ics_command('pfollow', 'o')
@@ -149,8 +149,8 @@ class Pfollow(Command):
                 # observing it, start observing it.
                 g = u2.session.game
                 if (g and g.variant.name == 'bughouse' and
-                    g.bug_link not in conn.user.session.observed and
-                    conn.user not in g.players):
+                        g.bug_link not in conn.user.session.observed and
+                        conn.user not in g.players):
                     g.bug_link.observe(conn.user)
 
 

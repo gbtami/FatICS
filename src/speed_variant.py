@@ -112,22 +112,17 @@ def init():
     blitz_chess960 = from_names('blitz', 'chess960')
     blitz_bughouse = from_names('blitz', 'bughouse')
     blitz_crazyhouse = from_names('blitz', 'crazyhouse')
-init()
 
-variant_class = {}
-
-
-def _init():
     import variant.chess
     import variant.chess960
     import variant.crazyhouse
     import variant.bughouse
+    import global_
 
-    global variant_class
-    variant_class['chess'] = variant.chess.Chess
-    variant_class['crazyhouse'] = variant.crazyhouse.Crazyhouse
-    variant_class['chess960'] = variant.chess960.Chess960
-    variant_class['bughouse'] = variant.bughouse.Bughouse
-_init()
+    global_.variant_class['chess'] = variant.chess.Chess
+    global_.variant_class['crazyhouse'] = variant.crazyhouse.Crazyhouse
+    global_.variant_class['chess960'] = variant.chess960.Chess960
+    global_.variant_class['bughouse'] = variant.bughouse.Bughouse
+
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

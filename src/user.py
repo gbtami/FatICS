@@ -695,9 +695,9 @@ class RegUser(BaseUser):
         self._load_ratings() # TODO: don't reload all ratings
 
     def del_rating(self, sv):
-        db.user_del_rating(self.id_, sv.speed.id_, sv.variant.id_)
         if self._rating is not None and sv in self._rating:
             del self._rating[sv]
+        return db.user_del_rating(self.id_, sv.speed.id_, sv.variant.id_)
 
     def _load_ratings(self):
         self._rating = {}
@@ -710,12 +710,12 @@ class RegUser(BaseUser):
                 row['when_best'])
 
     def set_email(self, email):
-        db.user_set_email(self.id_, email)
         self.email = email
+        return db.user_set_email(self.id_, email)
 
     def set_real_name(self, real_name):
-        db.user_set_real_name(self.id_, real_name)
         self.real_name = real_name
+        return db.user_set_real_name(self.id_, real_name)
 
     @defer.inlineCallbacks
     def set_banned(self, val):

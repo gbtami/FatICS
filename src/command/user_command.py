@@ -144,13 +144,13 @@ class Finger(Command):
                 else:
                     conn.write(_('Zipseal:     Off\n'))
                 if show_admin_info and (u.session.use_timeseal or
-                    u.session.use_zipseal):
+                        u.session.use_zipseal):
                     conn.write(A_('Acc:         %s\n') % u.session.timeseal_acc)
                     conn.write(A_('System:      %s\n') % u.session.timeseal_system)
 
             notes = u.notes if show_notes else []
             if (not u.is_guest and u.is_notebanned and u != conn.user and
-                not conn.user.is_admin()):
+                    not conn.user.is_admin()):
                 # hide notes
                 # XXX should hideinfo apply here?
                 notes = []
@@ -203,7 +203,7 @@ class History(Command):
     def run(self, args, conn):
         u = None
         if args[0] is not None:
-            u = yield find_user.by_prefix_for_user(args[0], conn) #, min_len=2)
+            u = yield find_user.by_prefix_for_user(args[0], conn)
         else:
             u = conn.user
         if u:

@@ -208,7 +208,7 @@ class Asetrating(Command):
                 (speed_name, variant_name))
             return
         if urating == 0:
-            u.del_rating(sv)
+            yield u.del_rating(sv)
             conn.write(A_('Cleared %s %s rating for %s.\n' %
                 (speed_name, variant_name, u.name)))
         else:
@@ -241,7 +241,7 @@ class Asetemail(Command):
                     conn.write(A_('That does not look like an email address.\n'))
                     return
                 old_email = u.email
-                u.set_email(email)
+                yield u.set_email(email)
                 yield db.add_comment_async(adminuser.id_, u.id_,
                     'Changed email address from "%s" to "%s".' % (
                         old_email, email))
@@ -271,7 +271,7 @@ class Asetrealname(Command):
                 assert(False)
             else:
                 old_real_name = u.real_name
-                u.set_real_name(real_name)
+                yield u.set_real_name(real_name)
                 yield db.add_comment_async(adminuser.id_, u.id_,
                     'Changed real name from "%s" to "%s".' % (old_real_name, real_name))
                 if u.is_online:

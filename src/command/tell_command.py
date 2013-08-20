@@ -139,7 +139,7 @@ class Qtell(Command):
         msg = args[1].replace('\\n', '\n:').replace('\\b', '\x07').replace('\\H', '\x1b[7m').replace('\\h', '\x1b[0m')
         msg = '\n:%s\n' % msg
         ret = 0 # 0 means success
-        if type(args[0]) == type(1):
+        if isinstance(args[0], (int, long)):
             # qtell channel
             try:
                 ch = global_.channels[args[0]]

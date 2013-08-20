@@ -26,6 +26,15 @@ import filter_
 import lang
 import channel
 import var
+import speed_variant
+
+# add a builtin to mark strings for translation that should not
+# automatically be translated dynamically.
+import __builtin__
+# dynamically translated messages
+__builtin__.__dict__['N_'] = lambda s: s
+# admin messages
+__builtin__.__dict__['A_'] = lambda s: s
 
 # bughouse partners
 partners = []
@@ -66,6 +75,10 @@ channels = channel.ChannelList()
 # commands
 commands = trie.Trie()
 admin_commands = trie.Trie()
+
+# map variant names to the classes that implement them
+variant_class = {}
+speed_variant.init()
 
 # current user whose command is being handled
 curuser = None

@@ -511,7 +511,7 @@ class PlayedGame(Game):
         if self.black.session.ivars['gameinfo']:
             self.black.write_nowrap(self.gameinfo_str)
 
-        self.variant = speed_variant.variant_class[self.speed_variant.variant.name](self)
+        self.variant = global_.variant_class[self.speed_variant.variant.name](self)
         # play the stored moves for an adjourned game
         if chal.adjourned:
             moves = chal.adjourned['movetext'].split(' ')

@@ -876,21 +876,16 @@ if 1:
         cursor.close()
 
     def user_del_rating(user_id, speed_id, variant_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM rating WHERE user_id = %s AND speed_id = %s and variant_id = %s""", (user_id, speed_id, variant_id))
-        cursor.close()
+        return adb.runOperation("""DELETE FROM rating WHERE user_id = %s AND speed_id = %s and variant_id = %s""",
+            (user_id, speed_id, variant_id))
 
     def user_set_email(user_id, email):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE user
+        return adb.runOperation("""UPDATE user
             SET user_email=%s WHERE user_id=%s""", (email, user_id))
-        cursor.close()
 
     def user_set_real_name(user_id, real_name):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE user SET user_real_name=%s WHERE user_id=%s""",
-                       (real_name, user_id))
-        cursor.close()
+        return adb.runOperation("""UPDATE user SET user_real_name=%s WHERE user_id=%s""",
+            (real_name, user_id))
 
     def get_variants():
         cursor = db.cursor(cursors.DictCursor)
@@ -1026,7 +1021,7 @@ if 1:
         when messages are deleted, possibly leaving a gap in the
         existing enumeration. """
         def do_renum(txn):
-            txn.execute( """SET @i=0""")
+            txn.execute("""SET @i=0""")
             txn.execute("""UPDATE message
                 SET num=(@i := @i + 1)
                 WHERE to_user_id=%s

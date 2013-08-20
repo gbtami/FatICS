@@ -419,12 +419,12 @@ class Position(object):
                         self.material[piece_is_white(c)] += \
                             piece_material[c.lower()]
                         if c == 'k':
-                            if self.king_pos[0] != None:
+                            if self.king_pos[0] is not None:
                                 # multiple kings
                                 raise BadFenError()
                             self.king_pos[0] = sq
                         elif c == 'K':
-                            if self.king_pos[1] != None:
+                            if self.king_pos[1] is not None:
                                 # multiple kings
                                 raise BadFenError()
                             self.king_pos[1] = sq
@@ -1393,7 +1393,7 @@ class Bughouse(BaseVariant):
             # san
             if not mv:
                 mv = self.pos.move_from_drop(s)
-        except IllegalMoveError: #as e:
+        except IllegalMoveError:
             #print e.reason
             raise
 

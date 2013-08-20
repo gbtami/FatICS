@@ -61,7 +61,7 @@ class Clearmessages(Command):
 
         if args[0] == '*':
             count = yield db.clear_messages_all(conn.user.id_)
-        elif type(args[0]) == type(1):
+        elif isinstance(args[0], (int, long)):
             i = int(args[0])
             count = yield db.clear_messages_range(conn.user.id_, i, i)
             if count == 0:

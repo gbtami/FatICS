@@ -1,2 +1,3 @@
 #!/bin/sh
-pyflakes src/*.tac src/*.py src/*/*.py | grep -v "undefined name 'N_'" | grep -v "undefined name '_" | grep -v "undefined name 'A_" | grep -v "undefined name 'ngettext"
+export PYFLAKES_BUILTINS=N_,_,A_,ngettext
+pyflakes src/*.tac src/*.py src/*/*.py

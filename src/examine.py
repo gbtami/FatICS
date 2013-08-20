@@ -48,7 +48,7 @@ class ExaminedGame(Game):
 
         if hist_game is None:
             self.speed_variant = speed_variant.from_names('untimed', 'chess')
-            self.variant = speed_variant.variant_class[self.speed_variant.variant.name](self)
+            self.variant = global_.variant_class[self.speed_variant.variant.name](self)
             self.moves = []
             #self.white_name = list(self.players)[0].name
             #self.black_name = self.white_name
@@ -61,7 +61,7 @@ class ExaminedGame(Game):
             # XXX use the speed from history
             self.speed_variant = speed_variant.from_names('untimed',
                 variant_name)
-            self.variant = speed_variant.variant_class[self.speed_variant.variant.name](self)
+            self.variant = global_.variant_class[self.speed_variant.variant.name](self)
             self.moves = hist_game['movetext'].split(' ')
             self.white_name = hist_game['white_name']
             self.black_name = hist_game['black_name']
