@@ -273,13 +273,12 @@ if 1:
             ORDER BY log_when DESC
             LIMIT %s""", (limit,))
 
+    @defer.inlineCallbacks
     def get_muted_user_names():
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM user
+        rows = yield adb.runQuery("""SELECT user_name FROM user
             WHERE user_muted=1 LIMIT 500""")
-        ret = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        return ret
+        ret = [r['user_name'] for r in rows]
+        defer.returnValue(ret)
 
     def user_set_banned(uid, val):
         assert(val in [0, 1])
@@ -287,13 +286,12 @@ if 1:
             SET user_banned=%s WHERE user_id=%s""", (val, uid))
         return d
 
+    @defer.inlineCallbacks
     def get_banned_user_names():
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM user
+        rows = yield adb.runQuery("""SELECT user_name FROM user
             WHERE user_banned=1 LIMIT 500""")
-        ret = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        return ret
+        ret = [r['user_name'] for r in rows]
+        defer.returnValue(ret)
 
     @defer.inlineCallbacks
     def user_set_muzzled(uid, val):
@@ -665,10 +663,10 @@ if 1:
                 raise DeleteError()
         return adb.runInteraction(do_del)
 
-    @defer.inlineCallbacks
+    '''@defer.inlineCallbacks
     def user_get_censored_async(user_id):
         rows = yield adb.runQuery("""SELECT user_name FROM user LEFT JOIN censor ON (user.user_id=censor.censored) WHERE censorer=%s""", (user_id,))
-        defer.returnValue(rows)
+        defer.returnValue(rows)'''
 
     def user_get_censored(user_id):
         cursor = db.cursor(cursors.DictCursor)
@@ -698,18 +696,14 @@ if 1:
         return adb.runQuery("""SELECT user_name FROM user LEFT JOIN noplay ON (user.user_id=noplay.noplayed) WHERE noplayer=%s""", (user_id,))
 
     def title_get_all():
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT title_id,title_name,title_descr,title_flag,title_public FROM title""")
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""SELECT title_id,title_name,title_descr,title_flag,title_public FROM title""")
 
+    @defer.inlineCallbacks
     def title_get_users(title_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM user LEFT JOIN user_title USING(user_id) WHERE title_id=%s""", (title_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return [r[0] for r in rows]
+        rows = yield adb.runQuery("""SELECT user_name FROM user LEFT JOIN user_title USING(user_id) WHERE title_id=%s""",
+            (title_id,))
+        ret = [r['user_name'] for r in rows]
+        defer.returnValue(ret)
 
     # eco
     def get_eco_sync(hash_):
@@ -882,18 +876,10 @@ if 1:
             (real_name, user_id))
 
     def get_variants():
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT variant_id,variant_name,variant_abbrev FROM variant""")
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""SELECT variant_id,variant_name,variant_abbrev FROM variant""")
 
     def get_speeds():
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT speed_id,speed_name,speed_abbrev FROM speed""")
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""SELECT speed_id,speed_name,speed_abbrev FROM speed""")
 
     # news
     def add_news(title, user, is_admin):

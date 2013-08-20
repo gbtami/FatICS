@@ -17,6 +17,7 @@
 #
 
 import db
+from twisted.internet import defer
 
 speed_ids = {}
 variant_ids = {}
@@ -99,10 +100,11 @@ def from_ids(speed_id, variant_id):
         variant_ids[variant_id])
 
 
+@defer.inlineCallbacks
 def init():
-    for row in db.get_speeds():
+    for row in (yield db.get_speeds()):
         Speed(row['speed_id'], row['speed_name'], row['speed_abbrev'])
-    for row in db.get_variants():
+    for row in (yield db.get_variants()):
         Variant(row['variant_id'], row['variant_name'], row['variant_abbrev'])
     global standard_chess, blitz_chess, lightning_chess
     global blitz_chess960, blitz_bughouse, blitz_crazyhouse
@@ -123,6 +125,7 @@ def init():
     global_.variant_class['crazyhouse'] = variant.crazyhouse.Crazyhouse
     global_.variant_class['chess960'] = variant.chess960.Chess960
     global_.variant_class['bughouse'] = variant.bughouse.Bughouse
+    defer.returnValue(None)
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

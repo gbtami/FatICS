@@ -67,6 +67,7 @@ def getService(port):
     """
     return internet.TCPServer(port, IcsFactory(port))
 
+
 def start_services(x):
     ports = [config.port, config.compatibility_port]
     if os.geteuid() == 0:

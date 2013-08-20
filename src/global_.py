@@ -86,6 +86,7 @@ curuser = None
 import command
 command # pacify pyflakes
 
+
 @defer.inlineCallbacks
 def init():
     db.init()
@@ -93,8 +94,8 @@ def init():
     yield filter_.init()
     var.init_vars()
     var.init_ivars()
-    list_.init_lists()
-    speed_variant.init()
+    yield list_.init_lists()
+    yield speed_variant.init()
     defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

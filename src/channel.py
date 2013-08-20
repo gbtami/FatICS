@@ -241,21 +241,24 @@ CHANNEL_MAX = 1 << 31
 
 
 class ChannelList(object):
-    all = {}
+    all_ = {}
     def __init__(self):
         for ch in db.channel_list():
-            id = ch['channel_id']
-            self.all[id] = Channel(ch)
+            id_ = ch['channel_id']
+            self.all_[id_] = Channel(ch)
 
     def __getitem__(self, key):
         assert(isinstance(key, (int, long)))
         if key < 0 or key > CHANNEL_MAX:
             raise KeyError
         try:
-            return self.all[key]
+            return self.all_[key]
         except KeyError:
-            self.all[key] = self._make_ch(key)
-            return self.all[key]
+            self.all_[key] = self._make_ch(key)
+            return self.all_[key]
+
+    def __iter__(self):
+        return iter(self.all_.values())
 
     def _make_ch(self, key):
         name = None
@@ -264,10 +267,11 @@ class ChannelList(object):
             'topic': None})
 
     def get_default_channels(self):
-        return [1][:]
+        return [1]
 
     def get_default_guest_channels(self):
-        return [4, 53][:]
+        return [4, 53]
+
 
 def init():
     global_.channels = ChannelList()

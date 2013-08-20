@@ -51,7 +51,7 @@ class Inchannel(Command):
                     count = len(on)
                     conn.write(ngettext('There is %d player in channel %d.\n', 'There are %d players in channel %d.\n', count) % (count, args[0]))
         else:
-            for ch in global_.channels.all.values():
+            for ch in global_.channels:
                 on = ch.get_online()
                 if len(on) > 0:
                     conn.write("%s: %s\n" %

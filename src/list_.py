@@ -640,6 +640,7 @@ class PlaybanList(SystemUserList):
         defer.returnValue(pb + playbanned_guests)
 
 
+@defer.inlineCallbacks
 def init_lists():
     """ initialize lists """
     ChannelList("channel")
@@ -657,8 +658,9 @@ def init_lists():
     RatedbanList("ratedban")
     PlaybanList("playban")
 
-    for title in db.title_get_all():
+    for title in (yield db.title_get_all()):
         TitleList(title)
+    defer.returnValue(None)
 
 # Not implemented:
 # removedcom, c1muzzle, c24muzzle, c46muzzle, c49muzzle,
