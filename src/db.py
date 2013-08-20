@@ -1021,7 +1021,7 @@ if 1:
             mid = 1
         defer.returnValue(mid)
 
-    def _renumber_messages(cursor, uid):
+    def _renumber_messages(uid):
         """ Renumber the messages for a given user, which is necessary
         when messages are deleted, possibly leaving a gap in the
         existing enumeration. """
@@ -1144,46 +1144,43 @@ if 1:
         defer.returnValue(message_id)
 
     def set_messages_read_all(uid):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE message
+        return adb.runOperation("""UPDATE message
             SET unread=0
-            WHERE to_user_id=%s""", (uid))
-        cursor.close()
+            WHERE to_user_id=%s""", (uid,))
 
     def set_message_read(message_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE message
+        return adb.runOperation("""UPDATE message
             SET unread=0
-            WHERE message_id=%s""", (message_id))
-        cursor.close()
+            WHERE message_id=%s""", (message_id,))
 
     def clear_messages_all(user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM message WHERE to_user_id=%s""",
-            (user_id,))
-        ret = cursor.rowcount
-        cursor.close()
-        return ret
+        def do_del(txn):
+            txn.execute("""DELETE FROM message WHERE to_user_id=%s""",
+                (user_id,))
+            return txn.rowcount
+        return adb.runInteraction(do_del)
 
+    @defer.inlineCallbacks
     def clear_messages_range(uid, start, end):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM message
-            WHERE to_user_id=%s AND num BETWEEN %s AND %s""",
-            (uid, start, end))
-        ret = cursor.rowcount
-        _renumber_messages(cursor, uid)
-        cursor.close()
-        return ret
+        def do_del(txn):
+            txn.execute("""DELETE FROM message
+                WHERE to_user_id=%s AND num BETWEEN %s AND %s""",
+                (uid, start, end))
+            return txn.rowcount
+        ret = yield adb.runInteraction(do_del)
+        yield _renumber_messages(uid)
+        defer.returnValue(ret)
 
+    @defer.inlineCallbacks
     def clear_messages_from_to(from_user_id, to_user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM message
-            WHERE from_user_id=%s AND to_user_id=%s""",
-            (from_user_id, to_user_id))
-        ret = cursor.rowcount
-        _renumber_messages(cursor, to_user_id)
-        cursor.close()
-        return ret
+        def do_del(txn):
+            txn.execute("""DELETE FROM message
+                WHERE from_user_id=%s AND to_user_id=%s""",
+                (from_user_id, to_user_id))
+            return txn.rowcount
+        ret = yield adb.runInteraction(do_del)
+        yield _renumber_messages(to_user_id)
+        defer.returnValue(ret)
 
     # chess960
     def fen_from_idn(idn):

@@ -60,10 +60,10 @@ class Clearmessages(Command):
             defer.returnValue(None)
 
         if args[0] == '*':
-            count = db.clear_messages_all(conn.user.id_)
+            count = yield db.clear_messages_all(conn.user.id_)
         elif type(args[0]) == type(1):
             i = int(args[0])
-            count = db.clear_messages_range(conn.user.id_, i, i)
+            count = yield db.clear_messages_range(conn.user.id_, i, i)
             if count == 0:
                 conn.write(_('There is no such message.\n'))
                 defer.returnValue(None)
@@ -75,12 +75,12 @@ class Clearmessages(Command):
                 if start < 1 or start > end or end > 9999:
                     conn.write(_('Invalid message range.\n'))
                     defer.returnValue(None)
-                count = db.clear_messages_range(conn.user.id_, start, end)
+                count = yield db.clear_messages_range(conn.user.id_, start, end)
             else:
                 sender = yield find_user.by_prefix_for_user(args[0], conn)
                 if not sender:
                     defer.returnValue(None)
-                count = db.clear_messages_from_to(sender.id_, conn.user.id_)
+                count = yield db.clear_messages_from_to(sender.id_, conn.user.id_)
 
         conn.write(ngettext('Cleared %d message.\n',
             'Cleared %d messages.\n', count) % count)
@@ -137,7 +137,7 @@ class Messages(Command, FormatMessage):
                 for msg in msgs:
                     conn.write(_('%d. ') % (msg['num']))
                     self._write_msg(msg, conn.user)
-                db.set_messages_read_all(conn.user.id_)
+                yield db.set_messages_read_all(conn.user.id_)
         elif args[0] == 'u':
             if args[1] is not None:
                 raise BadCommandError
@@ -149,7 +149,7 @@ class Messages(Command, FormatMessage):
                 for msg in msgs:
                     conn.write(_('%d. ') % (msg['num']))
                     self._write_msg(msg, conn.user)
-                db.set_messages_read_all(conn.user.id_)
+                yield db.set_messages_read_all(conn.user.id_)
         elif args[1] is None:
             # display some messages
             try:
@@ -194,7 +194,7 @@ class Messages(Command, FormatMessage):
                 conn.write(_('%d. ') % (msg['num']))
                 self._write_msg(msg, conn.user)
                 if msg['unread']:
-                    db.set_message_read(msg['message_id'])
+                    yield db.set_message_read(msg['message_id'])
         else:
             """ Send a message.  Note that the message may be localized
             differently for the sender and receiver. """
