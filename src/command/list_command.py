@@ -50,11 +50,12 @@ class Addlist(Command):
 
 @ics_command('showlist', 'o')
 class Showlist(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is None:
             for c in global_.lists.itervalues():
                 conn.write('%s\n' % c.name)
-            return
+            defer.returnValue(None)
 
         if conn.user.is_admin():
             ulists = global_.admin_lists
@@ -68,7 +69,7 @@ class Showlist(Command):
             conn.write(_('''Ambiguous list \"%s\". Matches: %s\n''') % (args[0], ' '.join([r.name for r in e.matches])))
         else:
             try:
-                ls.show(conn)
+                yield ls.show(conn)
             except list_.ListError as e:
                 conn.write(e.reason)
 

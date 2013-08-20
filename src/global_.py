@@ -19,6 +19,8 @@
 
 """ Server-wide global state. """
 
+from twisted.internet import defer
+
 import find_user
 import trie
 import list_
@@ -27,6 +29,7 @@ import lang
 import channel
 import var
 import speed_variant
+import db
 
 # add a builtin to mark strings for translation that should not
 # automatically be translated dynamically.
@@ -55,22 +58,19 @@ seeks = {}
 vars_ = trie.Trie()
 ivars = trie.Trie()
 var_defaults = var.Defaults()
-var.init_vars()
-var.init_ivars()
 
 # lists
 lists = trie.Trie()
 admin_lists = trie.Trie()
-list_.init_lists()
 
-# filters
-filters = filter_.get_initial_filters()
+# filters: will be initialized by filter_.init()
+filters = None
 
 # langauages
 langs = lang.get_langs()
 
-# channels
-channels = channel.ChannelList()
+# channels; will be initialized by channels.init()
+channels = None
 
 # commands
 commands = trie.Trie()
@@ -78,7 +78,6 @@ admin_commands = trie.Trie()
 
 # map variant names to the classes that implement them
 variant_class = {}
-speed_variant.init()
 
 # current user whose command is being handled
 curuser = None
@@ -86,5 +85,16 @@ curuser = None
 # load commands
 import command
 command # pacify pyflakes
+
+@defer.inlineCallbacks
+def init():
+    db.init()
+    channel.init()
+    yield filter_.init()
+    var.init_vars()
+    var.init_ivars()
+    list_.init_lists()
+    speed_variant.init()
+    defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

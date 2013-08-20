@@ -33,6 +33,12 @@ class TestList(Test):
 
         self.close(t)
 
+    def test_showlist(self):
+        t = self.connect_as_guest()
+        t.write('showlist\n')
+        self.expect('censor', t)
+        self.close(t)
+
     def test_list_persistence(self):
         # see also test_title; this tests persistence
         t = self.connect_as_admin()

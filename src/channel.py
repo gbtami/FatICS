@@ -22,7 +22,7 @@ from twisted.internet import defer
 import list_
 import admin
 import db
-
+import global_
 import config
 
 USER_CHANNEL_START = 1024
@@ -268,5 +268,8 @@ class ChannelList(object):
 
     def get_default_guest_channels(self):
         return [4, 53][:]
+
+def init():
+    global_.channels = ChannelList()
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

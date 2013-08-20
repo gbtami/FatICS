@@ -39,7 +39,7 @@ db = None
 adb = None
 
 if 1:
-    def _init():
+    def init():
         global db
         db = connect(host=config.db_host, db=config.db_db,
             read_default_file="~/.my.cnf")
@@ -69,7 +69,7 @@ if 1:
             cursor.close()
             db.close()
             adb.close()
-            _init()
+            init()
             # the new cursor needs to be the same type as the old one
             cursor = db.cursor(cursor.__class__)
             cursor.execute(*args)
@@ -302,13 +302,12 @@ if 1:
             SET user_muzzled=%s WHERE user_id=%s""", (val, uid))
         defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def get_muzzled_user_names():
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM user
+        rows = yield adb.runQuery("""SELECT user_name FROM user
             WHERE user_muzzled=1 LIMIT 500""")
-        ret = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        return ret
+        ret = [r['user_name'] for r in rows]
+        defer.returnValue(ret)
 
     @defer.inlineCallbacks
     def user_set_cmuzzled(uid, val):
@@ -317,13 +316,12 @@ if 1:
             SET user_cmuzzled=%s WHERE user_id=%s""", (val, uid))
         defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def get_cmuzzled_user_names():
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM user
+        rows = yield adb.runQuery("""SELECT user_name FROM user
             WHERE user_cmuzzled=1 LIMIT 500""")
-        ret = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        return ret
+        ret = [r['user_name'] for r in rows]
+        defer.returnValue(ret)
 
     @defer.inlineCallbacks
     def user_set_muted(uid, val):
@@ -339,13 +337,12 @@ if 1:
             SET user_notebanned=%s WHERE user_id=%s""", (val, uid))
         defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def get_notebanned_user_names():
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM user
+        rows = yield adb.runQuery("""SELECT user_name FROM user
             WHERE user_notebanned=1 LIMIT 500""")
-        ret = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        return ret
+        ret = [r['user_name'] for r in rows]
+        defer.returnValue(ret)
 
     @defer.inlineCallbacks
     def user_set_ratedbanned(uid, val):
@@ -354,13 +351,12 @@ if 1:
             SET user_ratedbanned=%s WHERE user_id=%s""", (val, uid))
         defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def get_ratedbanned_user_names():
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM user
+        rows = yield adb.runQuery("""SELECT user_name FROM user
             WHERE user_ratedbanned=1 LIMIT 500""")
-        ret = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        return ret
+        ret = [r['user_name'] for r in rows]
+        defer.returnValue(ret)
 
     @defer.inlineCallbacks
     def user_set_playbanned(uid, val):
@@ -369,13 +365,12 @@ if 1:
             SET user_playbanned=%s WHERE user_id=%s""", (val, uid))
         defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def get_playbanned_user_names():
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM user
+        rows = yield adb.runQuery("""SELECT user_name FROM user
             WHERE user_playbanned=1 LIMIT 500""")
-        ret = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        return ret
+        ret = [r['user_name'] for r in rows]
+        defer.returnValue(ret)
 
     def user_delete(uid):
         """ Permanently delete a user from the database.  In normal use
@@ -405,12 +400,11 @@ if 1:
         cursor.close()
 
     # filtered ips
+    @defer.inlineCallbacks
     def get_filtered_ips():
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT filter_pattern FROM ip_filter LIMIT 8192""")
-        ret = [r[0] for r in cursor.fetchall()]
-        cursor.close()
-        return ret
+        rows = yield adb.runQuery("""SELECT filter_pattern FROM ip_filter LIMIT 8192""")
+        ret = [r['filter_pattern'] for r in rows]
+        defer.returnValue(ret)
 
     @defer.inlineCallbacks
     def add_filtered_ip(filter_pattern):
@@ -1212,7 +1206,5 @@ if 1:
         row = cursor.fetchone()
         cursor.close()
         return row[0]
-
-_init()
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

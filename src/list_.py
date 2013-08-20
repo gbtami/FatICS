@@ -72,13 +72,15 @@ class SystemUserList(MyList):
             u.write_('\n%(aname)s has removed you from the %(lname)s list.\n',
                 {'aname': conn.user.name, 'lname': self.name})
 
+    @defer.inlineCallbacks
     def show(self, conn):
         if not self.is_public:
             self._require_admin(conn.user)
-        names = self._get_names()
+        names = yield self._get_names()
         conn.write(ngettext('-- %s list: %d name --\n',
             '-- %s list: %d names --\n', len(names)) % (self.name, len(names)))
         conn.write('%s\n' % ' '.join(names))
+        defer.returnValue(None)
 
 
 class TitleList(SystemUserList):
@@ -194,6 +196,7 @@ class IdlenotifyList(MyList):
         conn.write(ngettext('-- idlenotify list: %d name --\n',
             '-- idlenotify list: %d names --\n', len(notlist)) % len(notlist))
         conn.write('%s\n' % ' '.join([u.name for u in notlist]))
+        return defer.succeed(None)
 
 
 class GnotifyList(MyList):
@@ -236,6 +239,7 @@ class GnotifyList(MyList):
         conn.write(ngettext('-- gnotify list: %d name --\n',
             '-- gnotify list: %d names --\n', len(notlist)) % len(notlist))
         conn.write('%s\n' % ' '.join(notlist))
+        return defer.succeed(None)
 
 
 class ChannelList(MyList):
@@ -279,6 +283,7 @@ class ChannelList(MyList):
         conn.write(ngettext('-- channel list: %d channel --\n',
             '-- channel list: %d channels --\n', len(chlist)) % len(chlist))
         conn.write('%s\n' % ' '.join([str(ch) for ch in chlist]))
+        return defer.succeed(None)
 
 
 class CensorList(MyList):
@@ -307,6 +312,7 @@ class CensorList(MyList):
         conn.write(ngettext('-- censor list: %d name --\n',
             '-- censor list: %d names --\n', len(cenlist)) % len(cenlist))
         conn.write('%s\n' % ' '.join(cenlist))
+        return defer.succeed(None)
 
 
 class NoplayList(MyList):
@@ -335,6 +341,7 @@ class NoplayList(MyList):
         conn.write(ngettext('-- noplay list: %d name --\n',
             '-- noplay list: %d names --\n', len(noplist)) % len(noplist))
         conn.write('%s\n' % ' '.join(noplist))
+        return defer.succeed(None)
 
 
 class BanList(SystemUserList):
@@ -483,11 +490,13 @@ class MuteList(SystemUserList):
                 yield db.add_comment_async(conn.user.id_, u.id_, 'Unmuted.')
             self._notify_removed(conn, u)
 
+    @defer.inlineCallbacks
     def _get_names(self):
         # this is slow, but only admins can do it
         muted_guests = [u.name for u in global_.online
             if u.is_muted and u.is_guest]
-        return db.get_muted_user_names() + muted_guests
+        muted = yield db.get_muted_user_names()
+        defer.returnValue(muted + muted_guests)
 
 
 class FilterList(MyList):
@@ -503,12 +512,14 @@ class FilterList(MyList):
         yield filter_.remove_filter(item, conn)
         defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def show(self, conn):
         self._require_admin(conn.user)
-        filterlist = db.get_filtered_ips()
+        filterlist = yield db.get_filtered_ips()
         conn.write(ngettext('-- filter list: %d IP --\n',
             '-- filter list: %d IPs --\n', len(filterlist)) % len(filterlist))
         conn.write('%s\n' % ' '.join(filterlist))
+        defer.returnValue(None)
 
 
 class NotebanList(SystemUserList):
@@ -620,11 +631,13 @@ class PlaybanList(SystemUserList):
             self._notify_removed(conn, u)
         defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def _get_names(self):
         # this is slow, but only admins can do it
         playbanned_guests = [u.name for u in global_.online
             if u.is_playbanned and u.is_guest]
-        return db.get_playbanned_user_names() + playbanned_guests
+        pb = yield db.get_playbanned_user_names()
+        defer.returnValue(pb + playbanned_guests)
 
 
 def init_lists():

@@ -23,6 +23,8 @@ import random
 from pgn import Pgn
 import db
 
+db.init()
+
 class TestChess960(Test):
     def test_bad_idn(self):
         t = self.connect_as_guest('GuestABCD')

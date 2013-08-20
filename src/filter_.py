@@ -60,11 +60,14 @@ def check_filter(addr):
     return any(ip in net for net in global_.filters)
 
 
-def get_initial_filters():
+@defer.inlineCallbacks
+def init():
     # sanity checks
     IPNetwork('127.0.0.1')
     IPNetwork('127.0.0.1/16')
 
-    return set([IPNetwork(pat) for pat in db.get_filtered_ips()])
+    pats = yield db.get_filtered_ips()
+    global_.filters = set([IPNetwork(pat) for pat in pats])
+    defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

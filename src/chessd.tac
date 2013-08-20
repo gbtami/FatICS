@@ -25,6 +25,7 @@ import sys
 from twisted.application import service, internet
 from twisted.internet.protocol import ServerFactory
 from twisted.internet import task, reactor, ssl
+from twisted.python import log
 
 SockJsFactory = None
 try:
@@ -38,6 +39,7 @@ import config
 import telnet
 import connection
 import timer
+import global_
 
 reactor.shuttingDown = False
 
@@ -49,7 +51,6 @@ class IcsFactory(ServerFactory):
     def __init__(self, port):
         #ServerFactory.__init__(self)
         self.port = port
-        pass
 
     connections = []
     def buildProtocol(self, addr):
@@ -66,39 +67,43 @@ def getService(port):
     """
     return internet.TCPServer(port, IcsFactory(port))
 
-ports = [config.port, config.compatibility_port]
-if os.geteuid() == 0:
-    # alternate port, for those with firewall issues
-    ports.append(23)
+def start_services(x):
+    ports = [config.port, config.compatibility_port]
+    if os.geteuid() == 0:
+        # alternate port, for those with firewall issues
+        ports.append(23)
+    for port in ports:
+        service = getService(port)
+        service.setServiceParent(application)
+
+    # ssl
+    try:
+        key = open('keys/server.key')
+        cert = open('keys/server.pem')
+    except IOError:
+        # no ssl
+        pass
+    else:
+        cert = ssl.PrivateCertificate.loadPEM(key.read() + cert.read())
+        ssl_port = config.ssl_port
+        service = internet.SSLServer(ssl_port, IcsFactory(ssl_port),
+            cert.options())
+        service.setServiceParent(application)
+
+    # for WebSocket communication using sockjs
+    if SockJSFactory:
+        cf = ssl.DefaultOpenSSLContextFactory('keys/server.pem', 'keys/server.key')
+        service = internet.SSLServer(config.websocket_port,
+            SockJSFactory(IcsFactory(config.websocket_port)), cf)
+        service.setServiceParent(application)
+
+    lc = task.LoopingCall(timer.heartbeat)
+    lc.start(timer.heartbeat_timeout)
 
 application = service.Application("chessd")
 
-for port in ports:
-    service = getService(port)
-    service.setServiceParent(application)
-
-# ssl
-try:
-    key = open('keys/server.key')
-    cert = open('keys/server.pem')
-except IOError:
-    # no ssl
-    pass
-else:
-    cert = ssl.PrivateCertificate.loadPEM(key.read() + cert.read())
-    ssl_port = config.ssl_port
-    service = internet.SSLServer(ssl_port, IcsFactory(ssl_port),
-        cert.options())
-    service.setServiceParent(application)
-
-# for WebSocket communication using sockjs
-if SockJSFactory:
-    cf = ssl.DefaultOpenSSLContextFactory('keys/server.pem', 'keys/server.key')
-    service = internet.SSLServer(config.websocket_port,
-        SockJSFactory(IcsFactory(config.websocket_port)), cf)
-    service.setServiceParent(application)
-
-lc = task.LoopingCall(timer.heartbeat)
-lc.start(timer.heartbeat_timeout)
+d = global_.init()
+d.addCallback(start_services)
+d.addErrback(log.err)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent ft=python
