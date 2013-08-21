@@ -220,51 +220,44 @@ if 1:
         defer.returnValue(rows[0]['user_first_login'])
 
     def user_set_last_logout(uid):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE user
+        return adb.runOperation("""UPDATE user
             SET user_last_logout=NOW() WHERE user_id=%s""", (uid,))
-        cursor.close()
 
     def user_add_to_total_time_online(uid, secs):
         """ Expects secs to be an integer. """
         assert(secs >= 0)
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE user
-            SET user_total_time_online=user_total_time_online+%s WHERE user_id=%s""", (secs, uid))
-        cursor.close()
+        return adb.runOperation("""UPDATE user
+            SET user_total_time_online=user_total_time_online+%s
+            WHERE user_id=%s""", (secs, uid))
 
-    def user_log(user_name, login, ip):
-        cursor = db.cursor()
-
+    @defer.inlineCallbacks
+    def user_log_add(user_name, login, ip):
+        """Add an entry to a user's log."""
         # delete old log entry, if necessary
-        cursor = query(cursor, """SELECT COUNT(*) FROM user_log
+        # XXX it would probably be more efficient to periodically
+        # delete extra entries
+        rows = yield adb.runQuery("""SELECT COUNT(*) AS c FROM user_log
             WHERE log_who_name=%s""", (user_name,))
-        count = cursor.fetchone()[0]
+        count = rows[0]['c']
         if count >= 10:
-            assert(count == 10)
-            cursor = query(cursor, """DELETE FROM user_log
-                WHERE log_who_name=%s ORDER BY log_when DESC LIMIT 1""",
-                    (user_name,))
-        cursor.close()
-        cursor = db.cursor()
+            #assert(count == 10)
+            limit = count - 9
+            yield adb.runOperation("""DELETE FROM user_log
+                WHERE log_who_name=%s ORDER BY log_when DESC LIMIT %s""",
+                    (user_name, limit))
 
         which = 'login' if login else 'logout'
-        cursor = query(cursor, """INSERT INTO user_log
+        yield adb.runOperation("""INSERT INTO user_log
             SET log_who_name=%s,log_which=%s,log_ip=%s,log_when=NOW()""",
                 (user_name, which, ip))
-
-        cursor.close()
+        defer.returnValue(None)
 
     def user_get_log(user_name):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT log_who_name,log_when,
+        return adb.runQuery("""SELECT log_who_name,log_when,
                 log_which,log_ip
             FROM user_log
             WHERE log_who_name=%s
-            ORDER BY log_when DESC""", (user_name,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+            ORDER BY log_when DESC LIMIT 10""", (user_name,))
 
     def get_log_all(limit):
         return adb.runQuery("""SELECT log_who_name,log_when,
@@ -828,11 +821,15 @@ if 1:
         cursor.close()
 
     def user_get_ratings(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT * FROM (SELECT rating.variant_id as variant_id,rating.speed_id as speed_id,variant_name,speed_name,rating,rd,volatility,win,loss,draw,total,best,when_best,ltime FROM rating LEFT JOIN variant USING (variant_id) LEFT JOIN speed USING (speed_id) WHERE user_id=%s ORDER BY total DESC LIMIT 5) as tmp ORDER BY variant_id,speed_id""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""
+            SELECT * FROM (
+                SELECT rating.variant_id AS variant_id,rating.speed_id AS speed_id,variant_name,speed_name,rating,rd,volatility,win,loss,draw,total,best,when_best,ltime
+                FROM rating
+                LEFT JOIN variant USING (variant_id)
+                LEFT JOIN speed USING (speed_id) WHERE user_id=%s
+                ORDER BY total DESC LIMIT 5)
+            AS tmp ORDER BY variant_id,speed_id""",
+        (user_id,))
 
     def user_get_all_ratings(user_id):
         cursor = db.cursor(cursors.DictCursor)

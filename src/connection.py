@@ -18,10 +18,9 @@
 
 import time
 import re
-import twisted.internet.interfaces
 
 from twisted.protocols import basic
-from twisted.internet import reactor, defer, task
+from twisted.internet import reactor, defer, task, interfaces
 from zope.interface import implements
 
 import telnet
@@ -30,10 +29,10 @@ import global_
 import db
 import login
 import utf8
+import session
 
 import config
 from timeseal import timeseal, TIMESEAL_PONG
-from session import Session
 
 
 #class QuitException(Exception):
@@ -41,7 +40,10 @@ from session import Session
 
 
 class Connection(basic.LineReceiver):
-    implements(twisted.internet.interfaces.IProtocol)
+
+    """Represents a connection between a client and the server."""
+
+    implements(interfaces.IProtocol)
     # inherited from parent class:
     # the telnet transport changes all '\r\n' to '\n',
     # so we can just use '\n' here
@@ -59,7 +61,7 @@ class Connection(basic.LineReceiver):
 
     def connectionMade(self):
         global_.langs['en'].install(names=['ngettext'])
-        self.session = Session(self)
+        self.session = session.Session(self)
         self.factory.connections.append(self)
         self.write(db.get_server_message('welcome'))
         self.login()
@@ -237,7 +239,6 @@ class Connection(basic.LineReceiver):
         self.timeout_check = None
         self.user = self.claimed_user
         assert(self.user)
-        # XXX assert(not self.user.is_online)
         if self.user.is_admin():
             self.session.commands = global_.admin_commands
         else:

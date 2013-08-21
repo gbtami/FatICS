@@ -16,6 +16,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import glicko2
 import speed_variant
 import datetime
@@ -138,8 +140,9 @@ def update_ratings(game, white_score, black_score):
         black_win, black_loss, black_draw, ltime)
 
 
+@defer.inlineCallbacks
 def show_ratings(user, conn):
-    rows = db.user_get_ratings(user.id_)
+    rows = yield db.user_get_ratings(user.id_)
     if not rows:
         conn.write(_('%s has not played any rated games.\n\n') % user.name)
     else:
@@ -162,6 +165,7 @@ def show_ratings(user, conn):
             ent['total'] = row['total']
             conn.write('%(speed_variant)-24s %(rating)-6d %(rd)-3.0f %(volatility)9.6f %(total)7d %(best_str)s\n' % ent)
         conn.write('\n')
+    defer.returnValue(None)
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

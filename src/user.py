@@ -58,7 +58,6 @@ class BaseUser(object):
         self.noplay = set()
         self.session = conn.session
         self.session.set_user(self)
-        db.user_log(self.name, login=True, ip=conn.ip)
         notify.notify_pin(self, arrived=True)
         self.is_online = True
         global_.online.add(self)
@@ -68,12 +67,12 @@ class BaseUser(object):
         self.write(db.get_server_message('motd'))
         for ch in self.channels:
             global_.channels[ch].log_on(self)
-        return defer.succeed(None)
+
+        d = db.user_log_add(self.name, login=True, ip=conn.ip)
+        return d
 
     def log_off(self):
         assert(self.is_online)
-
-        db.user_log(self.name, login=False, ip=self.session.conn.ip)
 
         for ch in self.channels:
             global_.channels[ch].log_off(self)
@@ -81,6 +80,9 @@ class BaseUser(object):
         self.is_online = False
         global_.online.remove(self)
         notify.notify_pin(self, arrived=False)
+
+        d = db.user_log_add(self.name, login=False, ip=self.session.conn.ip)
+        return d
 
     def write(self, s):
         """ Write a string to the user. """
@@ -459,8 +461,7 @@ class RegUser(BaseUser):
         self.notifiers = set([dbu['user_name']
             for dbu in (yield db.user_get_notifiers(self.id_))])
 
-        d = BaseUser.log_on(self, conn)
-        assert(d.called)
+        yield BaseUser.log_on(self, conn)
 
         adjrows = yield db.get_adjourned(self.id_)
         self.adjourned = list(adjrows)
@@ -510,10 +511,11 @@ class RegUser(BaseUser):
 
     def log_off(self):
         notify.notify_users(self, arrived=False)
-        BaseUser.log_off(self)
-        db.user_add_to_total_time_online(self.id_,
+        d1 = BaseUser.log_off(self)
+        d2 = db.user_add_to_total_time_online(self.id_,
             int(self.session.get_online_time()))
-        db.user_set_last_logout(self.id_)
+        d3 = db.user_set_last_logout(self.id_)
+        return defer.DeferredList([d1, d2, d3])
 
     def get_log(self):
         return db.user_get_log(self.name)
@@ -831,7 +833,6 @@ class GuestUser(BaseUser):
         return [{'log_who_name': self.name,
             'log_when': datetime.datetime.fromtimestamp(self.session.login_time),
             'log_which': 'login', 'log_ip': self.session.conn.ip}]
-        db.user_get_log(self.id_)
 
     def get_history(self):
         assert(self._history is not None)

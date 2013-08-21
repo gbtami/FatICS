@@ -111,7 +111,7 @@ class Finger(Command):
             #if u.is_guest:
             #    conn.write(_('%s is NOT a registered player.\n') % u.name)
             if show_ratings and not u.is_guest:
-                rating.show_ratings(u, conn)
+                yield rating.show_ratings(u, conn)
             if u.admin_level > admin.Level.user:
                 conn.write(A_('Admin level: %s\n') % admin.level.to_str(u.admin_level))
             if show_admin_info:
@@ -220,7 +220,7 @@ class Logons(Command, LogMixin):
         else:
             u2 = conn.user
         if u2:
-            log = u2.get_log()
+            log = yield u2.get_log()
             if not log:
                 conn.write('%s has not logged on.\n' % u2.name)
             else:
