@@ -238,6 +238,8 @@ class Connection(basic.LineReceiver):
         self.timeout_check.cancel()
         self.timeout_check = None
         self.user = self.claimed_user
+        global_.langs[self.user.vars_['lang']].install(names=['ngettext'])
+        global_.curuser = self.user
         assert(self.user)
         if self.user.is_admin():
             self.session.commands = global_.admin_commands

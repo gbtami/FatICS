@@ -93,6 +93,39 @@ class Showtms(Command):
 
 @ics_command('who', 'T')
 class Who(Command):
+    # number of spaces between columns
+    MULTICOL_SPACE = 2
+
+    def _multicol_print(self, items, max_len, conn):
+        """Print a list of items in columns."""
+        assert(max_len > 0)
+        max_len += self.MULTICOL_SPACE
+        num_cols = max(conn.user.vars_['width'] // max_len, 1)
+        num_rows = len(items) // num_cols
+        if num_rows * num_cols < len(items):
+            num_rows += 1
+        assert(num_rows * num_cols >= len(items))
+
+        #print 'multicol items %d, rows %d, cols %d' % (len(items), num_rows, num_cols)
+
+        out = []
+        for row in range(0, num_rows):
+            for col in range(0, num_cols):
+                try:
+                    item = items[col * num_rows + row]
+                except IndexError:
+                    # reached end
+                    break
+                out.append(item)
+                if col != num_cols - 1:
+                    len_space = max_len - len(item)
+                    assert(len_space > 0)
+                    out.append(' ' * len_space)
+            out.append('\n')
+        out.append('\n')
+
+        conn.write_nowrap(''.join(out))
+
     def run(self, args, conn):
         users = [u for u in global_.online]
 
@@ -119,7 +152,7 @@ class Who(Command):
                         raise BadCommandError
                     sort_order = param[i]
                 elif param[i] in ['t', 'v', 'n', 'I']:
-                    # what does n do?
+                    # XXX what does n do?
                     if fmt != 't' and fmt != param[i]:
                         # conflicting formats given
                         raise BadCommandError
@@ -134,6 +167,8 @@ class Who(Command):
                     else:
                         page = int(param[i])
                         divs = int(param[i + 1])
+                        if page > divs:
+                            raise BadCommandError
                 else:
                     raise BadCommandError
 
@@ -145,7 +180,7 @@ class Who(Command):
         #zh = speed_variant.from_names('blitz', 'crazyhouse')
         #fr = speed_variant.from_names('blitz', 'chess960')
         #suicide = speed_variant.from_names('blitz', 'chess960')
-        bughouse = speed_variant.from_names('blitz', 'bughouse')
+        #bughouse = speed_variant.from_names('blitz', 'bughouse')
         if sort_order == 's':
             compare = lambda p: int(p.get_rating(speed_variant.standard_chess))
         elif sort_order == 'b':
@@ -154,14 +189,15 @@ class Who(Command):
             compare = lambda p: int(p.get_rating(speed_variant.lightning_chess))
         elif sort_order == 'z':
             compare = lambda p: int(p.get_rating(speed_variant.blitz_crazyhouse))
+        elif sort_order == 'B':
+            compare = lambda p: int(p.get_rating(speed_variant.blitz_bughouse))
         elif sort_order == 'w':
             # hack: in original fics this means wild, but it now means chess960
             compare = lambda p: int(p.get_rating(speed_variant.blitz_chess960))
         elif sort_order == 'S':
             # XXX suicide
-            assert(False)
-        elif sort_order == 'B':
-            compare = lambda p: int(p.get_rating(speed_variant.blitz_bughouse))
+            conn.write('TODO: suicide\n')
+            return
         elif sort_order == 'A':
             compare = lambda p: p.name
         elif sort_order == 'l':
@@ -171,22 +207,41 @@ class Who(Command):
         users.sort(key=compare)
 
         if fmt == 't':
-            count = 0
-            conn.write('\n')
+            items = []
+            max_len = 0
             for u in users:
                 if sort_order == 'A':
-                    conn.write('     ')
+                    rating = '     '
                 elif sort_order == 'l':
-                    conn.write('%4d ' % u.get_rating(speed_variant.blitz_chess))
+                    rating = '%4d  ' % u.get_rating(speed_variant.blitz_chess)
                 else:
-                    conn.write('%4d ' % compare(u))
-                conn.write(u.get_display_name() + '\n')
-                count = count + 1
-            conn.write('\n')
+                    rating = '%4d  ' % compare(u)
+                if u.vars_['tourney']:
+                    status = '&'
+                elif u.session.game:
+                    # XXX ~ means simul
+                    if u.session.game.gtype == PLAYED:
+                        status = '^'
+                    elif u.session.game.gtype == PLAYED:
+                        status = '#'
+                    else:
+                        # XXX
+                        assert(False)
+                elif u.vars_['busy'] or u.session.get_idle_time() > 300:
+                    status = '.'
+                elif not u.vars_['open']:
+                    status = ':'
+                else:
+                    status = ' '
+                item = ''.join((rating, status, u.get_display_name()))
+                max_len = max(len(item), max_len)
+                items.append(item)
+            self._multicol_print(items, max_len, conn)
 
+            count = len(items)
             conn.write(ngettext('%d player displayed.\n\n',
                 '%d players displayed.\n\n', count) % count)
         else:
-            conn.write('TODO: unsupposted format\n')
+            conn.write('TODO: unsupported format\n')
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

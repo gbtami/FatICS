@@ -150,6 +150,8 @@ class PromptTest(Test):
         t = self.connect()
         t.write('guest\n\n')
         self.expect('fics%', t, "fics% prompt")
+        # there should not be more than one prompt
+        self.expect_not('fics%', t)
         self.close(t)
 
 class LogoutTest(Test):

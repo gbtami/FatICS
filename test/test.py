@@ -161,7 +161,9 @@ class Test(unittest.TestCase):
         try:
             t = self.connect_as_admin()
             t.write('who\n')
-            # will have to be redone when 'who' output is finished
+            # this no longer works, due to support for FICS-style
+            # "who" output
+            assert(False)
             while True:
                 m = self.expect_re(r'^(.*?)\r\n', t)
                 line = m.group(1)

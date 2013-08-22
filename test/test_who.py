@@ -18,6 +18,8 @@
 
 from test import *
 
+import time
+
 class TestShowadmins(Test):
     def test_showadmins(self):
         t = self.connect_as_guest()
@@ -110,5 +112,29 @@ class TestShowtms(Test):
         self.close(t2)
 
         self.close(t)
+
+class TestWho(Test):
+    def test_who(self):
+        names = ['one', 'two', 'three', 'four', 'five', 'six', 'seven',
+            'eight', 'nine', 'ten']
+        conns = []
+        for name in names:
+            self._adduser(name, tpasswd)
+            conns.append(self.connect_as(name))
+
+        try:
+            t = self.connect_as_guest('GuestABCD')
+            t.write('who A\n')
+
+            # XXX TODO
+
+            self.expect('11 players displayed.', t)
+            self.close(t)
+
+        finally:
+            for conn in conns:
+                self.close(conn)
+            for name in names:
+                self._deluser(name)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
