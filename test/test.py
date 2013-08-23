@@ -135,6 +135,7 @@ class Test(unittest.TestCase):
         t = self.connect_as_admin()
         # in case the user already exists due to a failed test
         t.write('remplayer %s\n' % name)
+        self.expect_re('(removed|no player matching the name)', t)
         t.write('addplayer %s fakeemail@example.com Test Player\n' % name)
         self.expect('Added: ', t)
         t.write('asetpass %s %s\n' % (name, passwd))

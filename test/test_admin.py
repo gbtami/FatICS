@@ -33,9 +33,28 @@ class CommandTest(Test):
         t.write('addplayer testplayer nobody@example.com Foo Bar\n')
         self.expect('already registered', t)
 
+        t.write('finger testplayer\n')
+        self.expect('Finger of TestPlayer:', t)
+
+        t.write('raisedead testplayer\n')
+        self.expect('already registered', t)
 
         t.write('remplayer testplayer\n')
         self.expect('Player TestPlayer removed.', t)
+
+        t.write('finger testplayer\n')
+        self.expect('There is no player matching the name', t)
+
+        t.write('raisedead testplayer\n')
+        # XXX capitalization
+        self.expect('Player testplayer raised.', t)
+
+        t.write('finger testplayer\n')
+        self.expect('Finger of TestPlayer:', t)
+
+        t.write('remplayer testplayer\n')
+        self.expect('Player TestPlayer removed.', t)
+
         self.close(t)
 
     def test_announce(self):

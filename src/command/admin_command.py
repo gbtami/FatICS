@@ -346,17 +346,57 @@ class Asetv(Command):
 class Remplayer(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
-        d = find_user.exact_for_user(args[0], conn)
+        u = yield find_user.exact_for_user(args[0], conn)
         adminuser = conn.user
-        u = yield d
         if u:
             if not admin.check_user_operation(adminuser, u):
                 conn.write(A_('''You can't remove an admin with a level higher than or equal to yourself.\n'''))
             elif u.is_online:
                 conn.write(A_("%s is logged in.\n") % u.name)
             else:
-                u.remove()
+                yield u.remove()
                 conn.write(A_("Player %s removed.\n") % u.name)
+        defer.returnValue(None)
+
+
+@ics_command('raisedead', 'wo', admin.Level.admin)
+class Raisedead(Command):
+    @defer.inlineCallbacks
+    def run(self, args, conn):
+        u = yield find_user.exact(args[0])
+        if u:
+            conn.write(A_('A player named %s is already registered or online.\n')
+                % u.name)
+            defer.returnValue(None)
+
+        if args[1]:
+            conn.write(A_('Reincarnating a user to a different name is not supported.\n'))
+            defer.returnValue(None)
+
+        # XXX it is currently possible to raise a player with a
+        # higher adminlevel than yourself
+        try:
+            yield db.user_undelete(args[0])
+        except db.DeleteError:
+            conn.write(A_('Raisedead failed.\n'))
+        else:
+            # XXX should we query the database again
+            # to get the correct capitalization?
+            conn.write(A_('Player %s raised.\n') % args[0])
+
+        defer.returnValue(None)
+
+
+'''@ics_command('burydead', 'w', admin.Level.admin)
+class Burydead(Command):
+    @defer.inlineCallbacks
+    def run(self, args, conn):
+        try:
+            yield db.user_delete_forever(args[0])
+        except db.DeleteError:
+            conn.write(A_('Burydead failed.\n'))
+        else:
+            conn.write(A_('Player %s deleted permanently.\n') % args[0])'''
 
 
 @ics_command('addcomment', 'wS', admin.Level.admin)

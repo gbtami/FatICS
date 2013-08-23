@@ -191,6 +191,10 @@ if 1:
     @defer.inlineCallbacks
     def user_add(name, email, passwd, real_name, admin_level):
         def do_insert(txn):
+            # XXX probably we should instead fail with an error
+            # if the player is in removed_user
+            txn.execute("""DELETE FROM removed_user
+                WHERE user_name=%s""", (name,))
             txn.execute("""INSERT INTO user
                 SET user_name=%s,user_email=%s,user_passwd=%s,
                     user_real_name=%s,user_admin_level=%s""",
@@ -364,31 +368,61 @@ if 1:
         defer.returnValue(ret)
 
     def user_delete(uid):
-        """ Permanently delete a user from the database.  In normal use
-        this shouldn't be used, but it's useful for testing. """
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM user_log WHERE log_who_name=(SELECT user_name FROM user WHERE user_id=%s)""", (uid,))
-        cursor = query(cursor, """DELETE FROM user WHERE user_id=%s""", (uid,))
-        if cursor.rowcount != 1:
-            cursor.close()
-            raise DeleteError()
-        cursor = query(cursor, """DELETE FROM user_comment WHERE user_id=%s""", (uid,))
-        cursor = query(cursor, """DELETE FROM user_title WHERE user_id=%s""", (uid,))
-        cursor = query(cursor, """DELETE FROM user_notify
-            WHERE %s IN (notifier, notified)""", (uid))
-        cursor = query(cursor, """DELETE FROM user_gnotify
-            WHERE %s IN (gnotifier, gnotified)""", (uid))
-        cursor = query(cursor, """DELETE FROM censor WHERE %s IN (censorer, censored)""", (uid))
-        cursor = query(cursor, """DELETE FROM noplay WHERE %s IN (noplayer, noplayed)""", (uid))
-        cursor = query(cursor, """DELETE FROM formula WHERE user_id=%s""", (uid,))
-        cursor = query(cursor, """DELETE FROM note WHERE user_id=%s""", (uid,))
-        cursor = query(cursor, """DELETE FROM channel_user WHERE user_id=%s""", (uid,))
-        cursor = query(cursor, """DELETE FROM channel_owner WHERE user_id=%s""", (uid,))
-        cursor = query(cursor, """DELETE FROM history WHERE user_id=%s""", (uid,))
-        cursor = query(cursor, """DELETE FROM rating WHERE user_id=%s""", (id,))
-        cursor = query(cursor, """DELETE FROM message WHERE to_user_id=%s""", (uid,))
-        cursor = query(cursor, """DELETE FROM adjourned_game WHERE %s IN (white_user_id, black_user_id)""", (uid))
-        cursor.close()
+        """ Move a user to the removed_user table.  Currently this
+        removes all adjourned games, messages, comments, logs, lists,
+        ratings, titles, and variables for the user, although maybe that
+        should be changed in the future. """
+        def do_del(txn):
+            txn.execute("INSERT INTO removed_user SELECT * FROM user WHERE user_id=%s",
+                (uid,))
+            # this needs to be done before deleting the row from user
+            txn.execute("""DELETE FROM user_log WHERE log_who_name=(
+                SELECT user_name FROM user WHERE user_id=%s)""", (uid,))
+            txn.execute("""DELETE FROM user WHERE user_id=%s""", (uid,))
+            if txn.rowcount != 1:
+                raise DeleteError
+
+            txn.execute("""DELETE FROM user_comment WHERE user_id=%s""", (uid,))
+            txn.execute("""DELETE FROM user_title WHERE user_id=%s""", (uid,))
+            txn.execute("""DELETE FROM user_notify
+                WHERE %s IN (notifier, notified)""", (uid,))
+            txn.execute("""DELETE FROM user_gnotify
+                WHERE %s IN (gnotifier, gnotified)""", (uid,))
+            txn.execute("""DELETE FROM censor WHERE %s IN
+                (censorer, censored)""", (uid,))
+            txn.execute("""DELETE FROM noplay WHERE %s IN
+                (noplayer, noplayed)""", (uid,))
+            txn.execute("""DELETE FROM formula WHERE user_id=%s""", (uid,))
+            txn.execute("""DELETE FROM note WHERE user_id=%s""", (uid,))
+            txn.execute("""DELETE FROM channel_user WHERE user_id=%s""",
+                (uid,))
+            txn.execute("""DELETE FROM channel_owner WHERE user_id=%s""",
+                (uid,))
+            txn.execute("""DELETE FROM history WHERE user_id=%s""", (uid,))
+            txn.execute("""DELETE FROM rating WHERE user_id=%s""", (uid,))
+            txn.execute("""DELETE FROM message WHERE to_user_id=%s""", (uid,))
+            txn.execute("""DELETE FROM adjourned_game WHERE %s IN
+                (white_user_id, black_user_id)""", (uid,))
+        return adb.runInteraction(do_del)
+
+    def user_undelete(name):
+        """Move a user from the removed_user table back to user."""
+        def do_undel(txn):
+            txn.execute("SELECT user_id FROM removed_user WHERE user_name=%s",
+                (name,))
+            row = txn.fetchone()
+            if not row:
+                raise DeleteError
+            uid = row['user_id']
+            txn.execute("INSERT INTO user SELECT * FROM removed_user WHERE user_id=%s",
+                (uid,))
+            if txn.rowcount != 1:
+                raise DeleteError
+            txn.execute("""DELETE FROM removed_user WHERE user_id=%s""",
+                (uid,))
+            if txn.rowcount != 1:
+                raise DeleteError
+        return adb.runInteraction(do_undel)
 
     # filtered ips
     @defer.inlineCallbacks
