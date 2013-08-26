@@ -19,7 +19,7 @@ case "$1" in
     trial -e test/
     ;;
   check)
-    echo "Running test checks...."
+    echo "Running code checks...."
     ./scripts/check
     ./scripts/pep8
     ;;

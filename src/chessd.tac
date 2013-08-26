@@ -27,7 +27,7 @@ from twisted.internet.protocol import ServerFactory
 from twisted.internet import task, reactor, ssl
 from twisted.python import log
 
-SockJsFactory = None
+SockJSFactory = None
 try:
     from txsockjs.factory import SockJSFactory
 except ImportError:

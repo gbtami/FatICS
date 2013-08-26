@@ -495,7 +495,7 @@ class PlayedGame(Game):
         # "help iv_gameinfo" documentation; the it= field gives
         # the initial time increment for white, and the i= field
         # does the same for black.  This seems wrong since "it" was
-        # supposed to stand for "initial time", but compatability
+        # supposed to stand for "initial time", but compatibility
         # with FICS is more important than being logical.
         # not sure about the m and n; maybe they are a version number?
         # TODO: add info about clock style, variant/speed to gameinfo string
