@@ -25,6 +25,8 @@ websocket_port = 8080
 db_host = "localhost"
 db_db = "chess"
 
+log_directory = "./log"
+
 # login timout in seconds
 login_timeout = 30
 min_login_name_len = 3

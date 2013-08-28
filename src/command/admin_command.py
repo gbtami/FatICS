@@ -31,11 +31,16 @@ import trie
 import var
 import find_user
 import config
+import logger
 
 from reload import reload
 from .command import Command, ics_command
 from parser import BadCommandError
 
+
+def log_admin(admin, action):
+    logger.log('admin', logger.INFO, admin.name + "(" + admin.session.conn.ip + ") " + action)
+    
 
 @ics_command('aclearhistory', 'w', admin.Level.admin)
 class Aclearhistory(Command):
@@ -46,6 +51,7 @@ class Aclearhistory(Command):
             # disallow clearing history for higher adminlevels?
             u.clear_history()
             conn.write(A_('History of %s cleared.\n') % u.name)
+            log_admin(conn.user, "clears history of %s" % u.name)
 
 
 @ics_command('addplayer', 'WWS', admin.Level.admin)
@@ -70,6 +76,8 @@ class Addplayer(Command):
                     'Player added by %s using addplayer.' % conn.user.name)
             conn.write(A_('Added: >%s< >%s< >%s< >%s<\n')
                 % (name, real_name, email, passwd))
+            log_admin(conn.user, "adds player >%s< >%s< >%s<"
+                % (name, real_name, email))
 
 
 @ics_command('announce', 'S', admin.Level.admin)
@@ -84,6 +92,7 @@ class Announce(Command):
                     (conn.user.name, args[0]))
         conn.write("(%d) **ANNOUNCEMENT** from %s: %s\n\n" %
             (count, conn.user.name, args[0]))
+        log_admin(conn.user, "announces: %s" % args[0])
 
 
 @ics_command('annunreg', 'S', admin.Level.admin)
@@ -98,12 +107,14 @@ class Annunreg(Command):
                     % (conn.user.name, args[0]))
         conn.write("(%d) **UNREG ANNOUNCEMENT** from %s: %s\n\n"
             % (count, conn.user.name, args[0]))
+        log_admin(conn.user, "unreg announces: %s" % args[0])
 
 
 @ics_command('areload', '', admin.Level.god)
 class Areload(Command):
     def run(self, args, conn):
         reload.reload_all(conn)
+        log_admin(conn.user, "reloads all")
 
 
 @ics_command('asetadmin', 'wd', admin.Level.admin)
@@ -127,6 +138,7 @@ class Asetadmin(Command):
                 yield u.set_admin_level(level)
                 conn.write('''Admin level of %s set to %d.\n''' %
                     (u.name, level))
+                log_admin(adminuser, "set admin level of %s to %d" % (u.name, level))
                 if u.is_online:
                     # update user's command list
                     if u.is_admin():
@@ -143,9 +155,11 @@ class Asetmaxplayer(Command):
             # basic sanity checks XXX
             if args[0] < 10 or args[0] > 100000:
                 raise BadCommandError
+            old_maxplayer = config.maxplayer
             conn.write(A_("Previously %d total connections allowed....\n")
-                % config.maxplayer)
+                % old_maxplayer)
             config.maxplayer = args[0]
+            log_admin(conn.user, "changes allowed connections from %d to %d" % (old_maxplayer, config.maxplayer))
 
         conn.write(A_('There are currently %d regular and %d admin connections available.\n') %
             (max(config.maxplayer - config.admin_reserve, 0), min(config.maxplayer - len(global_.online), config.admin_reserve)))
@@ -161,9 +175,11 @@ class Asetmaxguest(Command):
             elif args[0] + config.admin_reserve > config.maxplayer:
                 conn.write(A_("maxguest + admin_reserve > maxplayer (%d + %d > %d); not changing\n") % (args[0], config.admin_reserve, config.maxplayer))
                 return
+            old_maxguest = config.maxguest
             conn.write(A_("Previously %d guest connections allowed....\n")
-                % config.maxguest)
+                % old_maxguest)
             config.maxguest = args[0]
+            log_admin(conn.user, "changes allowed guest connections from %d to %d" % (old_maxguest, config.maxguest))
 
         conn.write(A_('Allowed guest connections: %d.\n') % config.maxguest)
 
@@ -185,6 +201,7 @@ class Asetpasswd(Command):
             else:
                 u.set_passwd(passwd)
                 conn.write('Password of %s changed to %s.\n' % (u.name, '*' * len(passwd)))
+                log_admin(adminuser, "changes password of %s" % u.name)
                 if u.is_online:
                     u.write_('\n%s has changed your password.\n', (adminuser.name,))
 
@@ -211,11 +228,15 @@ class Asetrating(Command):
             yield u.del_rating(sv)
             conn.write(A_('Cleared %s %s rating for %s.\n' %
                 (speed_name, variant_name, u.name)))
+            log_admin(conn.user, "clears %s %s rating for %s" % 
+                (speed_name, variant_name, u.name))
         else:
             u.set_rating(sv, urating, rd, volatility, win, loss, draw,
                 datetime.datetime.utcnow())
             conn.write(A_('Set %s %s rating for %s.\n' %
                 (speed_name, variant_name, u.name)))
+            log_admin(conn.user, "sets %s %s rating for %s" %
+                (speed_name, variant_name, u.name))
         # XXX notify the user?
 
 
@@ -250,6 +271,8 @@ class Asetemail(Command):
                         {'aname': adminuser.name, 'email': email})
                 conn.write(A_('Email address of %(uname)s changed to "%(email)s".\n') %
                     {'uname': u.name, 'email': email})
+                log_admin(adminuser, 'changes email address of %s to "%s"' %
+                    (u.name, email))
 
 
 @ics_command('asetrealname', 'wS', admin.Level.admin)
@@ -279,6 +302,8 @@ class Asetrealname(Command):
                         {'aname': adminuser.name, 'real_name': real_name})
                 conn.write(A_('Real name of %(uname)s changed to "%(real_name)s".\n') %
                     {'uname': u.name, 'real_name': real_name})
+                log_admin(adminuser, 'changes real name of %s to "%s"' %
+                    (u.name, real_name))
 
 
 @ics_command('nuke', 'w', admin.Level.admin)
@@ -296,6 +321,7 @@ class Nuke(Command):
                 if not u.is_guest:
                     yield db.add_comment_async(conn.user.id_, u.id_, 'Nuked.')
                 conn.write('Nuked: %s\n' % u.name)
+                log_admin(conn.user, 'nukes %s' % u.name)
         defer.returnValue(None)
 
 
@@ -311,6 +337,7 @@ class Pose(Command):
                 conn.write(A_('You can only pose as players below your adminlevel.\n'))
             else:
                 conn.write(A_('Command issued as %s.\n') % u2.name)
+                log_admin(adminuser, 'issues command as %s: %s' % (u2.name, args[1]))
                 u2.write_('%s has issued the following command on your behalf: %s\n', (adminuser.name, args[1]))
                 parser.parse(args[1], u2.session.conn)
 
@@ -340,6 +367,7 @@ class Asetv(Command):
             conn.write(_('Bad value given for variable "%s".\n') % v.name)
         else:
             conn.write(A_("Command issued as %s.\n") % (u.name))
+            log_admin(adminuser, 'sets variable %s to %s for %s' % (v.name, args[2], u.name))
 
 
 @ics_command('remplayer', 'w', admin.Level.admin)
@@ -356,6 +384,7 @@ class Remplayer(Command):
             else:
                 yield u.remove()
                 conn.write(A_("Player %s removed.\n") % u.name)
+                log_admin(adminuser, 'removes player %s' % u.name)
         defer.returnValue(None)
 
 
@@ -383,6 +412,7 @@ class Raisedead(Command):
             # XXX should we query the database again
             # to get the correct capitalization?
             conn.write(A_('Player %s raised.\n') % args[0])
+            log_admin(conn.user, 'raises player %s' % args[0])
 
         defer.returnValue(None)
 
@@ -396,7 +426,8 @@ class Burydead(Command):
         except db.DeleteError:
             conn.write(A_('Burydead failed.\n'))
         else:
-            conn.write(A_('Player %s deleted permanently.\n') % args[0])'''
+            conn.write(A_('Player %s deleted permanently.\n') % args[0])
+            log_admin(conn.user, 'deletes player %s permanently' % args[0])'''
 
 
 @ics_command('addcomment', 'wS', admin.Level.admin)
@@ -411,6 +442,7 @@ class Addcomment(Command):
             else:
                 yield db.add_comment_async(adminuser.id_, u.id_, args[1])
                 conn.write(A_('Comment added for %s.\n') % u.name)
+                log_admin(adminuser, 'adds comment for %s: %s' % (u.name, args[1]))
 
 
 @ics_command('showcomment', 'w', admin.Level.admin)
@@ -428,6 +460,7 @@ class Showcomment(Command):
                 else:
                     allcomments = [A_('%s at %s: %s\n') % (c['admin_name'], c['when_added'], c['txt']) for c in comments]
                     conn.write_paged('\n'.join(allcomments))
+                    log_admin(conn.user, 'lists comments for %s' % u.name)
 
 
 @ics_command('ftell', 'o', admin.Level.admin)
@@ -441,6 +474,7 @@ class Ftell(Command):
                 conn.write(A_("Stopping the forwarding of the conversation with %s.") % conn.session.ftell.name)
                 conn.session.ftell.session.ftell_admins.remove(conn.user)
                 ch.tell(A_("I will no longer be forwarding the conversation between *%s* and myself.") % conn.session.ftell.name, conn.user)
+                log_admin(conn.user, 'stops forwarding conversation with %s' % conn.session.ftell.name)
                 conn.session.ftell = None
         else:
             u = find_user.online_by_prefix_for_user(args[0], conn)
@@ -454,8 +488,10 @@ class Ftell(Command):
                     if conn.session.ftell:
                         conn.session.ftell.session.ftell_admins.remove(conn.user)
                         ch.tell(A_("I will no longer be forwarding the conversation between *%s* and myself.") % conn.session.ftell.name, conn.user)
+                        log_admin(conn.user, 'stops forwarding conversation with %s' % conn.session.ftell.name)
                         conn.session.ftell = None
                     ch.tell(A_("I will be forwarding the conversation between *%s* and myself to channel 0.") % u.name, conn.user)
+                    log_admin(conn.user, 'starts forwarding conversation with %s' % u.name)
                     conn.session.ftell = u
                     u.session.ftell_admins.add(conn.user)
 
@@ -465,6 +501,7 @@ class Hideinfo(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         yield global_.vars_['hideinfo'].set(conn.user, None)
+        log_admin(conn.user, 'toggles private user info display')
 
 
 @ics_command('shutdown', 'p', admin.Level.admin)
@@ -477,6 +514,7 @@ class Shutdown(Command):
                 for u in global_.online:
                     u.write_("\n\n    *** Server shutdown canceled by %s ***\n\n",
                         (conn.user.name,))
+                log_admin(conn.user, 'cancels server shutdown')
                 return
             mins = 5
         elif args[0] < 0:
@@ -487,6 +525,7 @@ class Shutdown(Command):
 
         for u in global_.online:
             u.nwrite_("\n\n    *** The server is shutting down in %d minute, initiated by %s ***\n\n", "\n\n    *** The server is shutting down in %d minutes, initiated by %s ***\n\n", mins, (mins, conn.user.name))
+        log_admin(conn.user, 'issues the server to shut down in %d minute(s)' % mins)
 
         if reactor.shuttingDown:
             reactor.shuttingDown.cancel()
@@ -527,6 +566,7 @@ class Chkip(Command):
                 if count > 10:
                     break
         conn.write(A_("Number of players matched: %d\n") % count)
+        log_admin(conn.user, 'issues an ip check of %s' % ip_pat)
 
 
 @ics_command('asetidle', 'wd', admin.Level.admin)
@@ -544,5 +584,6 @@ class Asetidle(Command):
                 (u.name, secs))
             u.write_("\n%s has set your idle time to %d seconds.\n",
                 (conn.user.name, secs))
+            log_admin(conn.user, 'sets idle time for %s to %d seconds' % (u.name, secs))
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

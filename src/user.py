@@ -448,7 +448,7 @@ class RegUser(BaseUser):
     @defer.inlineCallbacks
     def log_on(self, conn):
         if global_.online.is_online(self.name):
-            assert(self.is_online) # XXX this shows that reorganization is needed
+            # assert(self.is_online) # XXX this shows that reorganization is needed
             conn.write(_("**** %s is already logged in; closing the other connection. ****\n" % self.name))
             u = global_.online.find_exact(self.name)
             u.session.conn.write(_("**** %s has arrived; you can't both be logged in. ****\n\n") % self.name)

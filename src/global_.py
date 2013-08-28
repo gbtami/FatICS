@@ -30,6 +30,7 @@ import channel
 import var
 import speed_variant
 import db
+import logger
 
 # add a builtin to mark strings for translation that should not
 # automatically be translated dynamically.
@@ -97,5 +98,7 @@ def init():
     yield list_.init_lists()
     yield speed_variant.init()
     defer.returnValue(None)
+
+log = logger.log
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
