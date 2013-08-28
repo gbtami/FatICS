@@ -40,7 +40,7 @@ from parser import BadCommandError
 
 def log_admin(admin, action):
     logger.log('admin', logger.INFO, admin.name + "(" + admin.session.conn.ip + ") " + action)
-    
+
 
 @ics_command('aclearhistory', 'w', admin.Level.admin)
 class Aclearhistory(Command):
@@ -228,7 +228,7 @@ class Asetrating(Command):
             yield u.del_rating(sv)
             conn.write(A_('Cleared %s %s rating for %s.\n' %
                 (speed_name, variant_name, u.name)))
-            log_admin(conn.user, "clears %s %s rating for %s" % 
+            log_admin(conn.user, "clears %s %s rating for %s" %
                 (speed_name, variant_name, u.name))
         else:
             u.set_rating(sv, urating, rd, volatility, win, loss, draw,

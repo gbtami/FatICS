@@ -36,7 +36,7 @@ CRITICAL = logging.CRITICAL
 try:
     os.makedirs(config.log_directory, 0750)
 except OSError as e:
-    if e.errno == errno.EACCES:        
+    if e.errno == errno.EACCES:
         print "Warning: could not create log directory (", config.log_directory, "), using current directory"
         config.log_directory = "."
     elif e.errno != errno.EEXIST:
