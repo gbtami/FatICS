@@ -194,17 +194,18 @@ class Game(object):
             self.send_board(u)
 
     def send_board(self, u, isolated=False):
+        prompt = (u != global_.curuser)
         if u.vars_['style'] == 12:
             if (self.gtype == PLAYED and self.variant.name == 'chess' and
                     u.session.ivars['compressmove'] and
                     self.variant.pos.get_last_move() is not None and
                     not isolated):
-                u.write_nowrap(self.variant.to_deltaboard(u), prompt=True)
+                u.write_nowrap(self.variant.to_deltaboard(u), prompt=prompt)
             else:
-                u.write_nowrap(self.variant.to_style12(u), prompt=True)
+                u.write_nowrap(self.variant.to_style12(u), prompt=prompt)
         else:
             # style 1, the default
-            u.write_nowrap(self.variant.to_style1(u), prompt=True)
+            u.write_nowrap(self.variant.to_style1(u), prompt=prompt)
 
     def __eq__(self, other):
         return self.number == other.number

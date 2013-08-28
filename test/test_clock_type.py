@@ -273,4 +273,36 @@ class TestUntimed(Test):
         self.close(t)
         self.close(t2)
 
+    def test_untimed_style1(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t.write('set style 1\n')
+        self.expect('Style 1 set.', t)
+
+        t.write('match guestefgh untimed white\n')
+        self.expect('Challenge: ', t2)
+        t2.write('accept\n')
+
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+
+        t.write('e4\n')
+        self.expect('White Moves', t)
+
+        t2.write('e5\n')
+        self.expect('Black Moves', t)
+
+        t.write('Nf3\n')
+        self.expect('White Moves', t)
+
+        t2.write('Nf6\n')
+        self.expect('Black Moves', t)
+
+        t.write('abo\n')
+        t2.write('abo\n')
+
+        self.close(t)
+        self.close(t2)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

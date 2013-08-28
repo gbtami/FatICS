@@ -211,7 +211,7 @@ class UntimedClock(Clock):
         self._black_time = 0
 
     def got_move(self, side, ply, elapsed, minmovetime):
-        pass
+        return 0.0
 
     def as_str(self):
         return ('0:00.000', '0:00.000')

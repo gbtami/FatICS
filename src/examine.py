@@ -234,9 +234,8 @@ class ExaminedGame(Game):
         user.session.game = None
         # user may be offline if he or she disconnected unexpectedly
         if user.is_online:
-            assert(user == global_.curuser)
-            user.write(_('You are no longer examining game %d.\n')
-                % self.number)
+            user.write_('You are no longer examining game %d.\n',
+                self.number)
         for p in self.players | self.observers:
             p.write_('\n%(name)s has stopped examining game %(num)d.\n', {'name': user.name, 'num': self.number})
         if not self.players:
