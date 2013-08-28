@@ -16,7 +16,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from db import db
+import db
+
 
 class History(object):
     def save_game(self, game, msg, result_code):
@@ -56,7 +57,7 @@ class History(object):
         black_rating = str(game.black_rating)
         movetext = game.get_movetext()
 
-        (i, eco, longeco) = game.get_eco()
+        (i, eco, longeco) = game.get_eco_sync()
         game_id = db.game_add(game.white.name, white_rating, game.black.name,
             black_rating, eco, game.speed_variant.variant.id_,
             game.speed_variant.speed.id_, game.white_time, game.inc,
@@ -90,6 +91,7 @@ class History(object):
             eco[0:3], flags, game.white_time, game.inc, result_reason,
             game.when_ended, movetext, game.idn)
         return game_id
+
 
 def show_for_user(user, conn):
     hist = user.get_history()

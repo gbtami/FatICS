@@ -19,38 +19,43 @@
 
 import re
 
-import game
+from twisted.internet import defer
+
 import examine
-import user
+import find_user
+
+from game_constants import EXAMINED
 
 from .command import ics_command, Command
 
+
 @ics_command('examine', 'on')
 class Examine(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.session.game:
-            if conn.user.session.game.gtype == game.EXAMINED:
+            if conn.user.session.game.gtype == EXAMINED:
                 conn.write(_("You are already examining a game.\n"))
             else:
                 conn.write(_("You are playing a game.\n"))
-            return
+            defer.returnValue(None)
 
         if args[0] is None:
             conn.write(_("Starting a game in examine (scratch) mode.\n"))
             examine.ExaminedGame(conn.user)
-            return
+            defer.returnValue(None)
 
         if args[0] == 'b':
             conn.write('TODO: EXAMINE SCRATCH BOARD\n')
-            return
+            defer.returnValue(None)
 
-        u = user.find_by_prefix_for_user(args[0], conn, min_len=2)
+        u = yield find_user.by_prefix_for_user(args[0], conn)
         if not u:
-            return
+            defer.returnValue(None)
 
         if args[1] is None:
             conn.write('TODO: EXAMINE ADJOURNED GAME\n')
-            return
+            defer.returnValue(None)
 
         try:
             num = int(args[1])
@@ -58,58 +63,63 @@ class Examine(Command):
             h = u.get_history_game(num, conn)
             if h:
                 examine.ExaminedGame(conn.user, h)
-            return
+            defer.returnValue(None)
         except ValueError:
             m = re.match(r'%(\d\d?)', args[1])
             if m:
                 num = int(m.group(1))
                 conn.write('TODO: EXAMINE JOURNAL GAME\n')
-                return
+                defer.returnValue(None)
 
-            u2 = user.find_by_prefix_for_user(args[1], conn, min_len=2)
+            u2 = yield find_user.by_prefix_for_user(args[1], conn)
             if not u2:
-                return
+                defer.returnValue(None)
             conn.write('TODO: EXAMINE ADJOURNED GAME\n')
+        defer.returnValue(None)
+
 
 @ics_command('mexamine', 'w')
 class Mexamine(Command):
     def run(self, args, conn):
         g = conn.user.session.game
-        if not g or g.gtype != game.EXAMINED:
+        if not g or g.gtype != EXAMINED:
             conn.write(_("You are not examining a game.\n"))
             return
 
-        u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(args[0], conn)
         if not u:
             return
 
         g.mexamine(u, conn)
+
 
 @ics_command('backward', 'p')
 class Backward(Command):
     def run(self, args, conn):
         n = args[0] if args[0] is not None else 1
         g = conn.user.session.game
-        if not g or g.gtype != game.EXAMINED:
+        if not g or g.gtype != EXAMINED:
             conn.write(_("You are not examining a game.\n"))
             return
         g.backward(n, conn)
+
 
 @ics_command('forward', 'p')
 class Forward(Command):
     def run(self, args, conn):
         n = args[0] if args[0] is not None else 1
         g = conn.user.session.game
-        if not g or g.gtype != game.EXAMINED:
+        if not g or g.gtype != EXAMINED:
             conn.write(_("You are not examining a game.\n"))
             return
         g.forward(n, conn)
+
 
 @ics_command('unexamine', '')
 class Unexamine(Command):
     def run(self, args, conn):
         g = conn.user.session.game
-        if not g or g.gtype != game.EXAMINED:
+        if not g or g.gtype != EXAMINED:
             conn.write(_("You are not examining a game.\n"))
             return
         g.leave(conn.user)

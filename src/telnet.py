@@ -57,6 +57,7 @@ IAC = chr(255) # interpret as command
 
 BS = chr(8) # backspace
 
+
 class TelnetTransport(protocol.Protocol):
     implements(interfaces.ITransport)
     protocolFactory = None
@@ -164,7 +165,6 @@ class TelnetTransport(protocol.Protocol):
         if appDataBuffer:
             self.applicationDataReceived(''.join(appDataBuffer))
 
-
     def commandReceived(self, command, argument):
         cmdFunc = self.commandMap.get(command)
         if cmdFunc:
@@ -202,6 +202,13 @@ class TelnetTransport(protocol.Protocol):
             else:
                 self.protocol.factory = factory
             self.protocol.makeConnection(self)
+
+    def pauseProducing(self):
+        self.transport.pauseProducing()
+
+    def resumeProducing(self):
+        if self.transport.connected and not self.transport.disconnecting:
+            self.transport.resumeProducing()
 
     def connectionLost(self, reason):
         if self.protocol is not None:

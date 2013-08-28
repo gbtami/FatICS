@@ -64,7 +64,7 @@ class Test(unittest.TestCase):
     def expect_not(self, str, t, timeout=0.3):
         ret = t.read_until(str, timeout)
         if str in ret:
-            print "got {{%s}}" % (ret + t.read_lazy())
+            print("got {{%s}}" % (ret + t.read_lazy()))
         self.assert_(not str in ret)
 
     def expect_EOF(self, t):
@@ -94,7 +94,7 @@ class Test(unittest.TestCase):
         t.write("admin\n%s\n" % admin_passwd)
         s = t.read_until('fics% ', 5)
         if 'fics%' not in s:
-            print 'got {%s}' % s
+            print('got {%s}' % s)
         self.assert_('fics% ' in s)
         self.set_nowrap(t)
         return t
@@ -119,12 +119,12 @@ class Test(unittest.TestCase):
         t.write('%s\n' % passwd)
         s = t.read_until('fics% ', 5)
         if 'fics%' not in s:
-            print 'got {%s}' % s
-        assert('fics% ' in s)
+            print('got {%s}' % s)
+        self.assert_('fics% ' in s)
         return t
 
     def close(self, t):
-        assert(not t.closed)
+        self.assert_(not t.closed)
         t.write('quit\n')
         t.read_until('Thank you for using')
         t.read_all()
@@ -135,6 +135,7 @@ class Test(unittest.TestCase):
         t = self.connect_as_admin()
         # in case the user already exists due to a failed test
         t.write('remplayer %s\n' % name)
+        self.expect_re('(removed|no player matching the name)', t)
         t.write('addplayer %s fakeemail@example.com Test Player\n' % name)
         self.expect('Added: ', t)
         t.write('asetpass %s %s\n' % (name, passwd))
@@ -161,7 +162,9 @@ class Test(unittest.TestCase):
         try:
             t = self.connect_as_admin()
             t.write('who\n')
-            # will have to be redone when 'who' output is finished
+            # this no longer works, due to support for FICS-style
+            # "who" output
+            assert(False)
             while True:
                 m = self.expect_re(r'^(.*?)\r\n', t)
                 line = m.group(1)

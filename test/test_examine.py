@@ -35,6 +35,10 @@ class TestExamine(Test):
         self.expect('Starting a game in examine (scratch) mode.', t)
         self.expect_re(r'\<12\> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 \d+ GuestPQLQ GuestPQLQ 2 0 0 39 39 0 0 1 none \(0:00\) none 0 0 0', t)
 
+        # then show exactly one prompt
+        self.expect('fics%', t)
+        self.expect_not('fics%', t)
+
         t.write('forward\n')
         self.expect("You're at the end of the game.", t)
         t.write('backward\n')
@@ -321,6 +325,9 @@ class TestMexamine(Test):
         self.expect('Usage: ', t)
 
         t.write('mex 1\n')
+        self.expect('You need to specify at least', t)
+
+        t.write('mex 11\n')
         self.expect('not a valid handle', t)
 
         self.close(t)

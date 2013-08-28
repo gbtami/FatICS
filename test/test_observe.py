@@ -300,7 +300,9 @@ class TestFollow(Test):
         t.write('follow admin\n')
         self.expect('No player named "admin" is online.', t)
         t.write('follow 1\n')
-        self.expect('"1" is not a valid handle.', t)
+        self.expect('You need to specify at least', t)
+        t.write('follow 11\n')
+        self.expect('"11" is not a valid handle.', t)
         t.write('follow GuestABCD\n')
         self.expect("You can't follow your own games.", t)
 

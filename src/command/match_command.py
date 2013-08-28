@@ -17,25 +17,27 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import game
 import match
 import admin
-import user
+import find_user
 import speed_variant
 import global_
 
 from .command import Command, ics_command
 
+from game_constants import EXAMINED
+
+
 @ics_command('match', 'wt', admin.Level.user)
 class Match(Command):
     def run(self, args, conn):
         if conn.user.session.game:
-            if conn.user.session.game.gtype == game.EXAMINED:
+            if conn.user.session.game.gtype == EXAMINED:
                 conn.write(_("You can't challenge while you are examining a game.\n"))
             else:
                 conn.write(_("You can't challenge while you are playing a game.\n"))
             return
-        u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(args[0], conn)
         if not u:
             return
         if u == conn.user:
@@ -44,7 +46,10 @@ class Match(Command):
 
         match.Challenge(conn.user, u, args[1])
 
+
 # TODO: parameters?
+
+
 @ics_command('rematch', '')
 class Rematch(Command):
     def run(self, args, conn):

@@ -18,20 +18,14 @@
 
 import gettext
 
-try:
-   langs
-except NameError:
-    pass
-else:
-    assert(False)
 
-langs = {
-    'en': gettext.NullTranslations(),
-    'es': gettext.translation('chessd', languages=['es'], localedir='./locale', fallback=True),
-    'compat': gettext.translation('chessd', languages=['compat'], localedir='./locale'),
-    # for testing
-    'upper': gettext.translation('chessd', languages=['upper'], localedir='./locale'),
-}
-
+def get_langs():
+    return {
+        'en': gettext.NullTranslations(),
+        'es': gettext.translation('chessd', languages=['es'], localedir='./locale', fallback=True),
+        'compat': gettext.translation('chessd', languages=['compat'], localedir='./locale'),
+        # for testing
+        'upper': gettext.translation('chessd', languages=['upper'], localedir='./locale'),
+    }
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

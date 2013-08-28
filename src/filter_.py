@@ -17,12 +17,15 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
 from netaddr import IPAddress, IPNetwork
 
 import list_
+import db
+import global_
 
-from db import db
 
+@defer.inlineCallbacks
 def add_filter(pattern, conn):
     # Don't check whether this filter is a subset of any existing filter,
     # because it could be reasonable to block overlapping ranges, such as
@@ -31,36 +34,40 @@ def add_filter(pattern, conn):
         net = IPNetwork(pattern, implicit_prefix=False).cidr
     except:
         raise list_.ListError(A_('Invalid filter pattern.\n'))
-    if net in filters:
+    if net in global_.filters:
         raise list_.ListError(_('%s is already on the filter list.\n') % net)
-    filters.add(net)
-    db.add_filtered_ip(str(net))
+    global_.filters.add(net)
+    yield db.add_filtered_ip(str(net))
     conn.write(_('%s added to the filter list.\n') % net)
 
+
+@defer.inlineCallbacks
 def remove_filter(pattern, conn):
     try:
         net = IPNetwork(pattern, implicit_prefix=False).cidr
     except:
         raise list_.ListError(A_('Invalid filter pattern.\n'))
     try:
-        filters.remove(net)
+        global_.filters.remove(net)
     except KeyError:
         raise list_.ListError(_('%s is not on the filter list.\n') % net)
-    db.del_filtered_ip(str(net))
+    yield db.del_filtered_ip(str(net))
     conn.write(_('%s removed from the filter list.\n') % net)
+
 
 def check_filter(addr):
     ip = IPAddress(addr)
-    return any(ip in net for net in filters)
+    return any(ip in net for net in global_.filters)
 
-def _init_filters():
+
+@defer.inlineCallbacks
+def init():
     # sanity checks
     IPNetwork('127.0.0.1')
     IPNetwork('127.0.0.1/16')
 
-    global filters
-    filters = set([IPNetwork(pat) for pat in db.get_filtered_ips()])
-_init_filters()
-
+    pats = yield db.get_filtered_ips()
+    global_.filters = set([IPNetwork(pat) for pat in pats])
+    defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

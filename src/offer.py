@@ -18,6 +18,7 @@
 
 import global_
 
+
 def _find_free_slot():
     """ Find the next available offer number. """
     i = 1
@@ -25,6 +26,7 @@ def _find_free_slot():
         if i not in global_.offers:
             return i
         i += 1
+
 
 class Offer(object):
     """represents an offer from one player to another"""
@@ -92,7 +94,7 @@ class Offer(object):
             self.a.write(_("Withdrawing your %(offer)s to %(pname)s.\n") %
                 {'offer': self.name, 'pname': self.b.name})
             self.b.write_("\n%(pname)s withdraws the %(offer)s.\n",
-                {'pname' : self.a.name, 'offer': self.name})
+                {'pname': self.a.name, 'offer': self.name})
             if self.game:
                 for p in self.game.observers:
                     p.write_("\nGame %(num)d: %(pname)s withdraws the %(offer)s.\n",
@@ -109,6 +111,7 @@ class Offer(object):
         """ Player b declines the offer by logging out. """
         self.decline(notify=False)
 
+
 class Abort(Offer):
     def __init__(self, game, user):
         Offer.__init__(self, 'abort request')
@@ -118,17 +121,19 @@ class Abort(Offer):
         self.game = game
         offers = [o for o in game.pending_offers if o.name == self.name]
         if len(offers) > 1:
-            raise RuntimeError('more than one abort request in game %d' \
+            raise RuntimeError('more than one abort request in game %d'
                 % game.number)
         if len(offers) > 0:
             o = offers[0]
             if o.a == self.a:
-                user.write_('You are already offering to abort game %d.\n', (game.number,))
+                user.write(_('You are already offering to abort game %d.\n')
+                    % (game.number,))
             else:
                 o.accept()
         else:
             game.pending_offers.append(self)
-            user.write_('Requesting to abort game %d.\n', (game.number,))
+            assert(user == global_.curuser)
+            user.write(_('Requesting to abort game %d.\n') % (game.number,))
             self.b.write_('\n%(name)s requests to abort game %(num)d.\n', {
                 'name': user.name, 'num': game.number})
             for p in game.observers:
@@ -150,6 +155,7 @@ class Abort(Offer):
         Offer.withdraw(self, notify)
         self.game.pending_offers.remove(self)
 
+
 class Adjourn(Offer):
     def __init__(self, game, user):
         Offer.__init__(self, 'adjourn request')
@@ -159,19 +165,21 @@ class Adjourn(Offer):
         self.game = game
         offers = [o for o in game.pending_offers if o.name == self.name]
         if len(offers) > 1:
-            raise RuntimeError('more than one adjourn offer in game %d' \
+            raise RuntimeError('more than one adjourn offer in game %d'
                 % game.number)
         if len(offers) > 0:
             o = offers[0]
             if o.a == self.a:
-                user.write_('You are already offering to adjourn game %d.\n', (game.number,))
+                user.write(_('You are already offering to adjourn game %d.\n')
+                    % (game.number,))
             else:
                 # XXX should we disallow adjourning games in the first few
                 # moves?
                 o.accept()
         else:
             game.pending_offers.append(self)
-            user.write_('Requesting to adjourn game %d.\n', (game.number,))
+            assert(user == global_.curuser)
+            user.write(_('Requesting to adjourn game %d.\n') % (game.number,))
             self.b.write_('\n%s requests to adjourn game %d.\n', (user.name, game.number))
             for p in game.observers:
                 p.write_('\n%s requests to adjourn game %d.\n', (user.name, game.number))
@@ -191,6 +199,7 @@ class Adjourn(Offer):
         Offer.withdraw(self, notify)
         self.game.pending_offers.remove(self)
 
+
 class Draw(Offer):
     def __init__(self, game, user):
         Offer.__init__(self, 'draw offer')
@@ -200,12 +209,12 @@ class Draw(Offer):
         self.game = game
         offers = [o for o in game.pending_offers if o.name == self.name]
         if len(offers) > 1:
-            raise RuntimeError('more than one draw offer in game %d' \
+            raise RuntimeError('more than one draw offer in game %d'
                 % game.number)
         if len(offers) > 0:
             o = offers[0]
             if o.a == self.a:
-                user.write_('You are already offering a draw.\n')
+                user.write(_('You are already offering a draw.\n'))
             else:
                 o.accept()
         else:
@@ -222,7 +231,7 @@ class Draw(Offer):
 
             game.pending_offers.append(self)
             # original FICS sends "Draw request sent."
-            user.write_('Offering a draw to %s.\n', (self.b.name,))
+            user.write(_('Offering a draw to %s.\n') % (self.b.name,))
             self.b.write_('\n%s offers you a draw.\n', (user.name,))
             for p in self.game.observers:
                 p.write_('\nGame %d: %s offers a draw.\n',

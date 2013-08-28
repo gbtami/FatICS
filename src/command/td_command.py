@@ -20,11 +20,14 @@
 from .command import ics_command, Command
 
 import match
-import user
 import game
 import speed_variant
+import global_
+import find_user
 
-from command_parser import BadCommandError
+from parser import BadCommandError
+from game_constants import PLAYED
+
 
 @ics_command('rmatch', 'wwt')
 class Rmatch(Command):
@@ -32,10 +35,10 @@ class Rmatch(Command):
         if not conn.user.has_title('TD'):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
-        u1 = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u1 = find_user.online_by_prefix_for_user(args[0], conn)
         if not u1:
             return
-        u2 = user.find_by_prefix_for_user(args[1], conn, online_only=True)
+        u2 = find_user.online_by_prefix_for_user(args[1], conn)
         if not u2:
             return
         # ignore censor lists, noplay lists, and open var
@@ -57,7 +60,7 @@ class Tournset(Command):
         if not conn.user.has_title('TD'):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
-        u2 = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u2 = find_user.online_by_prefix_for_user(args[0], conn)
         if not u2:
             return
         # XXX how to handle guests?
@@ -65,13 +68,14 @@ class Tournset(Command):
         if args[1] not in [0, 1]:
             raise BadCommandError
 
-        u2.vars['tourney'] = str(args[1])
+        u2.vars_['tourney'] = str(args[1])
         if args[1]:
             u2.write_('\n%s has set your tourney variable to ON.\n',
                 (conn.user.name,))
         else:
             u2.write_('\n%s has set your tourney variable to OFF.\n',
                 (conn.user.name,))
+
 
 @ics_command('robserve', 'wi')
 class Robserve(Command):
@@ -80,7 +84,7 @@ class Robserve(Command):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
 
-        u2 = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u2 = find_user.online_by_prefix_for_user(args[0], conn)
         if not u2:
             return
 
@@ -92,6 +96,7 @@ class Robserve(Command):
             else:
                 g.observe(u2)
 
+
 @ics_command('getpi', 'w')
 class Getpi(Command):
     def run(self, args, conn):
@@ -99,7 +104,7 @@ class Getpi(Command):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
         try:
-            u = user.find_by_name_exact(args[0], online_only=True)
+            u = global_.online.find_exact(args[0])
             if u and u.is_online:
                 if u.is_guest:
                     # it's not clear why the lasker server only prints
@@ -119,9 +124,10 @@ class Getpi(Command):
             else:
                 # do nothing
                 pass
-        except user.UsernameException:
+        except find_user.UsernameException:
             # do nothing
             pass
+
 
 @ics_command('getgi', 'w')
 class Getgi(Command):
@@ -130,10 +136,10 @@ class Getgi(Command):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
             return
         try:
-            u = user.find_by_name_exact(args[0], online_only=True)
+            u = global_.online.find_exact(args[0])
             if u and u.is_online and not u.is_guest:
                 g = u.session.game
-                if g and g.gtype == game.PLAYED:
+                if g and g.gtype == PLAYED:
                     conn.write('*getgi %s %s %s %d %d %d %d %d*\n' % (u.name,
                         g.white.name, g.black.name, g.number,
                         g.white_time, g.inc,
@@ -143,7 +149,7 @@ class Getgi(Command):
             else:
                 # do nothing
                 pass
-        except user.UsernameException:
+        except find_user.UsernameException:
             # do nothing
             pass
 

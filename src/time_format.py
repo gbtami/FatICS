@@ -17,6 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+
 def hms_words(secs, round_secs=False):
     (days, secs) = divmod(secs, 86400)
     (hours, secs) = divmod(secs, 3600)
@@ -31,6 +32,7 @@ def hms_words(secs, round_secs=False):
     if not round_secs:
         ret = ret + ngettext("%d second", "%d seconds", secs) % secs
     return ret
+
 
 def hms(secs, user=None):
     (hours, secs) = divmod(secs, 3600)

@@ -16,11 +16,13 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import glicko2
 import speed_variant
 import datetime
 
-from db import db
+import db
 
 INITIAL_RATING = 1720
 INITIAL_RD = 350
@@ -28,6 +30,7 @@ INITIAL_RD = 350
 # I solved 350 = sqrt(0^2 + 1051897*vol^2), so a rd of 0 would increase to
 # 350 in about 2 years.
 INITIAL_VOLATILITY = .00196 # 0.6
+
 
 class Rating(object):
     def __init__(self, rating, rd, volatility, ltime, win, loss, draw,
@@ -56,6 +59,7 @@ class Rating(object):
 
     def __int__(self):
         return self.rating
+
 
 class NoRating(object):
     def __init__(self, is_guest):
@@ -87,6 +91,7 @@ class NoRating(object):
 
     def __int__(self):
         return 0
+
 
 def update_ratings(game, white_score, black_score):
     wp = glicko2.Player(game.white_rating.glicko2_rating(),
@@ -134,8 +139,10 @@ def update_ratings(game, white_score, black_score):
         black_rating, black_rd, bp.vol,
         black_win, black_loss, black_draw, ltime)
 
+
+@defer.inlineCallbacks
 def show_ratings(user, conn):
-    rows = db.user_get_ratings(user.id)
+    rows = yield db.user_get_ratings(user.id_)
     if not rows:
         conn.write(_('%s has not played any rated games.\n\n') % user.name)
     else:
@@ -158,6 +165,7 @@ def show_ratings(user, conn):
             ent['total'] = row['total']
             conn.write('%(speed_variant)-24s %(rating)-6d %(rd)-3.0f %(volatility)9.6f %(total)7d %(best_str)s\n' % ent)
         conn.write('\n')
+    defer.returnValue(None)
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

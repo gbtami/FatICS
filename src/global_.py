@@ -19,36 +19,86 @@
 
 """ Server-wide global state. """
 
-import online
-import command_parser
+from twisted.internet import defer
+
+import find_user
 import trie
+import list_
+import filter_
+import lang
+import channel
+import var
+import speed_variant
+import db
+import logger
 
-try:
-    globals_defined
-except NameError:
-    globals_defined = True
+# add a builtin to mark strings for translation that should not
+# automatically be translated dynamically.
+import __builtin__
+# dynamically translated messages
+__builtin__.__dict__['N_'] = lambda s: s
+# admin messages
+__builtin__.__dict__['A_'] = lambda s: s
 
-    # bughouse partners
-    partners = []
+# bughouse partners
+partners = []
 
-    # all offers
-    offers = {}
+# all offers
+offers = {}
 
-    # all games
-    games = {}
+# all games
+games = {}
 
-    # online players
-    online = online.Online()
+# online players
+online = find_user.Online()
 
-    # seeks
-    seeks = {}
+# seeks
+seeks = {}
 
-    # commands
-    command_list = command_parser.CommandList()
+# player variables and ivariables
+vars_ = trie.Trie()
+ivars = trie.Trie()
+var_defaults = var.Defaults()
 
-    # player variables and ivariables
-    vars_ = trie.Trie()
-    ivars = trie.Trie()
+# lists
+lists = trie.Trie()
+admin_lists = trie.Trie()
 
+# filters: will be initialized by filter_.init()
+filters = None
+
+# langauages
+langs = lang.get_langs()
+
+# channels; will be initialized by channels.init()
+channels = None
+
+# commands
+commands = trie.Trie()
+admin_commands = trie.Trie()
+
+# map variant names to the classes that implement them
+variant_class = {}
+
+# current user whose command is being handled
+curuser = None
+
+# load commands
+import command
+command # pacify pyflakes
+
+
+@defer.inlineCallbacks
+def init():
+    db.init()
+    yield channel.init()
+    yield filter_.init()
+    var.init_vars()
+    var.init_ivars()
+    yield list_.init_lists()
+    yield speed_variant.init()
+    defer.returnValue(None)
+
+log = logger.log
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

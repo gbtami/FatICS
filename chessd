@@ -18,6 +18,11 @@ case "$1" in
     echo "Running test suite...."
     trial -e test/
     ;;
+  check)
+    echo "Running code checks...."
+    ./scripts/check
+    ./scripts/pep8
+    ;;
   restart)
     $0 stop
     $0 start

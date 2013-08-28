@@ -21,17 +21,18 @@ import global_
 import seek
 import match
 import game
-import user
+import find_user
 
-from command_parser import BadCommandError
-from game_constants import opp
+from parser import BadCommandError
+from game_constants import opp, EXAMINED
 from .command import Command, ics_command
+
 
 @ics_command('seek', 't')
 class Seek(Command):
     def run(self, args, conn):
         if conn.user.session.game:
-            if conn.user.session.game.gtype == game.EXAMINED:
+            if conn.user.session.game.gtype == EXAMINED:
                 conn.write(_('You are examining a game.\n'))
             else:
                 conn.write(_('You are playing a game.\n'))
@@ -63,7 +64,7 @@ class Seek(Command):
             ad.a.write_('\nYour seek matches one posted by %s.\n',
                 (conn.user.name,))
             ad.b = conn.user
-            g = game.PlayedGame(ad)
+            game.PlayedGame(ad)
             return
 
         if manual_matches:
@@ -84,6 +85,7 @@ class Seek(Command):
         conn.write(ngettext('(%d player saw the seek.)\n',
             '(%d players saw the seek.)\n', count) % count)
 
+
 @ics_command('unseek', 'p')
 class Unseek(Command):
     def run(self, args, conn):
@@ -102,11 +104,12 @@ class Unseek(Command):
             else:
                 conn.write(_('You have no active seeks.\n'))
 
+
 @ics_command('play', 'i')
 class Play(Command):
     def run(self, args, conn):
         if conn.user.session.game:
-            if conn.user.session.game.gtype == game.EXAMINED:
+            if conn.user.session.game.gtype == EXAMINED:
                 conn.write(_('You are examining a game.\n'))
             else:
                 conn.write(_('You are playing a game.\n'))
@@ -118,7 +121,7 @@ class Play(Command):
 
         ad = None
         if isinstance(args[0], basestring):
-            u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+            u = find_user.online_by_prefix_for_user(args[0], conn)
             if u:
                 if not u.session.seeks:
                     conn.write(_("%s isn't seeking any games.\n") % u.name)
@@ -175,7 +178,10 @@ class Play(Command):
                 ad.a.write_('\n%s accepts your seek.\n', (conn.user.name,))
                 ad.accept(conn.user)
 
+
 #  7 1500 SomePlayerA         5   2 rated   blitz      [white]  1300-9999 m
+
+
 @ics_command('sought', 'o')
 class Sought(Command):
     def run(self, args, conn):

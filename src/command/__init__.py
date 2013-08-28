@@ -17,6 +17,7 @@
 #
 
 __all__ = ['admin_command',
+'alias_command',
 'bug_command', 'channel_command', 'command',
 'date_command', 'examine_command',
 'game_command',
@@ -29,5 +30,8 @@ __all__ = ['admin_command',
 'shout_command', 'td_command',
 'tell_command', 'var_command',
 'who_command']
+
+for m in __all__:
+    __import__('command.' + m)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -85,7 +85,7 @@ class TestCommand(Test):
         t.write('t testplaye this is a test\n')
         self.expect('(told TestPlayer)', t)
         t.write('t testplaye! this is a test\n')
-        self.expect('There is no player matching the name "testplaye".', t)
+        self.expect('No player named "testplaye" is online.', t)
         t.write('t testplayer! this is a test\n')
         self.expect('(told TestPlayer)', t)
 

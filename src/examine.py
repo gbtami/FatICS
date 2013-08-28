@@ -21,9 +21,11 @@ import datetime
 
 import speed_variant
 import clock
+import global_
 
 from game import Game
-from game_constants import *
+from game_constants import WHITE, EXAMINED
+
 
 class ExaminedGame(Game):
     def __init__(self, user, hist_game=None):
@@ -46,7 +48,7 @@ class ExaminedGame(Game):
 
         if hist_game is None:
             self.speed_variant = speed_variant.from_names('untimed', 'chess')
-            self.variant = speed_variant.variant_class[self.speed_variant.variant.name](self)
+            self.variant = global_.variant_class[self.speed_variant.variant.name](self)
             self.moves = []
             #self.white_name = list(self.players)[0].name
             #self.black_name = self.white_name
@@ -59,7 +61,7 @@ class ExaminedGame(Game):
             # XXX use the speed from history
             self.speed_variant = speed_variant.from_names('untimed',
                 variant_name)
-            self.variant = speed_variant.variant_class[self.speed_variant.variant.name](self)
+            self.variant = global_.variant_class[self.speed_variant.variant.name](self)
             self.moves = hist_game['movetext'].split(' ')
             self.white_name = hist_game['white_name']
             self.black_name = hist_game['black_name']
@@ -232,7 +234,8 @@ class ExaminedGame(Game):
         user.session.game = None
         # user may be offline if he or she disconnected unexpectedly
         if user.is_online:
-            user.write_('You are no longer examining game %d.\n', self.number)
+            user.write_('You are no longer examining game %d.\n',
+                self.number)
         for p in self.players | self.observers:
             p.write_('\n%(name)s has stopped examining game %(num)d.\n', {'name': user.name, 'num': self.number})
         if not self.players:
@@ -246,8 +249,6 @@ class ExaminedGame(Game):
 
     def free(self):
         super(ExaminedGame, self).free()
-        for p in self.players:
-            assert(user.session.game == self)
-            p.session.game = None
+        assert(not self.players)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

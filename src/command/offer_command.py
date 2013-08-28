@@ -23,6 +23,7 @@ import global_
 
 # TODO: make these commands accept a username parameter
 
+
 @ics_command('accept', 'n')
 class Accept(Command):
     def run(self, args, conn):
@@ -47,6 +48,7 @@ class Accept(Command):
             # TODO: find by user
             pass
 
+
 @ics_command('decline', 'n')
 class Decline(Command):
     def run(self, args, conn):
@@ -69,6 +71,7 @@ class Decline(Command):
                 conn.write(_('There is no offer %d to decline.\n') % args[0])
             else:
                 o.decline()
+
 
 @ics_command('withdraw', 'n')
 class Withdraw(Command):

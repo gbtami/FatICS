@@ -26,12 +26,15 @@ import copy
 import random
 from array import array
 
-from game_constants import *
+from game_constants import (WHITE, BLACK, valid_sq, rank, file_)
+from game_constants import (A1, C1, D1, E1, F1, G1, H1,
+    A8, C8, D8, E8, F8, G8, H8)
 from variant.base_variant import BaseVariant, IllegalMoveError
 """
 0x88 board representation; pieces are represented as ASCII,
 the same as FEN. A blank square is '-'.
 """
+
 
 class BadFenError(Exception):
     def __init__(self, reason=None):
@@ -45,6 +48,8 @@ piece_moves = {
     'k': [-0x11, -0xf, 0xf, 0x11, -0x10, -1, 1, 0x10]
 }
 direction_table = array('i', [0 for i in range(0, 0x100)])
+
+
 def dir(fr, to):
     """Returns the direction a queen needs to go to get from TO to FR,
     or 0 if it's not possible."""
@@ -62,6 +67,7 @@ piece_material = {
     'k': 0
 }
 
+
 def to_castle_flags(w_oo, w_ooo, b_oo, b_ooo):
     return (w_oo << 3) + (w_ooo << 2) + (b_oo << 1) + b_ooo
 
@@ -73,16 +79,20 @@ castle_mask[A1] = to_castle_flags(True, False, True, True)
 castle_mask[E1] = to_castle_flags(False, False, True, True)
 castle_mask[H1] = to_castle_flags(False, True, True, True)
 
+
 def str_to_sq(s):
     return 'abcdefgh'.index(s[0]) + 0x10 * '12345678'.index(s[1])
 
+
 def sq_to_str(sq):
-    return 'abcdefgh'[file(sq)] + '12345678'[rank(sq)]
+    return 'abcdefgh'[file_(sq)] + '12345678'[rank(sq)]
+
 
 def piece_is_white(pc):
     assert(len(pc) == 1)
     assert(pc in 'pnbrqkPNBRQK')
     return pc.isupper()
+
 
 class Zobrist(object):
     """Zobrist keys for low-overhead repetition detection"""
@@ -110,7 +120,7 @@ class Zobrist(object):
         return self._piece[(self._piece_index[pc] << 7) | sq]
 
     def ep_hash(self, ep):
-        return self._ep[file(ep)]
+        return self._ep[file_(ep)]
 
     def castle_hash(self, flags):
         assert(flags & ~0xf == 0)
@@ -120,6 +130,7 @@ class Zobrist(object):
         return [random.getrandbits(64) for i in xrange(0, len)]
 
 zobrist = Zobrist()
+
 
 class Move(object):
     def __init__(self, pos, fr, to, prom=None, is_oo=False,
@@ -266,7 +277,7 @@ class Move(object):
         elif self.pc in ['P', 'p']:
             san = ''
             if self.is_capture or self.is_ep:
-                san += 'abcdefgh'[file(self.fr)] + 'x'
+                san += 'abcdefgh'[file_(self.fr)] + 'x'
             san += sq_to_str(self.to)
             if self.prom:
                 san += '=' + self.prom.upper()
@@ -277,9 +288,9 @@ class Move(object):
             assert(len(ambigs) >= 1)
             if len(ambigs) > 1:
                 r = rank(self.fr)
-                f = file(self.fr)
+                f = file_(self.fr)
                 # try disambiguating with file
-                if len(filter(lambda sq: file(sq) == f, ambigs)) == 1:
+                if len(filter(lambda sq: file_(sq) == f, ambigs)) == 1:
                     san += 'abcdefgh'[f]
                 elif len(filter(lambda sq: rank(sq) == r, ambigs)) == 1:
                     san += '12345678'[r]
@@ -336,9 +347,11 @@ class Move(object):
         else:
             return True
 
+
 class Undo(object):
     """information needed to undo a move"""
     pass
+
 
 class PositionHistory(object):
     """keeps past of past positions for repetition detection"""
@@ -361,6 +374,7 @@ class PositionHistory(object):
 
     def get_move(self, ply):
         return self.moves[ply]
+
 
 class Position(object):
     def __init__(self, fen):
@@ -400,12 +414,12 @@ class Position(object):
                         self.material[piece_is_white(c)] += \
                             piece_material[c.lower()]
                         if c == 'k':
-                            if self.king_pos[0] != None:
+                            if self.king_pos[0] is not None:
                                 # multiple kings
                                 raise BadFenError()
                             self.king_pos[0] = sq
                         elif c == 'K':
-                            if self.king_pos[1] != None:
+                            if self.king_pos[1] is not None:
                                 # multiple kings
                                 raise BadFenError()
                             self.king_pos[1] = sq
@@ -491,7 +505,6 @@ class Position(object):
                 if self.is_checkmate or self.is_stalemate \
                         or self.is_draw_nomaterial:
                     raise BadFenError('got a terminal position')
-
 
         except AssertionError:
             raise
@@ -601,7 +614,7 @@ class Position(object):
             self.ep = mv.new_ep
             self.hash ^= zobrist.ep_hash(self.ep)
 
-        self.history.set_move(self.ply - 1 , mv)
+        self.history.set_move(self.ply - 1, mv)
         #assert(self.hash == self._compute_hash())
         self.history.set_hash(self.ply, self.hash)
 
@@ -719,7 +732,6 @@ class Position(object):
                 elif pc == 'p':
                     self.black_has_mating_material = True
 
-
     def get_last_move(self):
         return self.history.get_move(self.ply - 1)
 
@@ -734,7 +746,6 @@ class Position(object):
         for (sq, pc) in self:
             #if pc != '-' and piece_is_white(pc) == self.wtm:
             if pc not in ['-', 'K', 'k'] and piece_is_white(pc) == self.wtm:
-                cur_sq = sq
                 if self._any_pc_moves(sq, pc):
                     return True
         return False
@@ -820,7 +831,7 @@ class Position(object):
 
         # bishop/queen attacks
         for d in piece_moves['b']:
-            cur_sq = sq +d
+            cur_sq = sq + d
             while valid_sq(cur_sq):
                 if self.board[cur_sq] != '-':
                     if wtm:
@@ -832,7 +843,6 @@ class Position(object):
                     # square blocked
                     break
                 cur_sq += d
-
 
         # rook/queen attacks
         for d in piece_moves['r']:
@@ -890,7 +900,6 @@ class Position(object):
     decorator_re = re.compile(r'[\+#\?\!]+$')
     def move_from_san(self, s):
         s = self.decorator_re.sub('', s)
-        matched = False
         mv = None
 
         # examples: e4 e8=Q
@@ -958,7 +967,7 @@ class Position(object):
                     raise IllegalMoveError('bad pawn capture')
 
             f = 'abcdefgh'.index(m.group(1))
-            if f == file(to) - 1:
+            if f == file_(to) - 1:
                 if self.wtm:
                     fr = to - 0x11
                     if self.board[fr] != 'P':
@@ -967,7 +976,7 @@ class Position(object):
                     fr = to + 0xf
                     if self.board[fr] != 'p':
                         raise IllegalMoveError('bad pawn capture')
-            elif f == file(to) + 1:
+            elif f == file_(to) + 1:
                 if self.wtm:
                     fr = to - 0xf
                     if self.board[fr] != 'P':
@@ -1006,7 +1015,7 @@ class Position(object):
                 if len(froms) <= 1:
                     raise IllegalMoveError('unnecessary disambiguation')
                 f = 'abcdefgh'.index(m.group(2))
-                froms = filter(lambda sq: file(sq) == f, froms)
+                froms = filter(lambda sq: file_(sq) == f, froms)
 
             if m.group(3):
                 r = '12345678'.index(m.group(3))
@@ -1108,14 +1117,14 @@ class Position(object):
         # own turn.)  My idea is to only check the previous position
         # when the player making the draw offer has the move, to avoid
         # a situation like the following:
-        # 
-        # Player A has the move.  The current position represents a 
+        #
+        # Player A has the move.  The current position represents a
         # threefold repetition, so player A is entitled to claim a draw.
         # Instead, Player A decides to press on, and plays a blunder
         # that loses his queen.  Player A realizes the mistake before
         # the opponent has a chance to move, and claims a draw.
         #
-        # The old fics grants the draw request, unreasonably in my 
+        # The old fics grants the draw request, unreasonably in my
         # opinion.  My change should close the loophole.
         if self.ply > 8 and (side == WHITE) == self.wtm:
             count = 0
@@ -1129,7 +1138,7 @@ class Position(object):
                 i -= 2
 
         return False
-    
+
     def to_xfen(self):
         p = []
         for r in range(7, -1, -1):
@@ -1212,7 +1221,7 @@ class Chess(BaseVariant):
             if not mv:
                 mv = self.pos.move_from_lalg(s)
 
-        except IllegalMoveError as e:
+        except IllegalMoveError:
             #print e.reason
             raise
 
@@ -1248,6 +1257,7 @@ class Chess(BaseVariant):
             last_mv.to_smith(), last_mv_time, clock, last_mv.lag)
 
         return s
+
 
 def init_direction_table():
     for r in range(8):

@@ -19,8 +19,9 @@
 import admin
 import channel
 import global_
+import config
 
-from config import config
+from twisted.internet import defer
 
 # parameter format (taken from Lasker)
 # w - a word
@@ -33,21 +34,23 @@ from config import config
 # t - optional string to end
 # lowercase <-> case-insensitive
 
+
 class Command(object):
     def __init__(self, name, param_str, admin_level):
         assert(hasattr(self, 'run'))
         self.name = name
         self.param_str = param_str
         self.admin_level = admin_level
-        global_.command_list.admin_cmds[name] = self
+        global_.admin_commands[name] = self
         if admin_level <= admin.Level.user:
-            global_.command_list.cmds[name] = self
+            global_.commands[name] = self
 
     def help(self, conn):
         conn.write("help for %s\n" % self.name)
 
     def usage(self, conn):
         conn.write("Usage: TODO for %s\n" % self.name)
+
 
 class ics_command(object):
     def __init__(self, name, param_str, admin_level=admin.Level.user):
@@ -67,55 +70,21 @@ class ics_command(object):
 
 # hack around bug in twisted.python.rebuild that occurs when this is a
 # nested function
+
+
 def wrapped_f(*args):
     raise RuntimeError('command objects should not be instantiated directly')
+
 
 def requires_registration(f):
     def check_reg(self, args, conn):
         if conn.user.is_guest:
             conn.write(_("Only registered players can use the %s command.\n") % self.name)
+            return None
         else:
-            f(self, args, conn)
+            return f(self, args, conn)
     return check_reg
 
-@ics_command('alias', 'oT', admin.Level.user)
-class Alias(Command):
-    def run(self, args, conn):
-        if args[0] is None:
-            # show list of aliases
-            if len(conn.user.aliases) == 0:
-                conn.write(_('You have no aliases.\n'))
-            else:
-                conn.write(_('Aliases:\n'))
-                for (k, v) in conn.user.aliases.iteritems():
-                    conn.write(_("%s -> %s\n") % (k, v))
-            return
-
-        aname = args[0]
-        assert(aname == aname.lower())
-        if not 1 <= len(aname) < 16:
-            conn.write(_("Alias names may not be more than 15 characters long.\n"))
-            return
-
-        if aname in ['quit', 'unalias']:
-            conn.write(_('You cannot use "%s" as an alias.\n') % aname)
-
-        if args[1] is None:
-            # show alias value
-            if aname not in conn.user.aliases:
-                conn.write(_('You have no alias named "%s".\n') % aname)
-            else:
-                conn.write(_("%s -> %s\n") % (aname,
-                    conn.user.aliases[aname]))
-            return
-
-        # set alias value
-        was_set = aname in conn.user.aliases
-        conn.user.set_alias(aname, args[1])
-        if was_set:
-            conn.write(_('Alias "%s" changed.\n') % aname)
-        else:
-            conn.write(_('Alias "%s" set.\n') % aname)
 
 @ics_command('limits', '')
 class Limits(Command):
@@ -128,36 +97,27 @@ class Limits(Command):
             {'umax': config.maxplayer - config.admin_reserve,
                 'amax': config.admin_reserve})
 
+
 @ics_command('password', 'WW')
 class Password(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.is_guest:
             conn.write(_("Setting a password is only for registered players.\n"))
         else:
             [oldpass, newpass] = args
-            if not conn.user.check_passwd(oldpass):
+            passed = yield conn.user.check_passwd(oldpass)
+            if not passed:
                 conn.write(_("Incorrect password; password not changed!\n"))
             else:
-                conn.user.set_passwd(newpass)
+                yield conn.user.set_passwd(newpass)
                 conn.write(_("Password changed to %s.\n") % ('*' * len(newpass)))
+
 
 @ics_command('quit', '', admin.Level.user)
 class Quit(Command):
     def run(self, args, conn):
         conn.loseConnection('quit')
 
-@ics_command('unalias', 'w', admin.Level.user)
-class Unalias(Command):
-    def run(self, args, conn):
-        aname = args[0]
-        if not 1 <= len(aname) < 16:
-            conn.write(_("Alias names may not be more than 15 characters long.\n"))
-            return
-
-        if aname not in conn.user.aliases:
-            conn.write(_('You have no alias "%s".\n') % aname)
-        else:
-            conn.user.set_alias(aname, None)
-            conn.write(_('Alias "%s" unset.\n') % aname)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

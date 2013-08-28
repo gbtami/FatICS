@@ -22,10 +22,10 @@ import pytz
 import time
 
 import time_format
+import server
 
 from .command import ics_command, Command
 
-from server import server
 
 @ics_command('date', '')
 class Date(Command):
@@ -38,6 +38,7 @@ class Date(Command):
         # same as above, just included in case scripts parse it
         #conn.write(_("GMT            - %s\n") %
         #    dt.strftime("%a %b %e, %H:%M GMT %Y"))
+
 
 @ics_command('uptime', '')
 class Uptime(Command):

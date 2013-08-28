@@ -33,9 +33,28 @@ class CommandTest(Test):
         t.write('addplayer testplayer nobody@example.com Foo Bar\n')
         self.expect('already registered', t)
 
+        t.write('finger testplayer\n')
+        self.expect('Finger of TestPlayer:', t)
+
+        t.write('raisedead testplayer\n')
+        self.expect('already registered', t)
 
         t.write('remplayer testplayer\n')
         self.expect('Player TestPlayer removed.', t)
+
+        t.write('finger testplayer\n')
+        self.expect('There is no player matching the name', t)
+
+        t.write('raisedead testplayer\n')
+        # XXX capitalization
+        self.expect('Player testplayer raised.', t)
+
+        t.write('finger testplayer\n')
+        self.expect('Finger of TestPlayer:', t)
+
+        t.write('remplayer testplayer\n')
+        self.expect('Player TestPlayer removed.', t)
+
         self.close(t)
 
     def test_announce(self):
@@ -71,16 +90,20 @@ class CommandTest(Test):
         t = self.connect_as_admin()
 
         t.write('nuke 123\n')
-        self.expect('not a valid handle', t)
+        self.expect('No player named', t)
 
         t.write('nuke guesttest\n')
-        self.expect('no player matching', t)
+        self.expect('No player named', t)
 
         t2 = self.connect_as_guest('GuestTest')
         t.write('nuke guesttest\n')
         self.expect('You have been kicked out', t2)
+        self.expect_EOF(t2)
         self.expect('Nuked: GuestTest', t)
         t2.close()
+
+        t.write('nuke guesttest\n')
+        self.expect('No player named "guesttest" is online.', t)
 
         t2 = self.connect_as_guest('GuestTest')
         t.write('asetadmin guesttest 100\n')
@@ -96,14 +119,14 @@ class CommandTest(Test):
         t2 = self.connect_as('testplayer')
 
         t.write('nuke testplayer\n')
-        self.expect('You have been kicked out', t2)
+        self.expect('You have been kicked out by admin', t2)
         self.expect('Nuked: TestPlayer', t)
 
         t.write('showcomment testplayer\n')
         self.expect_re('admin at .*: Nuked', t)
 
         self.close(t)
-        self.close(t2)
+        self.expect_EOF(t2)
 
     @with_player('testplayer')
     def test_asetpass(self):
@@ -295,6 +318,31 @@ class CommandTest(Test):
 
         self.close(t)
 
+    def test_asetv(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestABCD')
+
+        t.write('asetv guestabcd pin\n')
+        self.expect('Usage:', t)
+
+        t.write('asetv doesnotexist pin 1\n')
+        self.expect('There is no player matching the name "doesnotexist".', t)
+
+        t.write('asetv guestabcd pin foo\n')
+        self.expect('Bad value', t)
+
+        t.write('asetv guestabcd t foo\n')
+        self.expect('Ambiguous', t)
+
+        t.write('asetv guestabcd pin 1\n')
+        self.expect('Command issued as GuestABCD', t)
+        self.expect('You will now hear logins/logouts.', t2)
+        self.close(t)
+
+        self.expect('[admin has disconnected.]', t2)
+
+        self.close(t2)
+
 class PermissionsTest(Test):
     def test_permissions(self):
         t = self.connect_as_guest()
@@ -310,9 +358,12 @@ class CommentTest(Test):
         t.write('showcomment testplayer\n')
         self.expect('There are no comments for TestPlayer.', t)
 
-        t.write('addcomment testplay This is a test comment.\n')
+        t.write('addcomment testplayer This is a test comment.\n')
         self.expect('Comment added for TestPlayer.', t)
         time.sleep(1)
+        t.write('addcomment testplay Partial names not accepted.\n')
+        self.expect('no player matching the name', t)
+
         t.write('addcomment testplayer Comment #2\n')
         self.expect('Comment added for TestPlayer.', t)
 
@@ -350,6 +401,7 @@ class BanTest(Test):
         t.write('+ban testplayer\n')
         self.expect('TestPlayer added to the ban list.', t)
         self.expect('Note: TestPlayer is online.', t)
+        # XXX original FICS also sends "You have been added to the ban list by admin."
         t.write('+ban testplayer\n')
         self.expect('TestPlayer is already on the ban list.', t)
         t.write('nuke testplayer\n')
@@ -953,7 +1005,7 @@ class FtellTest(Test):
         self.expect('You were not forwarding a conversation.', t)
 
         t.write('ftell doesnotexist\n')
-        self.expect('no player matching', t)
+        self.expect('No player named "doesnotexist" is online', t)
 
         t.write('ftell admin\n')
         self.expect('talking to yourself', t)
@@ -1023,7 +1075,7 @@ class ChkipTest(Test):
         t.write('chkip\n')
         self.expect('Usage:', t)
         t.write('chkip doesnotexist\n')
-        self.expect('no player', t)
+        self.expect('No player named "doesnotexist" is online', t)
         t.write('chkip admin\n')
         self.expect_re('admin +%s' % LOCAL_IP, t)
         t.write('chkip %s\n' % LOCAL_IP)

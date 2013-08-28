@@ -31,6 +31,9 @@ class TestUtf8(Test):
         t.write('shout \x00\n')
         self.expect("invalid characters", t)
 
+        t.write('shout test\n')
+        self.expect('shouts: test\r\n', t)
+
         self.close(t)
 
     def test_utf8(self):

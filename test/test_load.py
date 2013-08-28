@@ -27,8 +27,8 @@ linux 2.6 and epoll.
 import sys
 import time
 
-from twisted.internet import epollreactor
-epollreactor.install()
+#from twisted.internet import epollreactor
+#epollreactor.install()
 
 from twisted.trial import unittest
 from twisted.internet import protocol, defer

@@ -19,15 +19,15 @@
 
 from .command import Command, ics_command
 
-import global_
-import user
+import find_user
 
-from command_parser import BadCommandError
+from parser import BadCommandError
+
 
 @ics_command('summon', 'w')
 class Summon(Command):
     def run(self, args, conn):
-        u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+        u = find_user.online_by_prefix_for_user(args[0], conn)
         if not u:
             return
         if u == conn.user:
@@ -44,29 +44,45 @@ class Summon(Command):
         conn.write(_('Summoning sent to "%s".\n') % u.name)
         conn.user.add_idlenotification(u)
 
+
 @ics_command('znotify', 'o')
 class Znotify(Command):
     def run(self, args, conn):
         if args[0] is not None:
             if args[0] != 'n':
                 raise BadCommandError()
-            show_idle = True
-        else:
             show_idle = False
-        notifiers = [name for name in conn.user.notifiers
-            if global_.online.is_online(name)]
-        if len(notifiers) == 0:
-            conn.write(_('No one from your notify list is logged on.\n'))
         else:
+            show_idle = True
+        notifiers = conn.user.session.notifiers_online
+        if notifiers:
+            idle_str = _('%(name)s(idle:%(mins)dm)')
+            if show_idle:
+                ngen = ({'name': u.name,
+                    'mins': u.session.get_idle_time() // 60} for u in notifiers)
+                notify_str = ' '.join(
+                    (idle_str % n if n['mins'] > 5 else n['name']
+                    for n in ngen))
+            else:
+                notify_str = ' '.join((u.name for u in notifiers))
             conn.write(_('Present company on your notify list:\n   %s\n') %
-                ' '.join(notifiers))
-
-        name = conn.user.name
-        notified = [u.name for u in global_.online if name in u.notifiers]
-        if len(notified) == 0:
-            conn.write(_('No one logged in has you on their notify list.\n'))
+                notify_str)
         else:
+            conn.write(_('No one from your notify list is logged on.\n'))
+
+        notified = conn.user.session.notified_online
+        if notified:
+            if show_idle:
+                ngen = ({'name': u.name,
+                    'mins': u.session.get_idle_time() // 60} for u in notified)
+                notify_str = ' '.join(
+                    (idle_str % n if n['mins'] > 5 else n['name']
+                    for n in ngen))
+            else:
+                notify_str = ' '.join((u.name for u in notified))
             conn.write(_('The following players have you on their notify list:\n   %s\n') %
-                ' '.join(notified))
+                notify_str)
+        else:
+            conn.write(_('No one logged in has you on their notify list.\n'))
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

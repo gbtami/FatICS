@@ -32,12 +32,20 @@ of formulas, which I tried to emulate.
 """
 import re
 
+from game_constants import WHITE, BLACK
+
 all_tokens = {}
+
+
+# pacify pyflakes
+token = nextt = chal = f_num = 0
+
 
 class FormulaError(Exception):
     def __init__(self, msg):
         super(FormulaError, self).__init__()
         self.msg = msg
+
 
 class Symbol(object):
     tokens = []
@@ -46,6 +54,7 @@ class Symbol(object):
 
     def led(self, left):
         raise FormulaError('unexpected use as binary operator')
+
 
 class Token(object):
     """ decorator that registers tokens for the tokenizer """
@@ -59,11 +68,13 @@ class Token(object):
             cls(*args)
         return new_cls
 
+
 class NumSymbol(Symbol):
     def __init__(self, val):
         self.val = val
     def nud(self):
         return self.val
+
 
 def advance(sym):
     global token
@@ -71,11 +82,13 @@ def advance(sym):
         raise FormulaError('expected %s' % sym)
     token = nextt()
 
+
 @Token(['!'])
 class NotSymbol(Symbol):
     lbp = 90
     def nud(self):
         return not expression(90)
+
 
 @Token(['*'])
 class MultSymbol(Symbol):
@@ -83,6 +96,7 @@ class MultSymbol(Symbol):
     def led(self, left):
         right = expression(80)
         return left * right
+
 
 @Token(['/'])
 class DivSymbol(Symbol):
@@ -92,6 +106,7 @@ class DivSymbol(Symbol):
         if right == 0:
             right = .001 # fudge factor
         return left // right
+
 
 @Token(['+'])
 class AddSymbol(Symbol):
@@ -103,6 +118,7 @@ class AddSymbol(Symbol):
         right = expression(70)
         return left + right
 
+
 @Token(['-'])
 class SubSymbol(Symbol):
     lbp = 70
@@ -113,12 +129,14 @@ class SubSymbol(Symbol):
         right = expression(70)
         return left - right
 
+
 @Token(['<'])
 class LTSymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
         return left < right
+
 
 @Token(['<=', '=<'])
 class LTESymbol(Symbol):
@@ -127,12 +145,14 @@ class LTESymbol(Symbol):
         right = expression(60)
         return left <= right
 
+
 @Token(['>'])
 class GTSymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
         return left > right
+
 
 @Token(['>=', '=>'])
 class GTESymbol(Symbol):
@@ -141,12 +161,14 @@ class GTESymbol(Symbol):
         right = expression(60)
         return left >= right
 
+
 @Token(['=', '=='])
 class EqSymbol(Symbol):
     lbp = 50
     def led(self, left):
         right = expression(50)
         return left == right
+
 
 @Token(['!=', '<>'])
 class NeqSymbol(Symbol):
@@ -155,6 +177,7 @@ class NeqSymbol(Symbol):
         right = expression(40)
         return left != right
 
+
 @Token(['&', '&&', 'and'])
 class AndSymbol(Symbol):
     lbp = 30
@@ -162,12 +185,14 @@ class AndSymbol(Symbol):
         right = expression(30)
         return left and right
 
+
 @Token(['|', '||', 'or'])
 class OrSymbol(Symbol):
     lbp = 20
     def led(self, left):
         right = expression(20)
         return left or right
+
 
 @Token(['('])
 class LParenSymbol(Symbol):
@@ -177,12 +202,15 @@ class LParenSymbol(Symbol):
         advance(')')
         return expr
 
+
 @Token([')'])
 class RParenSymbol(Symbol):
     lbp = 0
 
+
 class EndSymbol(Symbol):
     lbp = 0
+
 
 @Token(['abuser'])
 class AbuserSymbol(Symbol):
@@ -190,11 +218,13 @@ class AbuserSymbol(Symbol):
     def nud(self):
         return chal.a.has_title('abuser') if chal else None
 
+
 @Token(['computer'])
 class ComputerSymbol(Symbol):
     lbp = 0
     def nud(self):
         return chal.a.has_title('computer') if chal else None
+
 
 @Token(['time'])
 class TimeSymbol(Symbol):
@@ -202,11 +232,13 @@ class TimeSymbol(Symbol):
     def nud(self):
         return chal.time if chal else None
 
+
 @Token(['inc'])
 class IncSymbol(Symbol):
     lbp = 0
     def nud(self):
         return chal.inc if chal else None
+
 
 @Token(['rating'])
 class RatingSymbol(Symbol):
@@ -214,11 +246,13 @@ class RatingSymbol(Symbol):
     def nud(self):
         return int(chal.a.get_rating(chal.speed_variant)) if chal else None
 
+
 @Token(['myrating'])
 class MyratingSymbol(Symbol):
     lbp = 0
     def nud(self):
         return int(chal.b.get_rating(chal.speed_variant)) if chal else None
+
 
 @Token(['ratingdiff'])
 class RatingdiffSymbol(Symbol):
@@ -227,11 +261,13 @@ class RatingdiffSymbol(Symbol):
         return (int(chal.a.get_rating(chal.speed_variant)) -
             int(chal.b.get_rating(chal.speed_variant))) if chal else None
 
+
 @Token(['white'])
 class WhiteSymbol(Symbol):
     lbp = 0
     def nud(self):
         return chal.side == WHITE if chal else None
+
 
 @Token(['black'])
 class BlackSymbol(Symbol):
@@ -239,17 +275,20 @@ class BlackSymbol(Symbol):
     def nud(self):
         return chal.side == BLACK if chal else None
 
+
 @Token(['nocolor'])
 class NocolorSymbol(Symbol):
     lbp = 0
     def nud(self):
         return (chal.side not in [WHITE, BLACK]) if chal else None
 
+
 @Token(['slow'])
-class StandardSymbol(Symbol):
+class SlowSymbol(Symbol):
     lbp = 0
     def nud(self):
         return chal.speed_name == 'slow' if chal else None
+
 
 @Token(['standard'])
 class StandardSymbol(Symbol):
@@ -257,11 +296,13 @@ class StandardSymbol(Symbol):
     def nud(self):
         return chal.speed_name == 'standard' if chal else None
 
+
 @Token(['blitz'])
 class BlitzSymbol(Symbol):
     lbp = 0
     def nud(self):
         return chal.speed_name == 'blitz' if chal else None
+
 
 @Token(['lightning'])
 class LightningSymbol(Symbol):
@@ -269,11 +310,13 @@ class LightningSymbol(Symbol):
     def nud(self):
         return chal.speed_name == 'lightning' if chal else None
 
+
 @Token(['registered'])
 class RegisteredSymbol(Symbol):
     lbp = 0
     def nud(self):
         return (0 if chal.a.is_guest else 1) if chal else None
+
 
 @Token(['timeseal'])
 class TimesealSymbol(Symbol):
@@ -281,11 +324,13 @@ class TimesealSymbol(Symbol):
     def nud(self):
         return chal.a.has_timeseal() if chal else None
 
+
 @Token(['crazyhouse'])
 class CrazyhouseSymbol(Symbol):
     lbp = 0
     def nud(self):
         return chal.variant.name == 'crazyhouse' if chal else None
+
 
 class FSymbol(Symbol):
     lbp = 0
@@ -300,12 +345,13 @@ class FSymbol(Symbol):
             return None
         old_token = token
         old_nextt = nextt
-        ret = check_formula(chal, chal.b.vars['f' + str(self.num)], self.num)
+        ret = check_formula(chal, chal.b.vars_['f' + str(self.num)], self.num)
         token = old_token
         nextt = old_nextt
         return ret
 
-def expression(rbp = 0):
+
+def expression(rbp=0):
     global token, nextt
     t = token
     try:
@@ -324,6 +370,8 @@ def expression(rbp = 0):
     return left
 
 escaped_re = re.compile(r'([*+()|])')
+
+
 def re_escape(s):
     return escaped_re.sub(r'\\\1', s)
 
@@ -332,6 +380,8 @@ fvar_re = re.compile(r'^f([1-9])(.*)')
 minute_re = re.compile(r'^\s*minutes?(.*)')
 tokenize_re = re.compile('^(' + '|'.join([re_escape(k) for k in sorted(list(all_tokens.keys()), key=len, reverse=True)]) + ')(.*)')
 comment_re = re.compile('#.*')
+
+
 def tokenize(s):
     s = comment_re.sub('', s)
     while True:
@@ -364,6 +414,7 @@ def tokenize(s):
 
         raise FormulaError('Error parsing formula')
     yield EndSymbol()
+
 
 def check_formula(chal_, s, num=0):
     """ Check whether the challenge CHAL_ meets the formula described by S.

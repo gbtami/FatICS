@@ -72,6 +72,13 @@ class FingerTest(Test):
         t2.write('finger ad\n')
         self.expect('Matches: admin admintwo', t2)
         self.close(t2)
+
+        t3 = self.connect_as_guest('adminthree')
+        t3.write('f admi\n')
+        # ignores admintwo, who is offline
+        self.expect('Matches: admin adminthree\r\n', t3)
+        self.close(t3)
+
         self.close(t)
 
         # ambiguous, both users offline

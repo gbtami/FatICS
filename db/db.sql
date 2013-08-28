@@ -95,6 +95,9 @@ CREATE TABLE `user_log` (
   KEY (`log_when`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `removed_user`;
+CREATE TABLE `removed_user` LIKE `user`;
+
 DROP TABLE IF EXISTS `formula`;
 CREATE TABLE `formula` (
   `formula_id` int(8) NOT NULL AUTO_INCREMENT,

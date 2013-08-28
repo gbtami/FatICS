@@ -41,6 +41,9 @@ class TestTime(Test):
         t.write('time\n')
         self.expect('You are not playing', t)
 
+        t.write('time admin\n')
+        self.expect('admin is not playing', t)
+
         t.write('match testp white 0+1\n')
         self.expect('Challenge:', t2)
         t2.write('accept\n')
@@ -335,5 +338,104 @@ class TestFlag(Test):
         self.close(t)
         self.close(t2)
 
+class TestMinmovetime(Test):
+    def test_minmovetime_on(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
+        t.write('iset ms 1\n')
+        self.expect('ms set.', t)
+        t2.write('iset ms 1\n')
+        self.expect('ms set.', t2)
+
+        t.write('set minmovetime 0\n')
+        self.expect('You will not request minimum move time when games start.', t)
+        t2.write('set minmovetime 0\n')
+        self.expect('You will not request minimum move time when games start.', t2)
+        t2.write('match guestabcd 1 0 black\n')
+        self.expect('Challenge:', t)
+        t.write('a\n')
+
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+        self.expect('<12> ', t)
+        self.expect('<12> ', t2)
+
+        t.write('e4\n')
+        self.expect('(0:00.000) e4', t)
+        self.expect('(0:00.000) e4', t2)
+
+        t2.write('c5\n')
+        self.expect('(0:00.000) c5', t)
+        self.expect('(0:00.000) c5', t2)
+
+        t.write('Nf3\n')
+        m = self.expect_re('\(0:(\d\d\.\d\d\d)\) Nf3', t)
+        secs = float(m.group(1))
+        self.assert_(secs < 0.09)
+
+        t2.write('e6\n')
+        m = self.expect_re('\(0:(\d\d\.\d\d\d)\) e6', t2)
+        secs = float(m.group(1))
+        self.assert_(secs < 0.09)
+
+        t.write('abo\n')
+        t2.write('abo\n')
+        self.expect('aborted', t)
+
+        self.close(t)
+        self.close(t2)
+
+    def test_minmovetime_off(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
+        t.write('iset ms 1\n')
+        self.expect('ms set.', t)
+        t2.write('iset ms 1\n')
+        self.expect('ms set.', t2)
+
+        t.write('set minmovetime 0\n')
+        self.expect('You will not request minimum move time when games start.', t)
+        # t2 does not set minmovetime, so it is not used
+        t2.write('match guestabcd 1 0 black\n')
+        self.expect('Challenge:', t)
+        t.write('a\n')
+
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+        self.expect('<12> ', t)
+        self.expect('<12> ', t2)
+
+        t.write('e4\n')
+        self.expect('(0:00.000) e4', t)
+        self.expect('(0:00.000) e4', t2)
+
+        t2.write('c5\n')
+        self.expect('(0:00.000) c5', t)
+        self.expect('(0:00.000) c5', t2)
+
+        t.write('Nf3\n')
+        m = self.expect_re('\(0:(\d\d\.\d\d\d)\) Nf3', t)
+        secs = float(m.group(1))
+        self.assert_(secs == 0.1)
+
+        t2.write('e6\n')
+        m = self.expect_re('\(0:(\d\d\.\d\d\d)\) e6', t2)
+        secs = float(m.group(1))
+        self.assert_(secs == 0.1)
+
+        t.write('abo\n')
+        t2.write('abo\n')
+        self.expect('aborted', t)
+
+        self.close(t)
+        self.close(t2)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

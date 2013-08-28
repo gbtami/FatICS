@@ -19,6 +19,7 @@
 """Define admin levels and provide routines that
 check them."""
 
+
 class Level(object):
     """represents admin levels"""
     user = 10
@@ -41,18 +42,19 @@ class Level(object):
             return _('Unknown (%d)') % lvl
 level = Level()
 
-class Checker(object):
-    '''Check whether one admin can perform an operation on
-    another.'''
-    def check_user_operation(self, byuser, touser):
-        return self.check_level(byuser.admin_level, touser.admin_level)
-    
-    def check_level(self, by_level, to_level):
-        if by_level >= Level.god and to_level < Level.head:
-            return True
-        else:
-            return by_level > to_level
 
-checker = Checker()
+'''Check whether one admin can perform an operation on
+another.'''
+
+
+def check_user_operation(byuser, touser):
+    return check_level(byuser.admin_level, touser.admin_level)
+
+
+def check_level(by_level, to_level):
+    if by_level >= Level.god and to_level < Level.head:
+        return True
+    else:
+        return by_level > to_level
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

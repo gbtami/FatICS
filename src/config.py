@@ -17,37 +17,38 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-class Config(object):
-    port = 5001
-    compatibility_port = 5000
-    ssl_port = 5004
-    websocket_port = 8080
+port = 5001
+compatibility_port = 5000
+ssl_port = 5004
+websocket_port = 8080
 
-    db_host = "localhost"
-    db_db = "chess"
+db_host = "localhost"
+db_db = "chess"
 
-    # login timout in seconds
-    login_timeout = 30
-    min_login_name_len = 3
+log_directory = "./log"
 
-    # max idle time in seconds
-    idle_timeout = 60 * 60
+# login timout in seconds
+login_timeout = 30
+min_login_name_len = 3
+max_login_name_len = 17
 
-    # maximum number of players connected to the server at once
-    maxplayer = 49
+# max idle time in seconds
+idle_timeout = 60 * 60
 
-    # number of connections reserved for admins
-    admin_reserve = 5
+# maximum number of players connected to the server at once
+maxplayer = 49
 
-    # maximum number of guests
-    maxguest = 10
+# number of connections reserved for admins
+admin_reserve = 5
 
-    # limit on number of channels one user can own
-    max_channels_owned = 8
+# maximum number of guests
+maxguest = 10
 
-    prompt = 'fics% '
+# limit on number of channels one user can own
+max_channels_owned = 8
 
-config = Config()
-assert(config.admin_reserve + config.maxguest <= config.maxplayer)
+prompt = 'fics% '
+
+assert(admin_reserve + maxguest <= maxplayer)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

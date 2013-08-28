@@ -17,14 +17,15 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import user
+import find_user
 import partner
 import global_
 import speed_variant
 
-from command_parser import BadCommandError
+from parser import BadCommandError
 from .command import Command, ics_command
 from .tell_command import ToldMixin
+
 
 @ics_command('partner', 'o')
 class Partner(Command):
@@ -38,7 +39,7 @@ class Partner(Command):
             else:
                 conn.write(_('You do not have a bughouse partner.\n'))
         else:
-            u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+            u = find_user.online_by_prefix_for_user(args[0], conn)
             if not u:
                 return
 
@@ -57,14 +58,18 @@ class Partner(Command):
                 conn.write(_('%s already has a partner.\n') % u.name)
                 return
 
-            if not u.vars['bugopen']:
+            if not u.vars_['bugopen']:
                 conn.write(_('%s is not open for bughouse.\n') % u.name)
                 return
-            if not conn.user.vars['bugopen']:
+            if not conn.user.vars_['bugopen']:
                 conn.write(_('Setting you open for bughouse.\n'))
-                global_.vars_['bugopen'].set(conn.user, '1')
+                # A deferred is returned for API reasons, but it is
+                # not really needed here.
+                d = global_.vars_['bugopen'].set(conn.user, '1')
+                assert(d.called)
 
             partner.Partner(conn.user, u)
+
 
 @ics_command('ptell', 'S')
 class Ptell(Command, ToldMixin):
@@ -75,6 +80,7 @@ class Ptell(Command, ToldMixin):
         conn.user.session.partner.write_('\n%(name)s (your partner) tells you: %(msg)s\n',
             {'name': conn.user.get_display_name(), 'msg': args[0]})
         self._told(conn.user.session.partner, conn)
+
 
 @ics_command('bugwho', 'o')
 class Bugwho(Command):
@@ -103,7 +109,7 @@ class Bugwho(Command):
             count = 0
             for g in global_.games.values():
                 if g.variant.name == 'bughouse':
-                    # XXX 
+                    # XXX
                     conn.write('TODO\n')
                     count += 1
             conn.write(ngettext(' %d game displayed.\n',
@@ -123,7 +129,7 @@ class Bugwho(Command):
 
         if u_:
             conn.write(_('Unpartnered players with bugopen on\n'))
-            ulist = sorted([u for u in global_.online if u.vars['bugopen'] and
+            ulist = sorted([u for u in global_.online if u.vars_['bugopen'] and
                 not u.session.partner], key=lambda u: u.name)
             for u in ulist:
                 conn.write('%s %s\n' %

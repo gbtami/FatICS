@@ -19,19 +19,21 @@
 
 import re
 
+from twisted.internet import defer
+
 import offer
 import game
+import block_codes
+import db
 
-from command_parser import BadCommandError
 from .command import ics_command, Command
-from game_constants import opp
-from db import db
+from game_constants import opp, PLAYED
 
 
 class GameMixin(object):
     def _get_played_game(self, conn):
         g = conn.user.session.game
-        if not g or g.gtype != game.PLAYED:
+        if not g or g.gtype != PLAYED:
             g = None
             conn.write(_("You are not playing a game.\n"))
         return g
@@ -67,6 +69,7 @@ class Abort(Command, GameMixin):
         else:
             offer.Abort(g, conn.user)
 
+
 @ics_command('adjourn', '')
 class Adjourn(Command, GameMixin):
     def run(self, args, conn):
@@ -79,6 +82,7 @@ class Adjourn(Command, GameMixin):
             return
         offer.Adjourn(g, conn.user)
 
+
 @ics_command('draw', 'o')
 class Draw(Command, GameMixin):
     def run(self, args, conn):
@@ -90,6 +94,7 @@ class Draw(Command, GameMixin):
         else:
             conn.write('TODO: DRAW PARAM\n')
 
+
 @ics_command('resign', 'o')
 class Resign(Command, GameMixin):
     def run(self, args, conn):
@@ -100,10 +105,13 @@ class Resign(Command, GameMixin):
         if g:
             g.resign(conn.user)
 
+
 @ics_command('eco', 'oo')
 class Eco(Command, GameMixin):
-    eco_pat = re.compile(r'[a-z][0-9][0-9][a-z]?')
+    eco_pat = re.compile(r'[a-e][0-9][0-9][a-z]?')
     nic_pat = re.compile(r'[a-z][a-z]\.[0-9][0-9]')
+
+    @defer.inlineCallbacks
     def run(self, args, conn):
         g = None
         if args[1] is not None:
@@ -113,15 +121,21 @@ class Eco(Command, GameMixin):
                 if not self.eco_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid ECO code.\n"))
                 else:
-                    rows = db.look_up_eco(args[1])
+                    rows = yield db.look_up_eco(args[1])
             elif args[0] == 'n':
                 if not self.nic_pat.match(args[1]):
                     conn.write(_("You haven't specified a valid NIC code.\n"))
                 else:
-                    rows = db.look_up_nic(args[1])
+                    rows = yield db.look_up_nic(args[1])
             else:
-                raise BadCommandError()
+                self.usage(conn)
+                defer.returnValue(block_codes.BLKCMD_ERROR_BADCOMMAND)
+            first = True
             for row in rows:
+                if not first:
+                    conn.write('\n')
+                else:
+                    first = False
                 if row['eco'] is None:
                     row['eco'] = 'A00'
                 if row['nic'] is None:
@@ -129,7 +143,6 @@ class Eco(Command, GameMixin):
                 if row['long_'] is None:
                     row['long_'] = 'Unknown / not matched'
                 assert(row['fen'] is not None)
-                conn.write('\n')
                 conn.write('  ECO: %s\n' % row['eco'])
                 conn.write('  NIC: %s\n' % row['nic'])
                 conn.write(' LONG: %s\n' % row['long_'])
@@ -138,12 +151,13 @@ class Eco(Command, GameMixin):
             g = self._game_param(args[0], conn)
 
         if g:
-            (ply, eco, long) = g.get_eco()
-            (nicply, nic) = g.get_nic()
+            (ply, eco, long_) = yield g.get_eco()
+            (nicply, nic) = yield g.get_nic()
             conn.write(_('Eco for game %d (%s vs. %s):\n') % (g.number, g.white_name, g.black_name))
             conn.write(_(' ECO[%3d]: %s\n') % (ply, eco))
             conn.write(_(' NIC[%3d]: %s\n') % (nicply, nic))
-            conn.write(_('LONG[%3d]: %s\n') % (ply, long))
+            conn.write(_('LONG[%3d]: %s\n') % (ply, long_))
+
 
 @ics_command('moves', 'n')
 class Moves(Command, GameMixin):
@@ -151,6 +165,7 @@ class Moves(Command, GameMixin):
         g = self._game_param(args[0], conn)
         if g:
             g.write_moves(conn)
+
 
 @ics_command('moretime', 'd')
 class Moretime(Command, GameMixin):
@@ -163,6 +178,7 @@ class Moretime(Command, GameMixin):
             else:
                 g.moretime(secs, conn.user)
 
+
 @ics_command('flag', '')
 class Flag(Command):
     def run(self, args, conn):
@@ -173,12 +189,14 @@ class Flag(Command):
         if not g.clock.check_flag(g, opp(g.get_user_side(conn.user))):
             conn.write(_('Your opponent is not out of time.\n'))
 
+
 @ics_command('refresh', 'n')
 class Refresh(Command, GameMixin):
     def run(self, args, conn):
         g = self._game_param(args[0], conn)
         if g:
             g.send_board(conn.user, isolated=True)
+
 
 @ics_command('time', 'n')
 class Time(Command, GameMixin):
@@ -189,6 +207,7 @@ class Time(Command, GameMixin):
             g.send_info_str(conn.user)
             conn.write(_('White Clock : %s\n') % white_clock)
             conn.write(_('Black Clock : %s\n') % black_clock)
+
 
 @ics_command('ginfo', 'n')
 class Ginfo(Command, GameMixin):

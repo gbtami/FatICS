@@ -93,6 +93,11 @@ class TestMatch(Test):
         t.write('match guestefgh\n')
         self.expect('Challenge:', t2)
 
+        # setting open to true again should not change anything
+        t2.write('set open 1\n')
+        self.expect('now receiving', t2)
+        self.expect_not('removed', t2)
+
         t2.write('set open 0\n')
         # on original FICS, the order of the next two messages is reversed
         self.expect('You are no longer receiving match requests.', t2)
@@ -386,7 +391,10 @@ class TestMatch(Test):
         t.write('withdraw\n')
 
         t.write('match 1 0 admin white\n')
-        self.expect('"1" is not a valid handle', t)
+        self.expect('You need to specify at least', t)
+
+        t.write('match 11 0 admin white\n')
+        self.expect('"11" is not a valid handle', t)
 
         self.close(t)
         self.close(t2)

@@ -27,7 +27,7 @@ class TestPassword(Test):
 
         t = self.connect_as_admin()
         t.write('password wrongpass test\r\n')
-        self.expect("Incorrect", t)
+        self.expect("Incorrect password", t)
 
         t.write('password %s test\r\n' % admin_passwd)
         self.expect("changed", t)
@@ -37,6 +37,7 @@ class TestPassword(Test):
         t.write("admin\r\ntest\r\n")
         self.expect("fics%", t)
         t.write("password test %s\r\n" % admin_passwd)
+        self.expect("changed", t)
         self.close(t)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

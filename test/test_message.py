@@ -16,6 +16,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import time
+
 from test import *
 
 class TestMessage(Test):
@@ -57,8 +59,11 @@ class TestMessage(Test):
         self.expect(': This is an important message from admin.', t2)
         self.close(t2)
 
+        time.sleep(1)
         t.write('mess testplayer mess 2!\n')
+        time.sleep(1)
         t.write('mess testplayer mess 3!\n')
+        time.sleep(1)
         t.write('mess testplayer mess 4!\n')
         self.expect('mess 4!', t)
 
@@ -98,6 +103,7 @@ class TestMessage(Test):
         t2.write('clearmessages *\n')
         self.expect('Cleared 4 messages.', t2)
 
+        time.sleep(1)
         t2.write('mess admin Even more messages\n')
         self.expect(': Even more messages', t)
         self.expect(': Even more messages', t2)
@@ -124,7 +130,9 @@ class TestMessage(Test):
     def test_messages_unread(self):
         t = self.connect_as_admin()
         t.write('mess testplayer message #1\n')
+        time.sleep(1)
         t.write('mess testplayer message #2\n')
+        time.sleep(1)
         t.write('mess testplayer message #3\n')
         self.expect('message #3', t)
 
@@ -149,6 +157,7 @@ class TestMessage(Test):
         self.expect('Usage:', t2)
         self.close(t2)
 
+        time.sleep(1)
         t.write('mess testplayer message #4\n')
         self.expect('message #4', t)
         self.close(t)
@@ -167,8 +176,11 @@ class TestMessage(Test):
         self.expect('Cleared 0 messages.', t)
 
         t.write('mess testplayer message #1\n')
+        time.sleep(1)
         t.write('mess testplayer message #2\n')
+        time.sleep(1)
         t.write('mess testplayer message #3\n')
+        time.sleep(1)
         t.write('mess testplayer message #4\n')
         self.expect('message #4', t)
 
