@@ -21,6 +21,7 @@
 
 from twisted.internet import defer
 
+import server
 import find_user
 import trie
 import list_
@@ -90,6 +91,7 @@ command # pacify pyflakes
 
 @defer.inlineCallbacks
 def init():
+    server.init()
     db.init()
     yield channel.init()
     yield filter_.init()

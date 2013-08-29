@@ -19,18 +19,28 @@
 import time
 import subprocess
 
-location = "Fremont, California, USA"
-try:
-    #version = subprocess.check_output(["hg", "parents", "--template",
-    #    "r{rev} ({date|isodate})"])
-    version = subprocess.Popen(["hg", "parents", "--template",
-        "r{rev} ({date|isodate})"],
-        stdout=subprocess.PIPE).communicate()[0]
-except:
-    raise
-    version = "unknown"
+VERSION = "0.1"
+hg_label = None
 
-start_time = time.time()
+
+def init():
+    global start_time
+    start_time = time.time()
+
+    try:
+        global hg_label
+        hg_label = subprocess.Popen(["hg", "parents",
+            "--template", "r{rev}: {date|isodate}"],
+            stdout=subprocess.PIPE).communicate()[0]
+    except:
+        pass
+
+
+def get_version():
+    if hg_label:
+        return "%s (%s)" % (VERSION, hg_label)
+    else:
+        return VERSION
 
 
 def get_copyright_notice():
