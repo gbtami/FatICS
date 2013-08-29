@@ -29,6 +29,7 @@ import global_
 
 from offer import Offer
 from game_constants import WHITE, BLACK, side_to_str, EXAMINED
+from twisted.internet import defer
 
 
 shortcuts = {
@@ -293,7 +294,11 @@ def check_censor_noplay(a, b):
 
 class Challenge(Offer, MatchStringParser):
     """ represents a match offer from one player to another """
-    def __init__(self, a, b, args=None, tags=None):
+    def __init__(self):
+        Offer.__init__(self, 'match offer')
+
+    @defer.inlineCallbacks
+    def finish_init(self, a, b, args=None, tags=None):
         """ Initiate a new offer.  "a" is the player issuing the offer;
         "b" receives the request """
         Offer.__init__(self, 'match offer')
@@ -305,7 +310,7 @@ class Challenge(Offer, MatchStringParser):
             self.adjourned = None
         else:
             #self.adjourned = db.get_adjourned_between(a.id_, b.id_)
-            self.adjourned = a.get_adjourned_with(b)
+            self.adjourned = yield a.get_adjourned_with(b)
         if self.adjourned:
             if tags or args:
                 a.write(_('You have an adjourned game with %s.  You cannot start a new game until you finish it.\n') % b.name)
@@ -573,10 +578,12 @@ class Challenge(Offer, MatchStringParser):
 
         return False
 
+    @defer.inlineCallbacks
     def accept(self):
         Offer.accept(self)
 
         g = game.PlayedGame(self)
+        yield g.finish_init(self)
         if self.variant_name == 'bughouse':
             # this should probably be in another module
             chal2 = copy.copy(self)
@@ -587,6 +594,7 @@ class Challenge(Offer, MatchStringParser):
 
             chal2.side = g.get_user_side(self.b)
             g2 = game.PlayedGame(chal2)
+            yield g2.finish_init(chal2)
             g2.bug_link = g
             g.bug_link = g2
             g2.variant.pos.bug_link = g.variant.pos

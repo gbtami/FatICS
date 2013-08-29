@@ -776,7 +776,10 @@ if 1:
                 eco=%(eco)s,variant_id=%(variant_id)s,speed_id=%(speed_id)s,
                 time=%(time)s,inc=%(inc)s,rated=%(rated)s,
                 adjourn_reason=%(adjourn_reason)s,ply_count=%(ply_count)s,
-                movetext=%(movetext)s,when_started=%(when_started)s,
+                movetext=%(movetext)s,
+                white_material=%(white_material)s,
+                black_material=%(black_material)s,
+                when_started=%(when_started)s,
                 when_adjourned=%(when_adjourned)s""", g)
         adjourn_id = cursor.lastrowid
         cursor.close()
@@ -784,9 +787,9 @@ if 1:
 
     def get_adjourned(user_id):
         return adb.runQuery("""SELECT adjourn_id,white_user_id,black_user_id,
-                white_clock,black_clock,eco,speed_name,variant_name,clock_name,
+                white_clock,black_clock,eco,speed_name,speed_abbrev,variant_name,variant_abbrev,clock_name,
                 adjourned_game.time AS time,adjourned_game.inc AS inc,rated,
-                adjourn_reason,ply_count,movetext,
+                adjourn_reason,ply_count,movetext,white_material,black_material,
                 when_started,when_adjourned,idn,overtime_move_num,
                 overtime_bonus,white.user_name as white_name,
                 black.user_name as black_name

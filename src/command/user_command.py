@@ -27,6 +27,7 @@ import history
 import time_format
 import db
 import find_user
+import global_
 
 from twisted.internet import defer
 
@@ -208,6 +209,59 @@ class History(Command):
             u = conn.user
         if u:
             history.show_for_user(u, conn)
+        defer.returnValue(None)
+
+
+@ics_command('stored', 'o')
+class Stored(Command):
+    @defer.inlineCallbacks
+    def run(self, args, conn):
+        u = None
+
+        if args[0] is not None:
+            u = yield find_user.by_prefix_for_user(args[0], conn)
+        else:
+            u = conn.user
+        if u:
+
+            if u.is_guest:
+                conn.write(_('Only registered players may have stored games.\n'))
+            else:
+                adjourned = yield u.get_adjourned()
+
+                if not adjourned:
+                    conn.write(_('%s has no adjourned games.\n') % u.name)
+                    return
+
+                conn.write(_('Stored games for %s:\n') % u.name)
+                conn.write(_('    C Opponent       On Type          Str  M    ECO Date\n'))
+
+                i = 1
+
+                for entry in adjourned:
+                    entry['id'] = i
+                    
+                    is_white = entry['white_user_id'] == u.id_
+                    entry['user_color'] = is_white and 'W' or 'B'
+                    
+                    opp_name = is_white and entry['black_name'] or entry['white_name']
+                    entry['opp_str'] = opp_name[:15]
+
+                    entry['online'] = "Y" if global_.online.is_online(opp_name) else "N"
+
+                    flags = entry['speed_abbrev'] + entry['variant_abbrev']
+                    entry['flags'] = flags + 'r' if entry['rated'] else 'u'
+
+                    half_moves = entry['movetext'].count(' ') + 1
+                    next_move_color = "B" if half_moves % 2 else "W"
+                    next_move_number = half_moves / 2 + 1
+                    entry['next_move'] = "%s%d" % (next_move_color, next_move_number)
+
+                    entry['eco'] = entry['eco'][:3]
+                    entry['when_adjourned_str'] = u.format_datetime(entry['when_adjourned'])
+                    conn.write('%(id)2d: %(user_color)1s %(opp_str)-15s %(online)s [%(flags)3s%(time)3s %(inc)3s] %(white_material)2s-%(black_material)-2s %(next_move)-4s %(eco)s %(when_adjourned_str)-s\n' %
+                        entry)
+                    i = i + 1
         defer.returnValue(None)
 
 

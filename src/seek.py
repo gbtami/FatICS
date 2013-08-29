@@ -26,6 +26,7 @@ import formula
 
 from match import MatchStringParser, MatchError
 from game_constants import WHITE, BLACK
+from twisted.internet import defer
 
 # Wait 90 seconds after a seek ends to reuse its seek number
 # (this is the value GICS uses; original FICS is likely the
@@ -299,13 +300,15 @@ class Seek(MatchStringParser):
         finally:
             self.b = None
 
+    @defer.inlineCallbacks
     def accept(self, b):
         assert(self.check_formula(b))
         assert(not self.a.censor_or_noplay(b))
         assert(not self.expired)
         self.b = b
         # will remove this seek
-        game.PlayedGame(self)
+        g = game.PlayedGame(self)
+        yield g.finish_init(self)
         assert(self.expired)
 
     def remove(self):

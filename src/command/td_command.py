@@ -27,10 +27,12 @@ import find_user
 
 from parser import BadCommandError
 from game_constants import PLAYED
+from twisted.internet import defer
 
 
 @ics_command('rmatch', 'wwt')
 class Rmatch(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if not conn.user.has_title('TD'):
             conn.write(_('Only TD programs are allowed to use this command.\n'))
@@ -51,7 +53,8 @@ class Rmatch(Command):
         if u2.session.game:
             conn.write(_("%s is playing a game.\n") % u2.name)
             return
-        match.Challenge(u1, u2, args[2])
+        m = match.Challenge()
+        yield m.finish_init(u1, u2, args[2])
 
 
 @ics_command('tournset', 'wd')

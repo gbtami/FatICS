@@ -17,8 +17,10 @@
 #
 
 import global_
+from twisted.internet import defer
 
 
+@defer.inlineCallbacks
 def notify_users(user, arrived):
     """ Send a message to all users notified about the given user. """
 
@@ -32,7 +34,8 @@ def notify_users(user, arrived):
             user.write(_('Present company includes: %s\n')
                 % ' '.join((n.name for n in nlist)))
 
-        for adj in user.adjourned:
+        adj_list = yield user.get_adjourned()
+        for adj in adj_list:
             if adj['white_user_id'] == user.id_:
                 opp_name = adj['black_name']
             else:
@@ -70,6 +73,7 @@ def notify_users(user, arrived):
                 u.write_("\nNotification: %s has arrived and isn't on your notify list.\n", name)
             else:
                 u.write_("\nNotification: %s has departed and isn't on your notify list.\n", name)
+    defer.returnValue(None)
 
 
 def notify_pin(user, arrived):
