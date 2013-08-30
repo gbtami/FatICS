@@ -74,15 +74,15 @@ class TestNotes(Test):
         t.write('set 2 foo bar\n')
         self.expect('Note 2 set: foo bar', t)
         t.write('fi\n')
-        self.expect(' 1: The quick brown fox jumps over the lazy dog.', t)
-        self.expect(' 2: foo bar', t)
+        self.expect('\r\n 1: The quick brown fox jumps over the lazy dog.', t)
+        self.expect('\r\n 2: foo bar', t)
 
         self.close(t)
 
         t = self.connect_as_guest()
         t.write('fi admin\n')
-        self.expect(' 1: The quick brown fox jumps over the lazy dog.', t)
-        self.expect(' 2: foo bar', t)
+        self.expect('\r\n 1: The quick brown fox jumps over the lazy dog.', t)
+        self.expect('\r\n 2: foo bar', t)
         self.close(t)
 
         t = self.connect_as_admin()
@@ -95,7 +95,7 @@ class TestNotes(Test):
         self.expect('You do not have that many lines set.', t)
 
         t.write('fi\n')
-        self.expect_not('1:', t)
+        self.expect_not('\r\n 1:', t)
 
         self.close(t)
 

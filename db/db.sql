@@ -108,6 +108,8 @@ CREATE TABLE `formula` (
   PRIMARY KEY (`formula_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+
+-- finger notes
 DROP TABLE IF EXISTS `note`;
 CREATE TABLE `note` (
   `note_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -134,6 +136,7 @@ CREATE TABLE `channel` (
 ) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
 -- A list of owners for each channel.
+-- TODO: make this a column in channel_user instead
 DROP TABLE IF EXISTS `channel_owner`;
 CREATE TABLE `channel_owner` (
   `channel_id` int(8) NOT NULL,
@@ -143,6 +146,7 @@ CREATE TABLE `channel_owner` (
   UNIQUE KEY (`user_id`,`channel_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+-- Stores which users are in which channels.
 DROP TABLE IF EXISTS `channel_user`;
 CREATE TABLE `channel_user` (
   `channel_id` int(8) NOT NULL,
@@ -249,6 +253,7 @@ CREATE TABLE `eco` (
   PRIMARY KEY (`eco_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+-- NIC codes
 DROP TABLE IF EXISTS `nic`;
 CREATE TABLE `nic` (
   `nic_id` int(4) NOT NULL AUTO_INCREMENT,
@@ -402,7 +407,7 @@ CREATE TABLE `user_comment` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- adjourned (stored) games
--- this is similar to the `games` table, but uses player IDs instead
+-- this is similar to the `game` table, but uses player IDs instead
 -- of names (since it only stores games between registered players),
 -- stores the clocks for both players, and does not store a result.
 DROP TABLE IF EXISTS `adjourned_game`;
