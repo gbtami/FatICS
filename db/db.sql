@@ -95,6 +95,7 @@ CREATE TABLE `user_log` (
   KEY (`log_when`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+-- TODO: make a comlumn in user instead
 DROP TABLE IF EXISTS `removed_user`;
 CREATE TABLE `removed_user` LIKE `user`;
 
@@ -156,7 +157,7 @@ CREATE TABLE `channel_user` (
   UNIQUE KEY (`user_id`,`channel_id`)
 ) ENGINE=MyISAM;
 
--- titles
+-- titles for users, like (GM), (*), or (TM)
 DROP TABLE IF EXISTS `title`;
 CREATE TABLE `title` (
   `title_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -176,6 +177,7 @@ CREATE TABLE `user_title` (
   UNIQUE INDEX(`user_id`,`title_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+-- TODO: eliminate history and use game for everything
 -- history
 DROP TABLE IF EXISTS `history`;
 CREATE TABLE `history` (
@@ -210,6 +212,7 @@ CREATE TABLE `ip_filter` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- game
+-- This table could be very large.
 -- TODO: store overtime_move_num and overtime_bonus in a separate table,
 -- so we have a record of that information?
 DROP TABLE IF EXISTS `game`;
@@ -263,7 +266,7 @@ CREATE TABLE `nic` (
   PRIMARY KEY (`nic_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- notifications
+-- notifications of arrival and departure
 DROP TABLE IF EXISTS `user_notify`;
 CREATE TABLE `user_notify` (
   `notified` int(8) NOT NULL COMMENT 'id of the user receiving the notification',
@@ -271,6 +274,7 @@ CREATE TABLE `user_notify` (
   UNIQUE INDEX(`notified`, `notifier`)
 );
 
+-- TODO: combine with user_notify
 -- game notifications
 DROP TABLE IF EXISTS `user_gnotify`;
 CREATE TABLE `user_gnotify` (
@@ -306,7 +310,8 @@ CREATE TABLE user_alias (
   PRIMARY KEY (`alias_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
--- speeds and variants
+-- speed
+-- lightning, blitz, etc.
 DROP TABLE IF EXISTS `speed`;
 CREATE TABLE `speed` (
   `speed_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -314,6 +319,9 @@ CREATE TABLE `speed` (
   `speed_abbrev` char(2) NOT NULL,
   PRIMARY KEY(`speed_id`)
 );
+
+-- variant
+-- chess, crazyhouse, etc.
 DROP TABLE IF EXISTS `variant`;
 CREATE TABLE `variant` (
   `variant_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -387,6 +395,8 @@ CREATE TABLE `chess960_pos` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- for chess960
+-- stores the starting position of a game, represented by a number
+-- 0-959
 DROP TABLE IF EXISTS `game_idn`;
 CREATE TABLE `game_idn` (
   `game_id` int(8) NOT NULL,
@@ -405,6 +415,8 @@ CREATE TABLE `user_comment` (
   PRIMARY KEY(`comment_id`),
   INDEX(`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- TODO: eliminate adjourned_game and use game for everything
 
 -- adjourned (stored) games
 -- this is similar to the `game` table, but uses player IDs instead
@@ -453,6 +465,9 @@ CREATE TABLE `server_message` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- data
+-- TOOD: do not use a default password, but rather have the user
+-- run a small setup script that prompts for an admin password
+-- (and possibly other configuration details)
 LOCK TABLES `user` WRITE;
 -- admin account with password 'admin'
 INSERT INTO `user` SET user_id=1,user_name='admin',user_passwd='$2a$12$vUOlVpT6HhRBH3hCNrPW8.bqUwEZ/cRzLOOT142vmNYYxhq5bO4Sy',user_real_name='Admin Account',user_email='admin@fatics.org',user_admin_level=10000;
