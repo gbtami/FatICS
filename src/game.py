@@ -457,8 +457,10 @@ class PlayedGame(Game):
     def __init__(self, chal):
         self.gtype = PLAYED
 
+    @defer.inlineCallbacks
+    def finish_init(self, chal):
         if chal.adjourned:
-            self._resume(chal.adjourned, chal.a, chal.b)
+            yield self._resume(chal.adjourned, chal.a, chal.b)
             creating = 'Continuing'
         else:
             self._init_new(chal)
@@ -583,7 +585,9 @@ class PlayedGame(Game):
             if not self.minmovetime:
                 for p in self.players | self.observers:
                     p.write_("Game %d: All players agree no minimum move time during the game.\n", self.number)
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def _resume(self, adj, a, b):
         """ Resume an adjourned game. """
         if adj['white_user_id'] == a.id_:
@@ -627,9 +631,10 @@ class PlayedGame(Game):
         self.when_started = adj['when_started']
 
         # clear the game in the database
-        a.remove_adjourned(adj)
-        b.remove_adjourned(adj)
+        yield a.remove_adjourned(adj)
+        yield b.remove_adjourned(adj)
         db.delete_adjourned(adj['adjourn_id'])
+        defer.returnValue(None)
 
     def _init_new(self, chal):
         side = chal.side
@@ -944,6 +949,7 @@ class PlayedGame(Game):
             # two registered players; adjourn game
             self.adjourn('%s lost connection; game adjourned' % user.name)
 
+    @defer.inlineCallbacks
     def adjourn(self, reason):
         """ Adjourn this game by saving it to the database and notifying
         the players and observers. """
@@ -956,6 +962,8 @@ class PlayedGame(Game):
             #'black_rating': int(self.black_rating),
             'black_clock': self.clock.get_black_time(),
             'movetext': self.get_movetext(),
+            'white_material': self.variant.pos.material[1],
+            'black_material': self.variant.pos.material[0],
             'eco': self.get_eco_sync()[1],
             'ply_count': self.get_ply_count(),
             'variant_id': self.speed_variant.variant.id_,
@@ -980,9 +988,13 @@ class PlayedGame(Game):
         else:
             raise RuntimeError('unable to abbreviate adjournment reason: %s' %
                 reason)
+        data['white_name'] = self.white.name
+        data['black_name'] = self.black.name
+        data['variant_abbrev'] = self.speed_variant.variant.abbrev
+        data['speed_abbrev'] = self.speed_variant.speed.abbrev
         data['adjourn_id'] = db.adjourned_game_add(data)
-        self.white.adjourned.append(data)
-        self.black.adjourned.append(data)
+        yield self.white.add_adjourned(data)
+        yield self.black.add_adjourned(data)
         self.result(reason, '*')
 
     def free(self):

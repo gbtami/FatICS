@@ -390,6 +390,7 @@ class RegUser(BaseUser):
         self.is_muted = u['user_muted']
         self._total_time_online = u['user_total_time_online']
         self.is_guest = False
+        self._adjourned = None
 
     @defer.inlineCallbacks
     def finish_init(self):
@@ -462,9 +463,6 @@ class RegUser(BaseUser):
             for dbu in (yield db.user_get_notifiers(self.id_))])
 
         yield BaseUser.log_on(self, conn)
-
-        adjrows = yield db.get_adjourned(self.id_)
-        self.adjourned = list(adjrows)
 
         notify.notify_users(self, arrived=True)
 
@@ -654,6 +652,13 @@ class RegUser(BaseUser):
             self._history = [e for e in db.user_get_history(self.id_)]
         return self._history
 
+    @defer.inlineCallbacks
+    def get_adjourned(self):
+        if self._adjourned is None:
+            rows = yield db.get_adjourned(self.id_)
+            self._adjourned = list(rows)
+	defer.returnValue(self._adjourned)
+
     def has_title(self, title):
         if self._titles is None:
             self._load_titles()
@@ -771,22 +776,33 @@ class RegUser(BaseUser):
             tot += self.session.get_online_time()
         return tot
 
+    @defer.inlineCallbacks
     def get_adjourned_with(self, u):
         """Get an adjourned game with u, or None if none exists."""
         # This assumes that there is never more than one adjourned
         # game between two users.
-        for adj in self.adjourned:
+        adj_list = yield self.get_adjourned()
+        for adj in adj_list:
             if u.id_ in (adj['white_user_id'], adj['black_user_id']):
-                return adj
-        return None
+                defer.returnValue(adj)
+                return
+        defer.returnValue(None)
 
+    @defer.inlineCallbacks
+    def add_adjourned(self, data):
+        """Add the given data to the adjourned game list."""
+        adj_list = yield self.get_adjourned()
+        adj_list.append(data)
+
+    @defer.inlineCallbacks
     def remove_adjourned(self, adj):
         """Remove the given game from the adjourned game list.  Raise KeyError
         if no such game."""
         adj_id = adj['adjourn_id']
-        for i in range(len(self.adjourned) - 1, -1, -1):
-            if self.adjourned[i]['adjourn_id'] == adj_id:
-                del self.adjourned[i]
+        adj_list = yield self.get_adjourned()
+        for i in range(len(adj_list) - 1, -1, -1):
+            if adj_list[i]['adjourn_id'] == adj_id:
+                del adj_list[i]
                 return
         raise KeyError
 

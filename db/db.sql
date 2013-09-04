@@ -442,6 +442,8 @@ CREATE TABLE `adjourned_game` (
   `adjourn_reason` ENUM('Agr', 'Dis'),
   `ply_count` SMALLINT NOT NULL,
   `movetext` TEXT,
+  `white_material` TINYINT NOT NULL,
+  `black_material` TINYINT NOT NULL,
   `when_started` TIMESTAMP NOT NULL,
   `when_adjourned` TIMESTAMP NOT NULL,
   `idn` INT(4) DEFAULT NULL COMMENT 'chess960 position ID, if any',

@@ -26,10 +26,12 @@ import find_user
 from parser import BadCommandError
 from game_constants import opp, EXAMINED
 from .command import Command, ics_command
+from twisted.internet import defer
 
 
 @ics_command('seek', 't')
 class Seek(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.session.game:
             if conn.user.session.game.gtype == EXAMINED:
@@ -64,7 +66,8 @@ class Seek(Command):
             ad.a.write_('\nYour seek matches one posted by %s.\n',
                 (conn.user.name,))
             ad.b = conn.user
-            game.PlayedGame(ad)
+            g = game.PlayedGame(ad)
+            yield g.finish_init(ad)
             return
 
         if manual_matches:
@@ -77,7 +80,8 @@ class Seek(Command):
                     tags['side'] = opp(ad.side)
                 else:
                     tags['side'] = None
-                match.Challenge(conn.user, ad.a, tags=tags)
+                c = match.Challenge()
+                yield c.finish_init(conn.user, ad.a, tags=tags)
             # go on to post the seek, too
 
         count = s.post()
@@ -107,6 +111,7 @@ class Unseek(Command):
 
 @ics_command('play', 'i')
 class Play(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.session.game:
             if conn.user.session.game.gtype == EXAMINED:
@@ -173,10 +178,12 @@ class Play(Command):
                     tags['side'] = opp(ad.side)
                 else:
                     tags['side'] = None
-                match.Challenge(conn.user, ad.a, tags=tags)
+                c = match.Challenge()
+                yield c.finish_init(conn.user, ad.a, tags=tags)
+                
             else:
                 ad.a.write_('\n%s accepts your seek.\n', (conn.user.name,))
-                ad.accept(conn.user)
+                yield ad.accept(conn.user)
 
 
 #  7 1500 SomePlayerA         5   2 rated   blitz      [white]  1300-9999 m

@@ -26,10 +26,12 @@ import global_
 from .command import Command, ics_command
 
 from game_constants import EXAMINED
+from twisted.internet import defer
 
 
 @ics_command('match', 'wt', admin.Level.user)
 class Match(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if conn.user.session.game:
             if conn.user.session.game.gtype == EXAMINED:
@@ -44,7 +46,8 @@ class Match(Command):
             conn.write(_("You can't match yourself.\n"))
             return
 
-        match.Challenge(conn.user, u, args[1])
+        c = match.Challenge()
+        yield c.finish_init(conn.user, u, args[1])
 
 
 # TODO: parameters?
@@ -52,6 +55,7 @@ class Match(Command):
 
 @ics_command('rematch', '')
 class Rematch(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         # note that rematch uses history to determine the previous opp,
         # so unlike "say", it works after logging out and back in, and
@@ -69,6 +73,7 @@ class Rematch(Command):
         assert(h['flags'][2] in ['r', 'u'])
         match_str = '%d %d %s %s' % (h['time'], h['inc'], h['flags'][2],
             variant_name)
-        match.Challenge(conn.user, opp, match_str)
+        c = match.Challenge()
+        yield c.finish_init(conn.user, opp, match_str)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -18,6 +18,7 @@
 #
 
 from .command import ics_command, Command
+from twisted.internet import defer
 
 import global_
 
@@ -26,6 +27,7 @@ import global_
 
 @ics_command('accept', 'n')
 class Accept(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is None:
             if not conn.user.session.offers_received:
@@ -34,7 +36,7 @@ class Accept(Command):
             if len(conn.user.session.offers_received) > 1:
                 conn.write(_('You have more than one pending offer. Use "pending" to see them and "accept n" to choose one.\n'))
                 return
-            conn.user.session.offers_received[0].accept()
+            yield conn.user.session.offers_received[0].accept()
         elif type(args[0]) == int:
             try:
                 o = global_.offers[args[0]]
