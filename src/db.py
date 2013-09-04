@@ -822,14 +822,12 @@ if 1:
         return row'''
 
     def delete_adjourned(adjourn_id):
-        try:
-            cursor = db.cursor()
-            cursor = query(cursor, """DELETE FROM adjourned_game WHERE adjourn_id=%s""",
-                adjourn_id)
-            if cursor.rowcount != 1:
-                raise DeleteError
-        finally:
-            cursor.close()
+        def do_del(txn):
+            txn.execute("""DELETE FROM adjourned_game WHERE adjourn_id=%s""",
+                (adjourn_id,))
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
 
     def user_get_history(user_id):
         cursor = db.cursor(cursors.DictCursor)

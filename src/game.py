@@ -587,7 +587,6 @@ class PlayedGame(Game):
                     p.write_("Game %d: All players agree no minimum move time during the game.\n", self.number)
         defer.returnValue(None)
 
-    @defer.inlineCallbacks
     def _resume(self, adj, a, b):
         """ Resume an adjourned game. """
         if adj['white_user_id'] == a.id_:
@@ -631,10 +630,10 @@ class PlayedGame(Game):
         self.when_started = adj['when_started']
 
         # clear the game in the database
-        yield a.remove_adjourned(adj)
-        yield b.remove_adjourned(adj)
-        db.delete_adjourned(adj['adjourn_id'])
-        defer.returnValue(None)
+        d1 = a.remove_adjourned(adj)
+        d2 = b.remove_adjourned(adj)
+        d3 = db.delete_adjourned(adj['adjourn_id'])
+        return defer.DeferredList([d1, d2, d3])
 
     def _init_new(self, chal):
         side = chal.side

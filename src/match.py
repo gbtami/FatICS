@@ -309,7 +309,6 @@ class Challenge(Offer, MatchStringParser):
         if a.is_guest or b.is_guest:
             self.adjourned = None
         else:
-            #self.adjourned = db.get_adjourned_between(a.id_, b.id_)
             self.adjourned = yield a.get_adjourned_with(b)
         if self.adjourned:
             if tags or args:

@@ -790,7 +790,8 @@ class RegUser(BaseUser):
 
     @defer.inlineCallbacks
     def add_adjourned(self, data):
-        """Add the given data to the adjourned game list."""
+        """Add the given data to the adjourned game list. The adjourned
+        game is expected to be added to the DB by the caller."""
         adj_list = yield self.get_adjourned()
         adj_list.append(data)
 
