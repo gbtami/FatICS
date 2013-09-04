@@ -240,11 +240,12 @@ class Stored(Command):
 
                 for entry in adjourned:
                     entry['id'] = i
-                    
+
                     is_white = entry['white_user_id'] == u.id_
                     entry['user_color'] = is_white and 'W' or 'B'
-                    
-                    opp_name = is_white and entry['black_name'] or entry['white_name']
+
+                    opp_name = (entry['black_name'] if is_white
+                        else entry['white_name'])
                     entry['opp_str'] = opp_name[:15]
 
                     entry['online'] = "Y" if global_.online.is_online(opp_name) else "N"
@@ -255,7 +256,8 @@ class Stored(Command):
                     half_moves = entry['movetext'].count(' ') + 1
                     next_move_color = "B" if half_moves % 2 else "W"
                     next_move_number = half_moves / 2 + 1
-                    entry['next_move'] = "%s%d" % (next_move_color, next_move_number)
+                    entry['next_move'] = "%s%d" % (next_move_color,
+                        next_move_number)
 
                     entry['eco'] = entry['eco'][:3]
                     entry['when_adjourned_str'] = u.format_datetime(entry['when_adjourned'])

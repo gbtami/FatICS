@@ -180,7 +180,7 @@ class Play(Command):
                     tags['side'] = None
                 c = match.Challenge()
                 yield c.finish_init(conn.user, ad.a, tags=tags)
-                
+
             else:
                 ad.a.write_('\n%s accepts your seek.\n', (conn.user.name,))
                 yield ad.accept(conn.user)

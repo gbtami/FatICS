@@ -657,7 +657,7 @@ class RegUser(BaseUser):
         if self._adjourned is None:
             rows = yield db.get_adjourned(self.id_)
             self._adjourned = list(rows)
-	defer.returnValue(self._adjourned)
+        defer.returnValue(self._adjourned)
 
     def has_title(self, title):
         if self._titles is None:
