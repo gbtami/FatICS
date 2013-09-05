@@ -63,7 +63,6 @@ class Set(Command):
             conn.write(_('No such variable "%s".\n') % name)
         except var.BadVarError:
             conn.write(_('Bad value given for variable "%s".\n') % v.name)
-        defer.returnValue(None)
 
 
 @ics_command('ivariables', 'o', admin.Level.user)
@@ -139,7 +138,6 @@ class Variables(Command):
         if u.vars_['formula']:
             conn.write('Formula: %s\n' % u.vars_['formula'])
         conn.write("\n")
-        defer.returnValue(None)
 
 
 @ics_command('style', 'd', admin.Level.user)
@@ -148,6 +146,5 @@ class Style(Command):
     def run(self, args, conn):
         #conn.write('Warning: the "style" command is deprecated.  Please use "set style" instead.\n')
         yield global_.vars_['style'].set(conn.user, str(args[0]))
-        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

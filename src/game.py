@@ -585,7 +585,6 @@ class PlayedGame(Game):
             if not self.minmovetime:
                 for p in self.players | self.observers:
                     p.write_("Game %d: All players agree no minimum move time during the game.\n", self.number)
-        defer.returnValue(None)
 
     def _resume(self, adj, a, b):
         """ Resume an adjourned game. """

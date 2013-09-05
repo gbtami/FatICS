@@ -158,7 +158,6 @@ if 1:
             (user_id))
         yield adb.runOperation("""INSERT INTO note SET user_id=%s,num=1,txt=%s""",
             (user_id, val))
-        defer.returnValue(None)
 
     def user_set_alias(user_id, name, val):
         if val is not None:
@@ -254,7 +253,6 @@ if 1:
         yield adb.runOperation("""INSERT INTO user_log
             SET log_who_name=%s,log_which=%s,log_ip=%s,log_when=NOW()""",
                 (user_name, which, ip))
-        defer.returnValue(None)
 
     def user_get_log(user_name):
         return adb.runQuery("""SELECT log_who_name,log_when,
@@ -295,7 +293,6 @@ if 1:
         assert(val in [0, 1])
         yield adb.runOperation("""UPDATE user
             SET user_muzzled=%s WHERE user_id=%s""", (val, uid))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def get_muzzled_user_names():
@@ -309,7 +306,6 @@ if 1:
         assert(val in [0, 1])
         yield adb.runOperation("""UPDATE user
             SET user_cmuzzled=%s WHERE user_id=%s""", (val, uid))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def get_cmuzzled_user_names():
@@ -323,14 +319,12 @@ if 1:
         assert(val in [0, 1])
         yield adb.runOperation("""UPDATE user
             SET user_muted=%s WHERE user_id=%s""", (val, uid))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def user_set_notebanned(uid, val):
         assert(val in [0, 1])
         yield adb.runOperation("""UPDATE user
             SET user_notebanned=%s WHERE user_id=%s""", (val, uid))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def get_notebanned_user_names():
@@ -344,7 +338,6 @@ if 1:
         assert(val in [0, 1])
         yield adb.runOperation("""UPDATE user
             SET user_ratedbanned=%s WHERE user_id=%s""", (val, uid))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def get_ratedbanned_user_names():
@@ -358,7 +351,6 @@ if 1:
         assert(val in [0, 1])
         yield adb.runOperation("""UPDATE user
             SET user_playbanned=%s WHERE user_id=%s""", (val, uid))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def get_playbanned_user_names():
@@ -448,7 +440,6 @@ if 1:
         yield adb.runOperation("""INSERT INTO user_comment
             SET admin_id=%s,user_id=%s,when_added=NOW(),txt=%s""",
                 (admin_id, user_id, txt))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def get_comments(user_id):
@@ -565,7 +556,6 @@ if 1:
                 (user_id, title_id))
         except IntegrityError:
             raise DuplicateKeyError()
-        defer.returnValue(None)
 
     def user_del_title(user_id, title_id):
         def do_del(txn):
@@ -597,7 +587,6 @@ if 1:
                 (notified, notifier))
         except IntegrityError:
             raise DuplicateKeyError()
-        defer.returnValue(None)
 
     def user_del_notification(notified, notifier):
         def do_del(txn):
@@ -636,7 +625,6 @@ if 1:
                 SET gnotified=%s,gnotifier=%s""", (gnotified, gnotifier))
         except IntegrityError:
             raise DuplicateKeyError()
-        defer.returnValue(None)
 
     def user_del_gnotification(notified, notifier):
         def do_del(txn):
@@ -656,8 +644,7 @@ if 1:
             LEFT JOIN user_gnotify ON (user.user_id=user_gnotify.gnotifier)
             WHERE gnotified=%s""", (user_id,))
 
-    # censor
-    #@defer.inlineCallbacks
+    # censor list
     def user_add_censor(censorer, censored):
         try:
             d = adb.runOperation("""INSERT INTO censor SET censored=%s,censorer=%s""",
@@ -665,7 +652,6 @@ if 1:
         except IntegrityError:
             raise DuplicateKeyError()
         return d
-        #defer.returnValue(None)
 
     def user_del_censor(censorer, censored):
         def do_del(txn):
@@ -687,14 +673,13 @@ if 1:
         cursor.close()
         return rows
 
-    # noplay
+    # noplay list
     @defer.inlineCallbacks
     def user_add_noplay(noplayer, noplayed):
         try:
             yield adb.runOperation("""INSERT INTO noplay SET noplayed=%s,noplayer=%s""", (noplayed, noplayer))
         except IntegrityError:
             raise DuplicateKeyError()
-        defer.returnValue(None)
 
     def user_del_noplay(noplayer, noplayed):
         def do_del(txn):
@@ -938,7 +923,7 @@ if 1:
             SELECT news_id,news_title,DATE(news_when) AS news_date,news_poster
             FROM news_index WHERE news_id=%s""", (news_id,))
         if not rows:
-            defer.returnValue(None)
+            return
         row = rows[0]
 
         lines = yield adb.runQuery("""SELECT txt FROM news_line
@@ -958,7 +943,6 @@ if 1:
             num = row['m'] + 1
         yield adb.runOperation("""INSERT INTO news_line
             SET news_id=%s,num=%s,txt=%s""", (news_id, num, text))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def del_last_news_line(news_id):
@@ -976,7 +960,6 @@ if 1:
             if txn.rowcount != 1:
                 raise DeleteError
         yield adb.runInteraction(do_del)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_news_poster(news_id, u):
@@ -987,7 +970,6 @@ if 1:
             if txn.rowcount != 1:
                 raise UpdateError
         yield adb.runInteraction(do_update)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_news_title(news_id, title):
@@ -998,7 +980,6 @@ if 1:
             if txn.rowcount != 1:
                 raise UpdateError
         yield adb.runInteraction(do_update)
-        defer.returnValue(None)
 
     # messages
     @defer.inlineCallbacks

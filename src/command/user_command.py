@@ -209,7 +209,6 @@ class History(Command):
             u = conn.user
         if u:
             history.show_for_user(u, conn)
-        defer.returnValue(None)
 
 
 @ics_command('stored', 'o')
@@ -264,7 +263,6 @@ class Stored(Command):
                     conn.write('%(id)2d: %(user_color)1s %(opp_str)-15s %(online)s [%(flags)3s%(time)3s %(inc)3s] %(white_material)2s-%(black_material)-2s %(next_move)-4s %(eco)s %(when_adjourned_str)-s\n' %
                         entry)
                     i = i + 1
-        defer.returnValue(None)
 
 
 @ics_command('logons', 'o')
@@ -281,7 +279,6 @@ class Logons(Command, LogMixin):
                 conn.write('%s has not logged on.\n' % u2.name)
             else:
                 self._display_log(log, conn)
-        defer.returnValue(None)
 
 
 @ics_command('llogons', 'p')
@@ -297,7 +294,6 @@ class Llogons(Command, LogMixin):
 
         rows = yield db.get_log_all(limit)
         self._display_log(rows, conn)
-        defer.returnValue(None)
 
 
 @ics_command('handles', 'w')
@@ -317,6 +313,5 @@ class Handles(Command):
                 # XXX should print in columns
                 for u in ulist:
                     conn.write('%s\n' % u['user_name'])
-        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

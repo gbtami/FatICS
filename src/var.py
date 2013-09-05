@@ -161,7 +161,6 @@ class Var(object):
         the user. On an error, raises BadVarError. """
         if self._hook:
             self._hook(user, val)
-        defer.returnValue(None)
 
 
 class StringVar(Var):
@@ -184,7 +183,6 @@ class StringVar(Var):
                 % {'name': self.name, 'val': val}))
         if self._hook:
             self._hook(user, val)
-        defer.returnValue(None)
 
 
 class PromptVar(StringVar):
@@ -200,7 +198,6 @@ class PromptVar(StringVar):
 
         yield user.set_var(self, val)
         user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
-        defer.returnValue(None)
 
 
 class LangVar(StringVar):
@@ -213,7 +210,6 @@ class LangVar(StringVar):
         # Start using the new language right away.
         global_.langs[val].install(names=['ngettext'])
         user.write(_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val})
-        defer.returnValue(None)
 
 
 class FormulaVar(Var):
@@ -239,7 +235,6 @@ class FormulaVar(Var):
                 raise BadVarError()
             yield user.set_formula(self, val)
             user.write((_('''%(name)s set to "%(val)s".\n''') % {'name': self.name, 'val': val}))
-        defer.returnValue(None)
 
 
 class NoteVar(Var):
@@ -259,18 +254,17 @@ class NoteVar(Var):
                 val = ''
             yield user.insert_note(val)
             user.write(_("Inserted line 1 '%s'.\n") % val)
-            defer.returnValue(None)
+            return
         if val is None and int(self.name) not in user.notes:
             # XXX would it be better to raise an exception?
             user.write(_('''You do not have that many lines set.\n'''))
-            defer.returnValue(None)
+            return
         yield user.set_note(self, val)
         if val is None:
             user.write(_('''Note %s unset.\n''') % self.name)
         else:
             user.write((_('''Note %(name)s set: %(val)s\n''') %
                 {'name': self.name, 'val': val}))
-        defer.returnValue(None)
 
 
 class TzoneVar(Var):
@@ -289,7 +283,6 @@ class TzoneVar(Var):
                 tzinfo=pytz.utc).astimezone(user.tz).strftime(' (%Z, UTC%z)')
         user.write(_('''Time zone set to "%(val)s"%(info)s.\n''') %
             {'val': val, 'info': info})
-        defer.returnValue(None)
 
 
 class IntVar(Var):
@@ -317,7 +310,6 @@ class IntVar(Var):
             user.write(_("%(name)s set to %(val)s.\n") % {'name': self.name, 'val': val})
         if self._hook:
             self._hook(user, val)
-        defer.returnValue(None)
 
 
 class BoolVar(Var):
@@ -361,7 +353,6 @@ class BoolVar(Var):
                 user.write(_("%s unset.\n") % self.name)
         if self._hook:
             self._hook(user, val)
-        defer.returnValue(None)
 
 
 def init_vars():

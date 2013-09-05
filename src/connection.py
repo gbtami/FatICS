@@ -201,7 +201,6 @@ class Connection(basic.LineReceiver):
                 self.transport.will(telnet.ECHO)
             else:
                 self.write("\nlogin: ")
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def handleLine_passwd(self, line):
@@ -230,7 +229,6 @@ class Connection(basic.LineReceiver):
                     def resume():
                         self.login()
                     yield task.deferLater(reactor, 3, resume)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def prompt(self):
@@ -254,13 +252,12 @@ class Connection(basic.LineReceiver):
         #d.addCallback(handleQuit)
         yield d
         if self.state == 'quitting':
-            defer.returnValue(None)
+            return
         assert(self.user)
         assert(self.user.is_online)
 
         self.state = 'prompt'
         self.user.write_prompt()
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def handleLine_prompt(self, line):
@@ -281,7 +278,6 @@ class Connection(basic.LineReceiver):
             assert(self.user)
             if self.user:
                 self.user.write_prompt()
-        defer.returnValue(None)
 
     def loseConnection(self, reason):
         if self.state == 'quitting':

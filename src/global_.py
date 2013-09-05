@@ -99,7 +99,6 @@ def init():
     var.init_ivars()
     yield list_.init_lists()
     yield speed_variant.init()
-    defer.returnValue(None)
 
 log = logger.log
 

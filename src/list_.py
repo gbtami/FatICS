@@ -80,7 +80,6 @@ class SystemUserList(MyList):
         conn.write(ngettext('-- %s list: %d name --\n',
             '-- %s list: %d names --\n', len(names)) % (self.name, len(names)))
         conn.write('%s\n' % ' '.join(names))
-        defer.returnValue(None)
 
 
 class TitleList(SystemUserList):
@@ -104,7 +103,6 @@ class TitleList(SystemUserList):
                 raise ListError(_('%(uname)s is already on the %(lname)s list.\n') %
                     {'uname': u.name, 'lname': self.name})
             self._notify_added(conn, u)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -118,7 +116,6 @@ class TitleList(SystemUserList):
                     {'uname': u.name, 'lname': self.name})
             yield u.remove_title(self.id_)
             self._notify_removed(conn, u)
-        defer.returnValue(None)
 
     def _get_names(self):
         return db.title_get_users(self.id_)
@@ -144,7 +141,6 @@ class NotifyList(MyList):
                 # new feature: inform the added user
                 u.write_('\nYou have been added to the notify list of %s.\n',
                     (conn.user.name,))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -158,7 +154,6 @@ class NotifyList(MyList):
             conn.write(_('%s removed from your notify list.\n') % u.name)
             # We deliberately don't notify the user, to avoid
             # embarrassment or hurt feelings.
-        defer.returnValue(None)
 
     def show(self, conn):
         if conn.user.is_guest:
@@ -218,7 +213,6 @@ class GnotifyList(MyList):
             #if u.is_online:
             #    u.write_('\nYou have been added to the gnotify list of %s.\n',
             #        (conn.user.name,))
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -230,7 +224,6 @@ class GnotifyList(MyList):
                 raise ListError(_('[%s] is not on your gnotify list.\n') % u.name)
             yield conn.user.remove_gnotification(u)
             conn.write(_('[%s] removed from your gnotify list.\n') % u.name)
-        defer.returnValue(None)
 
     def show(self, conn):
         if conn.user.is_guest:
@@ -260,7 +253,6 @@ class ChannelList(MyList):
         else:
             yield ch.add(conn.user)
             conn.user.write(_('[%d] added to your channel list.\n') % val)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -276,7 +268,6 @@ class ChannelList(MyList):
 
         yield ch.remove(conn.user)
         conn.user.write(_('[%d] removed from your channel list.\n') % val)
-        defer.returnValue(None)
 
     def show(self, conn):
         chlist = conn.user.channels
@@ -295,7 +286,6 @@ class CensorList(MyList):
                 raise ListError(_('%s is already on your censor list.\n') % u.name)
             yield conn.user.add_censor(u)
             conn.write(_('%s added to your censor list.\n') % u.name)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -305,7 +295,6 @@ class CensorList(MyList):
                 raise ListError(_('%s is not on your censor list.\n') % u.name)
             yield conn.user.remove_censor(u)
             conn.write(_('%s removed from your censor list.\n') % (u.name))
-        defer.returnValue(None)
 
     def show(self, conn):
         cenlist = conn.user.censor
@@ -324,7 +313,6 @@ class NoplayList(MyList):
                 raise ListError(_('%s is already on your noplay list.\n') % u.name)
             yield conn.user.add_noplay(u)
             conn.write(_('%s added to your noplay list.\n') % u.name)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -334,7 +322,6 @@ class NoplayList(MyList):
                 raise ListError(_('%s is not on your noplay list.\n') % u.name)
             yield conn.user.remove_noplay(u)
             conn.write(_('%s removed from your noplay list.\n') % (u.name))
-        defer.returnValue(None)
 
     def show(self, conn):
         noplist = conn.user.noplay
@@ -364,7 +351,6 @@ class BanList(SystemUserList):
             self._notify_added(conn, u)
             if u.is_online:
                 conn.write(_('Note: %s is online.\n') % u.name)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -378,7 +364,6 @@ class BanList(SystemUserList):
             yield u.set_banned(False)
             yield db.add_comment_async(conn.user.id_, u.id_, 'Unbanned.')
             self._notify_removed(conn, u)
-        defer.returnValue(None)
 
     def _get_names(self):
         return db.get_banned_user_names()
@@ -402,7 +387,6 @@ class MuzzleList(SystemUserList):
             yield u.set_muzzled(True)
             yield db.add_comment_async(conn.user.id_, u.id_, 'Muzzled.')
             self._notify_added(conn, u)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -416,7 +400,6 @@ class MuzzleList(SystemUserList):
             yield u.set_muzzled(False)
             yield db.add_comment_async(conn.user.id_, u.id_, 'Removed from the muzzle list.')
             self._notify_removed(conn, u)
-        defer.returnValue(None)
 
     def _get_names(self):
         return db.get_muzzled_user_names()
@@ -440,7 +423,6 @@ class CmuzzleList(SystemUserList):
             yield u.set_cmuzzled(True)
             yield db.add_comment_async(conn.user.id_, u.id_, 'C-muzzled.')
             self._notify_added(conn, u)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -454,7 +436,6 @@ class CmuzzleList(SystemUserList):
             yield u.set_cmuzzled(False)
             yield db.add_comment_async(conn.user.id_, u.id_, 'Removed from the cmuzzle list.')
             self._notify_removed(conn, u)
-        defer.returnValue(None)
 
     def _get_names(self):
         return db.get_cmuzzled_user_names()
@@ -504,13 +485,11 @@ class FilterList(MyList):
     def add(self, item, conn):
         self._require_admin(conn.user)
         yield filter_.add_filter(item, conn)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
         self._require_admin(conn.user)
         yield filter_.remove_filter(item, conn)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def show(self, conn):
@@ -519,7 +498,6 @@ class FilterList(MyList):
         conn.write(ngettext('-- filter list: %d IP --\n',
             '-- filter list: %d IPs --\n', len(filterlist)) % len(filterlist))
         conn.write('%s\n' % ' '.join(filterlist))
-        defer.returnValue(None)
 
 
 class NotebanList(SystemUserList):
@@ -540,7 +518,6 @@ class NotebanList(SystemUserList):
             yield u.set_notebanned(True)
             yield db.add_comment_async(conn.user.id_, u.id_, 'Notebanned.')
             self._notify_added(conn, u)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -555,7 +532,6 @@ class NotebanList(SystemUserList):
             yield db.add_comment_async(conn.user.id_, u.id_,
                 'Removed from the noteban list.')
             self._notify_removed(conn, u)
-        defer.returnValue(None)
 
     def _get_names(self):
         return db.get_notebanned_user_names()
@@ -579,7 +555,6 @@ class RatedbanList(SystemUserList):
             yield u.set_ratedbanned(True)
             yield db.add_comment_async(conn.user.id_, u.id_, 'Ratedbanned.')
             self._notify_added(conn, u)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -593,7 +568,6 @@ class RatedbanList(SystemUserList):
             yield u.set_ratedbanned(False)
             yield db.add_comment_async(conn.user.id_, u.id_, 'Removed from the ratedbanned list.')
             self._notify_removed(conn, u)
-        defer.returnValue(None)
 
     def _get_names(self):
         return db.get_ratedbanned_user_names()
@@ -616,7 +590,6 @@ class PlaybanList(SystemUserList):
             if not u.is_guest:
                 yield db.add_comment_async(conn.user.id_, u.id_, 'Playbanned.')
             self._notify_added(conn, u)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def sub(self, item, conn):
@@ -629,7 +602,6 @@ class PlaybanList(SystemUserList):
             if not u.is_guest:
                 yield db.add_comment_async(conn.user.id_, u.id_, 'Removed from the playbanned list.')
             self._notify_removed(conn, u)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def _get_names(self):
@@ -660,7 +632,6 @@ def init_lists():
 
     for title in (yield db.title_get_all()):
         TitleList(title)
-    defer.returnValue(None)
 
 # Not implemented:
 # removedcom, c1muzzle, c24muzzle, c46muzzle, c49muzzle,

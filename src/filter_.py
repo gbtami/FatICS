@@ -68,6 +68,5 @@ def init():
 
     pats = yield db.get_filtered_ips()
     global_.filters = set([IPNetwork(pat) for pat in pats])
-    defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

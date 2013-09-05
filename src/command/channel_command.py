@@ -74,7 +74,6 @@ class Chkick(Command):
             conn.write(_('Invalid channel number.\n'))
             return
         yield ch.kick(u, conn.user)
-        defer.returnValue(None)
 
 
 @ics_command('chtopic', 'dT', admin.Level.user)
@@ -92,6 +91,5 @@ class Chtopic(Command):
             ch.show_topic(conn.user)
         else:
             yield ch.set_topic(topic, conn.user)
-        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

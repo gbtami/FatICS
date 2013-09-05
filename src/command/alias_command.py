@@ -67,7 +67,6 @@ class Alias(Command):
             conn.write(_('Alias "%s" changed.\n') % aname)
         else:
             conn.write(_('Alias "%s" set.\n') % aname)
-        defer.returnValue(None)
 
 
 @ics_command('unalias', 'w')
@@ -84,7 +83,6 @@ class Unalias(Command):
         else:
             yield conn.user.set_alias(aname, None)
             conn.write(_('Alias "%s" unset.\n') % aname)
-        defer.returnValue(None)
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

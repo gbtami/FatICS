@@ -414,7 +414,6 @@ class RegUser(BaseUser):
             self.notes[note['num']] = note['txt']
         self._rating = None
         self.tz = pytz.timezone(self.vars_['tzone'])
-        defer.returnValue(None)
 
     def _get_censor(self):
         if self._censor is None:
@@ -506,7 +505,6 @@ class RegUser(BaseUser):
             self.noplay.add(dbu['user_name'])
 
         self.get_history()
-        defer.returnValue(None)
 
     def log_off(self):
         assert(self.session.notified_online is not None)
@@ -551,7 +549,6 @@ class RegUser(BaseUser):
         BaseUser.set_var(self, v, val)
         if v.is_persistent:
             yield db.user_set_var(self.id_, v.name, val)
-        defer.returnValue(None)
 
     def set_formula(self, v, val):
         BaseUser.set_formula(self, v, val)
@@ -573,81 +570,69 @@ class RegUser(BaseUser):
     def add_channel(self, chid):
         BaseUser.add_channel(self, chid)
         yield db.channel_add_user(chid, self.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_channel(self, id_):
         BaseUser.remove_channel(self, id_)
         yield db.channel_del_user(id_, self.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_title(self, id_):
         yield db.user_add_title(self.id_, id_)
         self._load_titles()
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_title(self, id_):
         yield db.user_del_title(self.id_, id_)
         self._load_titles()
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_notification(self, user):
         BaseUser.add_notification(self, user)
         if not user.is_guest:
             yield db.user_add_notification(self.id_, user.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_notification(self, user):
         BaseUser.remove_notification(self, user)
         if not user.is_guest:
             yield db.user_del_notification(self.id_, user.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_gnotification(self, user):
         BaseUser.add_gnotification(self, user)
         if not user.is_guest:
             yield db.user_add_gnotification(self.id_, user.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_gnotification(self, user):
         BaseUser.remove_gnotification(self, user)
         if not user.is_guest:
             yield db.user_del_gnotification(self.id_, user.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_censor(self, user):
         BaseUser.add_censor(self, user)
         if not user.is_guest:
             yield db.user_add_censor(self.id_, user.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_censor(self, user):
         BaseUser.remove_censor(self, user)
         if not user.is_guest:
             yield db.user_del_censor(self.id_, user.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_noplay(self, user):
         BaseUser.add_noplay(self, user)
         if not user.is_guest:
             yield db.user_add_noplay(self.id_, user.id_)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove_noplay(self, user):
         BaseUser.remove_noplay(self, user)
         if not user.is_guest:
             yield db.user_del_noplay(self.id_, user.id_)
-        defer.returnValue(None)
 
     def get_history(self):
         if self._history is None:
@@ -737,40 +722,34 @@ class RegUser(BaseUser):
         """ Muzzle or unmuzzle the user (affects shouts). """
         self.is_muzzled = val
         yield db.user_set_muzzled(self.id_, 1 if val else 0)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_cmuzzled(self, val):
         """ Cmuzzle or un-cmuzzle the user (affects c-shouts). """
         self.is_cmuzzled = val
         yield db.user_set_cmuzzled(self.id_, 1 if val else 0)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_muted(self, val):
         BaseUser.set_muted(self, val)
         yield db.user_set_muted(self.id_, 1 if val else 0)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_notebanned(self, val):
         """ Add or remove this user from the noteban list. """
         self.is_notebanned = val
         yield db.user_set_notebanned(self.id_, 1 if val else 0)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_ratedbanned(self, val):
         """ Add or remove this user from the ratedban list. """
         self.is_ratedbanned = val
         yield db.user_set_ratedbanned(self.id_, 1 if val else 0)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def set_playbanned(self, val):
         BaseUser.set_playbanned(self, val)
         yield db.user_set_playbanned(self.id_, 1 if val else 0)
-        defer.returnValue(None)
 
     def get_total_time_online(self):
         tot = self._total_time_online
@@ -788,7 +767,6 @@ class RegUser(BaseUser):
             if u.id_ in (adj['white_user_id'], adj['black_user_id']):
                 defer.returnValue(adj)
                 return
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def add_adjourned(self, data):

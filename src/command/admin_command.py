@@ -322,7 +322,6 @@ class Nuke(Command):
                     yield db.add_comment_async(conn.user.id_, u.id_, 'Nuked.')
                 conn.write('Nuked: %s\n' % u.name)
                 log_admin(conn.user, 'nukes %s' % u.name)
-        defer.returnValue(None)
 
 
 @ics_command('pose', 'wS', admin.Level.admin)
@@ -385,7 +384,6 @@ class Remplayer(Command):
                 yield u.remove()
                 conn.write(A_("Player %s removed.\n") % u.name)
                 log_admin(adminuser, 'removes player %s' % u.name)
-        defer.returnValue(None)
 
 
 @ics_command('raisedead', 'wo', admin.Level.admin)
@@ -396,11 +394,11 @@ class Raisedead(Command):
         if u:
             conn.write(A_('A player named %s is already registered or online.\n')
                 % u.name)
-            defer.returnValue(None)
+            return
 
         if args[1]:
             conn.write(A_('Reincarnating a user to a different name is not supported.\n'))
-            defer.returnValue(None)
+            return
 
         # XXX it is currently possible to raise a player with a
         # higher adminlevel than yourself
@@ -413,8 +411,6 @@ class Raisedead(Command):
             # to get the correct capitalization?
             conn.write(A_('Player %s raised.\n') % args[0])
             log_admin(conn.user, 'raises player %s' % args[0])
-
-        defer.returnValue(None)
 
 
 '''@ics_command('burydead', 'w', admin.Level.admin)

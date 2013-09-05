@@ -45,7 +45,6 @@ class Addlist(Command):
                 yield ls.add(args[1], conn)
             except list_.ListError as e:
                 conn.write(e.reason)
-        defer.returnValue(None)
 
 
 @ics_command('showlist', 'o')
@@ -55,7 +54,7 @@ class Showlist(Command):
         if args[0] is None:
             for c in global_.lists.itervalues():
                 conn.write('%s\n' % c.name)
-            defer.returnValue(None)
+            return
 
         if conn.user.is_admin():
             ulists = global_.admin_lists
@@ -93,6 +92,5 @@ class Sublist(Command):
                 yield ls.sub(args[1], conn)
             except list_.ListError as e:
                 conn.write(e.reason)
-        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

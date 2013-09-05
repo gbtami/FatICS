@@ -110,7 +110,7 @@ class Channel(object):
     @defer.inlineCallbacks
     def set_topic(self, topic, owner):
         if not (yield self._check_owner(owner)):
-            defer.returnValue(None)
+            return
 
         if topic in ['-', '.']:
             # clear the topic
@@ -173,7 +173,6 @@ class Channel(object):
 
         if self.topic:
             self.show_topic(user)
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def remove(self, user):
@@ -190,7 +189,6 @@ class Channel(object):
         if was_owner:
             user.write(_('You are no longer an owner of channel %d.\n') % self.id_)
             # TODO? what if channel no longer has an owner?
-        defer.returnValue(None)
 
     @defer.inlineCallbacks
     def kick(self, u, owner):

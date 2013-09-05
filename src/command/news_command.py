@@ -48,7 +48,6 @@ class News(Command):
                 for item in reversed(news):
                     conn.write('%4d (%s) %s\n' % (item['news_id'],
                         item['news_date'], item['news_title']))
-        defer.returnValue(None)
 
 
 @ics_command('cnewsd', 'd', admin.Level.admin)
@@ -81,7 +80,6 @@ class Cnewse(Command):
             conn.write(A_('News item %d not found.\n') % args[0])
         else:
             conn.write(A_('Deleted news item %d.\n') % args[0])
-        defer.returnValue(None)
 
 
 @ics_command('cnewsf', 'dT', admin.Level.admin)
@@ -93,7 +91,6 @@ class Cnewsf(Command):
         line = args[1] if args[1] is not None else ''
         yield db.add_news_line(news_id, line)
         conn.write(A_('News item %d updated.\n') % news_id)
-        defer.returnValue(None)
 
 
 @ics_command('cnewsi', 'S', admin.Level.admin)
@@ -105,7 +102,6 @@ class Cnewsi(Command):
             return
         news_id = yield db.add_news(args[0], conn.user, is_admin=False)
         conn.write(A_('Created news item %d.\n') % news_id)
-        defer.returnValue(None)
 
 
 @ics_command('cnewsp', 'd', admin.Level.admin)
@@ -118,7 +114,6 @@ class Cnewsp(Command):
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])
-        defer.returnValue(None)
 
 
 @ics_command('cnewst', 'dS', admin.Level.admin)
@@ -131,6 +126,5 @@ class Cnewst(Command):
             conn.write(A_('News item %d not found or not changed.\n') % args[0])
         else:
             conn.write(A_('News item %d updated.\n') % args[0])
-        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

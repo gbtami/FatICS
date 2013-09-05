@@ -125,7 +125,6 @@ def init():
     global_.variant_class['crazyhouse'] = variant.crazyhouse.Crazyhouse
     global_.variant_class['chess960'] = variant.chess960.Chess960
     global_.variant_class['bughouse'] = variant.bughouse.Bughouse
-    defer.returnValue(None)
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

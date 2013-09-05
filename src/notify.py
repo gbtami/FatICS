@@ -73,7 +73,6 @@ def notify_users(user, arrived):
                 u.write_("\nNotification: %s has arrived and isn't on your notify list.\n", name)
             else:
                 u.write_("\nNotification: %s has departed and isn't on your notify list.\n", name)
-    defer.returnValue(None)
 
 
 def notify_pin(user, arrived):

@@ -165,7 +165,6 @@ def show_ratings(user, conn):
             ent['total'] = row['total']
             conn.write('%(speed_variant)-24s %(rating)-6d %(rd)-3.0f %(volatility)9.6f %(total)7d %(best_str)s\n' % ent)
         conn.write('\n')
-    defer.returnValue(None)
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

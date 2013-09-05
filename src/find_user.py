@@ -259,7 +259,7 @@ def exact_for_user(name, conn):
         u = yield exact(name)
     except UsernameException:
         conn.write(_('"%s" is not a valid handle.\n') % name)
-        defer.returnValue(None)
+        return
     if not u:
         conn.write(_('There is no player matching the name "%s".\n') % name)
     defer.returnValue(u)
@@ -290,7 +290,7 @@ def by_prefix_for_user(name, conn):
         if not u:
             conn.write(_('There is no player matching the name "%s".\n')
                     % name)
-            defer.returnValue(None)
+            return
         defer.returnValue(u)
 
     except UsernameException as e:

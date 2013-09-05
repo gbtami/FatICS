@@ -38,24 +38,24 @@ class Examine(Command):
                 conn.write(_("You are already examining a game.\n"))
             else:
                 conn.write(_("You are playing a game.\n"))
-            defer.returnValue(None)
+            return
 
         if args[0] is None:
             conn.write(_("Starting a game in examine (scratch) mode.\n"))
             examine.ExaminedGame(conn.user)
-            defer.returnValue(None)
+            return
 
         if args[0] == 'b':
             conn.write('TODO: EXAMINE SCRATCH BOARD\n')
-            defer.returnValue(None)
+            return
 
         u = yield find_user.by_prefix_for_user(args[0], conn)
         if not u:
-            defer.returnValue(None)
+            return
 
         if args[1] is None:
             conn.write('TODO: EXAMINE ADJOURNED GAME\n')
-            defer.returnValue(None)
+            return
 
         try:
             num = int(args[1])
@@ -63,19 +63,18 @@ class Examine(Command):
             h = u.get_history_game(num, conn)
             if h:
                 examine.ExaminedGame(conn.user, h)
-            defer.returnValue(None)
+            return
         except ValueError:
             m = re.match(r'%(\d\d?)', args[1])
             if m:
                 num = int(m.group(1))
                 conn.write('TODO: EXAMINE JOURNAL GAME\n')
-                defer.returnValue(None)
+                return
 
             u2 = yield find_user.by_prefix_for_user(args[1], conn)
             if not u2:
-                defer.returnValue(None)
+                return
             conn.write('TODO: EXAMINE ADJOURNED GAME\n')
-        defer.returnValue(None)
 
 
 @ics_command('mexamine', 'w')

@@ -57,7 +57,7 @@ class Clearmessages(Command):
     def run(self, args, conn):
         if args[0] is None:
             conn.write(_('Use "clearmessages *" to clear all your messages.\n'))
-            defer.returnValue(None)
+            return
 
         if args[0] == '*':
             count = yield db.clear_messages_all(conn.user.id_)
@@ -66,7 +66,7 @@ class Clearmessages(Command):
             count = yield db.clear_messages_range(conn.user.id_, i, i)
             if count == 0:
                 conn.write(_('There is no such message.\n'))
-                defer.returnValue(None)
+                return
         else:
             m = self.range_re.match(args[0])
             if m:
@@ -74,12 +74,12 @@ class Clearmessages(Command):
                 # sanity checks
                 if start < 1 or start > end or end > 9999:
                     conn.write(_('Invalid message range.\n'))
-                    defer.returnValue(None)
+                    return
                 count = yield db.clear_messages_range(conn.user.id_, start, end)
             else:
                 sender = yield find_user.by_prefix_for_user(args[0], conn)
                 if not sender:
-                    defer.returnValue(None)
+                    return
                 count = yield db.clear_messages_from_to(sender.id_, conn.user.id_)
 
         conn.write(ngettext('Cleared %d message.\n',
@@ -98,7 +98,7 @@ class Fmessage(Command, FormatMessage):
         if u2:
             if conn.user.name in u2.censor and not conn.user.is_admin():
                 conn.write(_('%s is censoring you.\n') % u2.name)
-                defer.returnValue(None)
+                return
             msgs = yield db.get_messages_range(conn.user.id_, args[1], args[1])
             if msgs:
                 msg = msgs[0]
@@ -157,7 +157,7 @@ class Messages(Command, FormatMessage):
                 msgs = yield db.get_messages_range(conn.user.id_, i, i)
                 if not msgs:
                     conn.write(_('There is no such message.\n'))
-                    defer.returnValue(None)
+                    return
             except ValueError:
                 m = self.range_re.match(args[0])
                 if m:
@@ -165,15 +165,15 @@ class Messages(Command, FormatMessage):
                     # sanity checks
                     if start < 1 or start > end or end > 9999:
                         conn.write(_('Invalid message range.\n'))
-                        defer.returnValue(None)
+                        return
                     msgs = yield db.get_messages_range(conn.user.id_, start, end)
                 else:
                     u2 = yield find_user.by_prefix_for_user(args[0], conn)
                     if not u2:
-                        defer.returnValue(None)
+                        return
                     if u2.is_guest:
                         conn.write(_('Only registered players can have messages.\n'))
-                        defer.returnValue(None)
+                        return
                     msgs = yield db.get_messages_from_to(conn.user.id_, u2.id_)
                     if not msgs:
                         conn.write(_('You have no messages to %s.\n') % u2.name)
@@ -186,7 +186,7 @@ class Messages(Command, FormatMessage):
                     msgs = yield db.get_messages_from_to(u2.id_, conn.user.id_)
                     if not msgs:
                         conn.write(_('You have no messages from %s.\n') % u2.name)
-                        defer.returnValue(None)
+                        return
                     else:
                         conn.write(_('Messages from %s:\n') % u2.name)
 
@@ -202,13 +202,13 @@ class Messages(Command, FormatMessage):
             if to:
                 if conn.user.is_muted:
                     conn.write(_('You are muted.\n'))
-                    defer.returnValue(None)
+                    return
                 if to.is_guest:
                     conn.write(_('Only registered players can have messages.\n'))
-                    defer.returnValue(None)
+                    return
                 if conn.user.name in to.censor and not conn.user.is_admin():
                     conn.write(_('%s is censoring you.\n') % to.name)
-                    defer.returnValue(None)
+                    return
                 message_id = yield db.send_message(conn.user.id_, to.id_,
                     args[1])
                 msg = yield db.get_message(message_id)
@@ -226,6 +226,5 @@ class Messages(Command, FormatMessage):
                 if to.is_online:
                     to.write_('The following message was received:\n')
                     to.write(msg_str_to)
-        defer.returnValue(None)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
