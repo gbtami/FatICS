@@ -90,7 +90,7 @@ class ExaminedGame(Game):
             if not mv:
                 mv = self.variant.pos.move_from_san(san)
             if not mv:
-                print 'internal error: failed to parse move %s' % san
+                print('internal error: failed to parse move %s' % san)
             assert(mv)
             mv.time = 0.0
             self.variant.do_move(mv)

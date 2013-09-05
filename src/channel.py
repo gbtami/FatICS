@@ -87,28 +87,29 @@ class Channel(object):
         else:
             user.write(_('There is no topic for channel %d.\n') % (self.id_,))
 
-    def check_owner(self, user):
+    @defer.inlineCallbacks
+    def _check_owner(self, user):
         """ Check whether a user is an owner of the channel allowed to
         perform operations on it, and if not, send an error message. """
         # XXX maybe this could be done without checking the DB
         if not user.is_admin():
-            if not db.channel_is_owner(self.id_, user.id_):
+            if not (yield db.channel_is_owner(self.id_, user.id_)):
                 user.write(_("You don't have permission to do that.\n"))
-                return False
+                defer.returnValue(False)
 
-        if not self.has_member(user):
+        if not (yield self._has_member(user)):
             user.write(_("You are not in channel %d.\n") % (self.id_,))
-            return False
+            defer.returnValue(False)
 
         if not user.hears_channels():
             user.write(_('You are not listening to channels.\n'))
-            return False
+            defer.returnValue(False)
 
-        return True
+        defer.returnValue(True)
 
     @defer.inlineCallbacks
     def set_topic(self, topic, owner):
-        if not self.check_owner(owner):
+        if not (yield self._check_owner(owner)):
             defer.returnValue(None)
 
         if topic in ['-', '.']:
@@ -137,18 +138,24 @@ class Channel(object):
     def is_user_owned(self):
         return self.id_ >= USER_CHANNEL_START
 
-    def has_member(self, user):
+    def _has_member(self, user):
+        """Check if a user is in a channel. Queries the database if the
+        user is offline. Returns a deferred."""
         if user.is_online:
-            return user in self.online
+            return defer.succeed(user in self.online)
         else:
             assert(not user.is_guest)
             return db.user_in_channel(user.id_, self.id_)
 
     @defer.inlineCallbacks
     def add(self, user):
+        """Add a user to this channel."""
         if user in self.online:
             raise list_.ListError(_('[%s] is already on your channel list.\n') %
                 self.id_)
+
+        self.online.append(user)
+        yield user.add_channel(self.id_)
 
         # channels above 1024 may be claimed by a user simply
         # by joining
@@ -156,16 +163,14 @@ class Channel(object):
             if user.is_guest:
                 raise list_.ListError(_('Only registered players can join channels %d and above.\n') % USER_CHANNEL_START)
             count = yield db.channel_user_count(self.id_)
-            if count == 0:
+            if count == 1:
                 owned_count = yield db.user_channels_owned(user.id_)
                 if (owned_count >= config.max_channels_owned
                         and not user.has_title('TD')):
                     raise list_.ListError(_('You cannot own more than %d channels.\n') % config.max_channels_owned)
-                yield db.channel_add_owner(self.id_, user.id_)
+                yield db.channel_set_owner(self.id_, user.id_, 1)
                 user.write(_('You are now the owner of channel %d.\n') % self.id_)
 
-        self.online.append(user)
-        yield user.add_channel(self.id_)
         if self.topic:
             self.show_topic(user)
         defer.returnValue(None)
@@ -177,32 +182,29 @@ class Channel(object):
                 self.id_)
 
         assert(user.is_online)
+        was_owner = not user.is_guest and (yield db.channel_is_owner(self.id_,
+            user.id_))
         self.online.remove(user)
         yield user.remove_channel(self.id_)
 
-        if not user.is_guest and self.is_user_owned():
-            try:
-                yield db.channel_del_owner(self.id_, user.id_)
-            except db.DeleteError:
-                # user was not an owner
-                pass
-            else:
-                user.write(_('You are no longer an owner of channel %d.\n') % self.id_)
-                # TODO? what if channel no longer has an owner?
+        if was_owner:
+            user.write(_('You are no longer an owner of channel %d.\n') % self.id_)
+            # TODO? what if channel no longer has an owner?
         defer.returnValue(None)
 
+    @defer.inlineCallbacks
     def kick(self, u, owner):
-        if not self.check_owner(owner):
+        if not (yield self._check_owner(owner)):
             return
 
-        if not self.has_member(u):
+        if not (yield self._has_member(u)):
             owner.write(_("%(name)s is not in channel %(chid)d.\n") % {
                 'name': u.name, 'chid': self.id_
                 })
             return
 
         if not owner.is_admin():
-            if db.channel_is_owner(self.id_, u.id_):
+            if (yield db.channel_is_owner(self.id_, u.id_)):
                 owner.write(_("You cannot kick out a channel owner.\n"))
                 return
             if u.is_admin():
@@ -212,9 +214,6 @@ class Channel(object):
             if not admin.check_user_operation(owner, u):
                 owner.write(A_('You need a higher adminlevel to do that.\n'))
                 return
-            if not u.is_guest and db.channel_is_owner(self.id_, u.id_):
-                # remove kicked user as owner of the channel, too
-                db.channel_del_owner(self.id_, u.id_)
 
         u.remove_channel(self.id_)
         if u.is_online:

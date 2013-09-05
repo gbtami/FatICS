@@ -396,8 +396,6 @@ if 1:
             txn.execute("""DELETE FROM note WHERE user_id=%s""", (uid,))
             txn.execute("""DELETE FROM channel_user WHERE user_id=%s""",
                 (uid,))
-            txn.execute("""DELETE FROM channel_owner WHERE user_id=%s""",
-                (uid,))
             txn.execute("""DELETE FROM history WHERE user_id=%s""", (uid,))
             txn.execute("""DELETE FROM rating WHERE user_id=%s""", (uid,))
             txn.execute("""DELETE FROM message WHERE to_user_id=%s""", (uid,))
@@ -505,6 +503,7 @@ if 1:
         return adb.runInteraction(do_del)
 
     def get_channel_list():
+        """Get a list of all channels and their descriptions and topics."""
         return adb.runQuery("""SELECT channel_id,name,descr,
             topic,user_name AS topic_who_name,topic_when
             FROM channel LEFT JOIN user ON(channel.topic_who=user.user_id)""")
@@ -518,46 +517,45 @@ if 1:
         cursor.close()
         return [r[0] for r in rows]'''
 
+    @defer.inlineCallbacks
     def user_in_channel(user_id, chid):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT 1 FROM channel_user
+        """Check whether a user is in a given channel."""
+        rows = yield adb.runQuery("""SELECT 1 FROM channel_user
             WHERE channel_id=%s AND user_id=%s LIMIT 1""", (chid, user_id))
-        row = cursor.fetchone()
-        cursor.close()
-        return bool(row)
+        defer.returnValue(bool(rows))
 
     @defer.inlineCallbacks
     def channel_user_count(chid):
+        """Find how many users are in a channel."""
         rows = yield adb.runQuery("""SELECT COUNT(*) AS c FROM channel_user
             WHERE channel_id=%s""", (chid,))
         defer.returnValue(rows[0]['c'])
 
-    def channel_is_owner(chid, user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT 1 FROM channel_owner
-            WHERE channel_id=%s AND user_id=%s LIMIT 1""", (chid, user_id))
-        row = cursor.fetchone()
-        cursor.close()
-        return bool(row)
-
     @defer.inlineCallbacks
-    def channel_add_owner(chid, user_id):
-        yield adb.runOperation("""INSERT INTO channel_owner
-            SET channel_id=%s,user_id=%s""", (chid, user_id))
-        defer.returnValue(None)
+    def channel_is_owner(chid, user_id):
+        """Check whether the given user is an owner of the given channel."""
+        """ TODO this should probably be cached somewhere,
+        rather than querying the DB every time. """
+        rows = yield adb.runQuery("""SELECT 1 FROM channel_user
+             WHERE channel_id=%s AND user_id=%s AND is_owner=1""",
+             (chid, user_id))
+        defer.returnValue(bool(rows))
 
-    def channel_del_owner(chid, user_id):
-        def do_del(txn):
-            txn.execute("""DELETE FROM channel_owner
-            WHERE channel_id=%s AND user_id=%s""", (chid, user_id))
+    def channel_set_owner(chid, user_id, val):
+        """Add or remove an owner of a channel."""
+        assert(val in [0, 1])
+        def do(txn):
+            txn.execute("""UPDATE channel_user
+                SET is_owner=%s WHERE channel_id=%s AND user_id=%s""",
+                (val, chid, user_id))
             if txn.rowcount != 1:
-                raise DeleteError()
-        return adb.runInteraction(do_del)
+                raise UpdateError
+        return adb.runInteraction(do)
 
     @defer.inlineCallbacks
     def user_channels_owned(user_id):
-        rows = yield adb.runQuery("""SELECT COUNT(*) AS c FROM channel_owner
-            WHERE user_id=%s""", (user_id,))
+        rows = yield adb.runQuery("""SELECT COUNT(*) AS c FROM channel_user
+            WHERE user_id=%s AND is_owner=1""", (user_id,))
         defer.returnValue(rows[0]['c'])
 
     @defer.inlineCallbacks

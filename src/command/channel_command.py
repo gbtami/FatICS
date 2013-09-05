@@ -73,7 +73,7 @@ class Chkick(Command):
         except KeyError:
             conn.write(_('Invalid channel number.\n'))
             return
-        ch.kick(u, conn.user)
+        yield ch.kick(u, conn.user)
         defer.returnValue(None)
 
 

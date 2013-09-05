@@ -464,6 +464,7 @@ class RegUser(BaseUser):
 
         yield BaseUser.log_on(self, conn)
 
+        assert(self.session.notified_online is not None)
         notify.notify_users(self, arrived=True)
 
         if not self.first_login:
@@ -508,6 +509,7 @@ class RegUser(BaseUser):
         defer.returnValue(None)
 
     def log_off(self):
+        assert(self.session.notified_online is not None)
         notify.notify_users(self, arrived=False)
         d1 = BaseUser.log_off(self)
         d2 = db.user_add_to_total_time_online(self.id_,
