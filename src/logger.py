@@ -34,10 +34,10 @@ CRITICAL = logging.CRITICAL
 
 
 try:
-    os.makedirs(config.log_directory, 0750)
+    os.makedirs(config.log_directory, 0o750)
 except OSError as e:
     if e.errno == errno.EACCES:
-        print "Warning: could not create log directory (", config.log_directory, "), using current directory"
+        print("Warning: could not create log directory (", config.log_directory, "), using current directory")
         config.log_directory = "."
     elif e.errno != errno.EEXIST:
         raise
@@ -57,4 +57,6 @@ def log(facility, level, message):
     if facility in facilities:
         _logger[facility].log(level, message)
     else:
-        print "Unknown log facilitiy used: ", facility
+        print("Unknown log facilitiy used: ", facility)
+
+# vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -128,7 +128,7 @@ class Finger(Command):
                         total = u.get_total_time_online()
                         first = calendar.timegm(u.first_login.timetuple()) + (
                             1e-6 * u.first_login.microsecond)
-                        perc = round(100 * total / (time.time() - first), 1)
+                        perc = round(100 * total // (time.time() - first), 1)
                         conn.write(_('Total time online: %s\n') % time_format.hms_words(total, round_secs=True))
                         since = time.strftime("%a %b %e, %H:%M %Z %Y", time.gmtime(first))
                         # should be equivalent: since = u.first_login.replace(tzinfo=pytz.utc).astimezone(conn.user.tz).strftime('%a %b %e, %H:%M %Z %Y')
@@ -254,7 +254,7 @@ class Stored(Command):
 
                     half_moves = entry['movetext'].count(' ') + 1
                     next_move_color = "B" if half_moves % 2 else "W"
-                    next_move_number = half_moves / 2 + 1
+                    next_move_number = half_moves // 2 + 1
                     entry['next_move'] = "%s%d" % (next_move_color,
                         next_move_number)
 

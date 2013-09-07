@@ -672,7 +672,7 @@ class Position(object):
         self.history.set_move(self.ply - 1, mv)
         #assert(self.hash == self.compute_hash())
         if self.hash != self.compute_hash():
-            print 'failed on move %d %s' % (self.ply, str(mv))
+            print('failed on move %d %s' % (self.ply, str(mv)))
             assert(False)
         self.check_material()
         if self.bug_link:
@@ -817,11 +817,11 @@ class Position(object):
                 bmat += piece_material[pc] * count
 
         if bmat != self.material[0]:
-            print self.to_xfen()
-            print 'bmat %d, mat0 %d' % (bmat, self.material[0])
+            print(self.to_xfen())
+            print('bmat %d, mat0 %d' % (bmat, self.material[0]))
         if wmat != self.material[1]:
-            print self.to_xfen()
-            print 'wmat %d, mat1 %d' % (wmat, self.material[1])
+            print(self.to_xfen())
+            print('wmat %d, mat1 %d' % (wmat, self.material[1]))
         assert(bmat == self.material[0])
         assert(wmat == self.material[1])
 

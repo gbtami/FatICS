@@ -87,7 +87,7 @@ def advance(sym):
 class NotSymbol(Symbol):
     lbp = 90
     def nud(self):
-        return not expression(90)
+        return int(not expression(90))
 
 
 @Token(['*'])
@@ -135,7 +135,7 @@ class LTSymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
-        return left < right
+        return int(left < right)
 
 
 @Token(['<=', '=<'])
@@ -143,7 +143,7 @@ class LTESymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
-        return left <= right
+        return int(left <= right)
 
 
 @Token(['>'])
@@ -151,7 +151,7 @@ class GTSymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
-        return left > right
+        return int(left > right)
 
 
 @Token(['>=', '=>'])
@@ -159,7 +159,7 @@ class GTESymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
-        return left >= right
+        return int(left >= right)
 
 
 @Token(['=', '=='])
@@ -167,7 +167,7 @@ class EqSymbol(Symbol):
     lbp = 50
     def led(self, left):
         right = expression(50)
-        return left == right
+        return int(left == right)
 
 
 @Token(['!=', '<>'])
@@ -175,7 +175,7 @@ class NeqSymbol(Symbol):
     lbp = 40
     def led(self, left):
         right = expression(40)
-        return left != right
+        return int(left != right)
 
 
 @Token(['&', '&&', 'and'])
@@ -183,7 +183,7 @@ class AndSymbol(Symbol):
     lbp = 30
     def led(self, left):
         right = expression(30)
-        return left and right
+        return int(left and right)
 
 
 @Token(['|', '||', 'or'])
@@ -191,7 +191,7 @@ class OrSymbol(Symbol):
     lbp = 20
     def led(self, left):
         right = expression(20)
-        return left or right
+        return int(left or right)
 
 
 @Token(['('])

@@ -47,7 +47,7 @@ class Seek(Command):
         try:
             s = seek.Seek(conn.user, args[0])
         except match.MatchError as e:
-            conn.write(e[0])
+            conn.write(e.args[0])
             return
 
         # Check if the user has already posted the same seek.  It might be

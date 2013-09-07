@@ -356,7 +356,8 @@ class Game(object):
                 move_str = '%-7s (%s)' % (mv.to_san(),
                     time_format.hms(mv.time, conn.user))
             if i % 2 == 0:
-                conn.write_nowrap('%3d.  %-23s ' % (int((i + 3) / 2), move_str))
+                conn.write_nowrap('%3d.  %-23s ' % (int((i + 3) // 2),
+                    move_str))
             else:
                 assert(len(move_str) <= 23)
                 conn.write_nowrap('%s\n' % move_str)
@@ -887,10 +888,10 @@ class PlayedGame(Game):
                 elif 'Game aborted' in msg:
                     self.bug_link.result("Partners' game aborted", '*')
                 else:
-                    print 'unexpected incomplete game message %s' % msg
+                    print('unexpected incomplete game message %s' % msg)
                     assert(False)
             else:
-                print 'unexpected result code %s' % result_code
+                print('unexpected result code %s' % result_code)
                 assert(False)
 
         self.free()

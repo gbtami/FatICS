@@ -343,7 +343,7 @@ class Challenge(Offer, MatchStringParser):
                 self._check_open()
                 self._parse_args(args, a, b)
             except MatchError as e:
-                a.write(e[0])
+                a.write(e.args[0])
                 return
 
         a_sent = a.session.offers_sent

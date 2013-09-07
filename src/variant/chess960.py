@@ -323,7 +323,7 @@ class Move(object):
             san = self.pc.upper()
             ambigs = self.pos.get_from_sqs(self.pc, self.to)
             if not (len(ambigs) >= 1):
-                print 'move not ambig with itself: %s%s' % (sq_to_str(self.fr), sq_to_str(self.to))
+                print('move not ambig with itself: %s%s' % (sq_to_str(self.fr), sq_to_str(self.to)))
             assert(len(ambigs) >= 1)
             if len(ambigs) > 1:
                 r = rank(self.fr)
