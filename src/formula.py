@@ -38,7 +38,7 @@ all_tokens = {}
 
 
 # pacify pyflakes
-token = nextt = chal = f_num = 0
+token = nextt = chal = f_num = None
 
 
 class FormulaError(Exception):
@@ -135,7 +135,10 @@ class LTSymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
-        return int(left < right)
+        try:
+            return int(left < right)
+        except TypeError:
+            return None
 
 
 @Token(['<=', '=<'])
@@ -143,7 +146,10 @@ class LTESymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
-        return int(left <= right)
+        try:
+            return int(left <= right)
+        except TypeError:
+            return None
 
 
 @Token(['>'])
@@ -151,7 +157,10 @@ class GTSymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
-        return int(left > right)
+        try:
+            return int(left > right)
+        except TypeError:
+            return None
 
 
 @Token(['>=', '=>'])
@@ -159,7 +168,10 @@ class GTESymbol(Symbol):
     lbp = 60
     def led(self, left):
         right = expression(60)
-        return int(left >= right)
+        try:
+            return int(left >= right)
+        except TypeError:
+            return None
 
 
 @Token(['=', '=='])
@@ -167,7 +179,10 @@ class EqSymbol(Symbol):
     lbp = 50
     def led(self, left):
         right = expression(50)
-        return int(left == right)
+        try:
+            return int(left == right)
+        except TypeError:
+            return None
 
 
 @Token(['!=', '<>'])
@@ -175,7 +190,10 @@ class NeqSymbol(Symbol):
     lbp = 40
     def led(self, left):
         right = expression(40)
-        return int(left != right)
+        try:
+            return int(left != right)
+        except TypeError:
+            return None
 
 
 @Token(['&', '&&', 'and'])
@@ -183,7 +201,10 @@ class AndSymbol(Symbol):
     lbp = 30
     def led(self, left):
         right = expression(30)
-        return int(left and right)
+        try:
+            return int(left and right)
+        except TypeError:
+            return None
 
 
 @Token(['|', '||', 'or'])
@@ -191,7 +212,10 @@ class OrSymbol(Symbol):
     lbp = 20
     def led(self, left):
         right = expression(20)
-        return int(left or right)
+        try:
+            return int(left or right)
+        except TypeError:
+            return None
 
 
 @Token(['('])
@@ -216,14 +240,14 @@ class EndSymbol(Symbol):
 class AbuserSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.a.has_title('abuser') if chal else None
+        return int(chal.a.has_title('abuser')) if chal else None
 
 
 @Token(['computer'])
 class ComputerSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.a.has_title('computer') if chal else None
+        return int(chal.a.has_title('computer')) if chal else None
 
 
 @Token(['time'])
@@ -266,49 +290,49 @@ class RatingdiffSymbol(Symbol):
 class WhiteSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.side == WHITE if chal else None
+        return int(chal.side == WHITE) if chal else None
 
 
 @Token(['black'])
 class BlackSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.side == BLACK if chal else None
+        return int(chal.side == BLACK) if chal else None
 
 
 @Token(['nocolor'])
 class NocolorSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return (chal.side not in [WHITE, BLACK]) if chal else None
+        return int(chal.side not in [WHITE, BLACK]) if chal else None
 
 
 @Token(['slow'])
 class SlowSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.speed_name == 'slow' if chal else None
+        return int(chal.speed_name == 'slow') if chal else None
 
 
 @Token(['standard'])
 class StandardSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.speed_name == 'standard' if chal else None
+        return int(chal.speed_name == 'standard') if chal else None
 
 
 @Token(['blitz'])
 class BlitzSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.speed_name == 'blitz' if chal else None
+        return int(chal.speed_name == 'blitz') if chal else None
 
 
 @Token(['lightning'])
 class LightningSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.speed_name == 'lightning' if chal else None
+        return int(chal.speed_name == 'lightning') if chal else None
 
 
 @Token(['registered'])
@@ -322,14 +346,14 @@ class RegisteredSymbol(Symbol):
 class TimesealSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.a.has_timeseal() if chal else None
+        return int(chal.a.has_timeseal()) if chal else None
 
 
 @Token(['crazyhouse'])
 class CrazyhouseSymbol(Symbol):
     lbp = 0
     def nud(self):
-        return chal.variant.name == 'crazyhouse' if chal else None
+        return int(chal.variant.name == 'crazyhouse') if chal else None
 
 
 class FSymbol(Symbol):
@@ -342,7 +366,7 @@ class FSymbol(Symbol):
             raise FormulaError('A formula variable may not refer to itself or an earlier formula variable')
         if not chal:
             # no need to evaluate
-            return None
+            return 0
         old_token = token
         old_nextt = nextt
         ret = check_formula(chal, chal.b.vars_['f' + str(self.num)], self.num)

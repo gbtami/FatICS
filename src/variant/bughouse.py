@@ -24,7 +24,7 @@ from array import array
 from game_constants import (WHITE, BLACK, valid_sq, rank, file_)
 from game_constants import (A1, C1, D1, E1, F1, G1, H1,
     A8, C8, D8, E8, F8, G8, H8)
-from base_variant import BaseVariant, IllegalMoveError
+from variant.base_variant import BaseVariant, IllegalMoveError
 
 """
 0x88 board representation; pieces are represented as ASCII,

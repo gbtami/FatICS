@@ -17,8 +17,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from game_command import GameMixin
-
+from .game_command import GameMixin
 from .command import ics_command, Command
 
 import game

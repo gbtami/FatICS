@@ -565,18 +565,17 @@ if 1:
         return adb.runInteraction(do_del)
 
     def user_get_titles(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT title_name,title_flag,title_light FROM user_title LEFT JOIN title USING (title_id) WHERE user_id=%s ORDER BY title_id ASC""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        """Get a list of a player's titles, such as TM, admin, or abuser."""
+        return adb.runQuery("""SELECT title_name,title_flag,title_light FROM user_title LEFT JOIN title USING (title_id) WHERE user_id=%s ORDER BY title_id ASC""",
+            (user_id,))
 
     def toggle_title_light(user_id, title_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE user_title
+        """Toggle the light that appears after a player's
+        name and marks the player as on or off duty, e.g. (*) for
+        admins or (TM) for tourney managers."""
+        return adb.runOperation("""UPDATE user_title
             SET title_light=NOT title_light
             WHERE title_id=%s AND user_id=%s""", (title_id, user_id))
-        cursor.close()
 
     # notifications
     @defer.inlineCallbacks

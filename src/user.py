@@ -414,6 +414,7 @@ class RegUser(BaseUser):
             self.notes[note['num']] = note['txt']
         self._rating = None
         self.tz = pytz.timezone(self.vars_['tzone'])
+        yield self._load_titles()
 
     def _get_censor(self):
         if self._censor is None:
@@ -426,24 +427,24 @@ class RegUser(BaseUser):
     def get_display_name(self):
         """Get the name displayed for other users, e.g. admin(*)(SR).  Titles
         for which the light is turned off are not included. """
-        if self._title_str is None:
-            self._load_titles()
         return BaseUser.get_display_name(self)
 
+    @defer.inlineCallbacks
     def _load_titles(self):
         disp_list = []
         self._titles = set()
         self._on_duty_titles = set()
-        for t in db.user_get_titles(self.id_):
+        for t in (yield db.user_get_titles(self.id_)):
             if t['title_flag'] and t['title_light']:
                 disp_list.append('(%s)' % t['title_flag'])
                 self._on_duty_titles.add(t['title_name'])
             self._titles.add(t['title_name'])
         self._title_str = ''.join(disp_list)
 
+    @defer.inlineCallbacks
     def toggle_light(self, title_id):
-        db.toggle_title_light(self.id_, title_id)
-        self._load_titles()
+        yield db.toggle_title_light(self.id_, title_id)
+        yield self._load_titles()
 
     @defer.inlineCallbacks
     def log_on(self, conn):
@@ -464,7 +465,7 @@ class RegUser(BaseUser):
         yield BaseUser.log_on(self, conn)
 
         assert(self.session.notified_online is not None)
-        notify.notify_users(self, arrived=True)
+        yield notify.notify_users(self, arrived=True)
 
         if not self.first_login:
             yield db.user_set_first_login(self.id_)
@@ -506,14 +507,15 @@ class RegUser(BaseUser):
 
         self.get_history()
 
+    @defer.inlineCallbacks
     def log_off(self):
         assert(self.session.notified_online is not None)
-        notify.notify_users(self, arrived=False)
+        yield notify.notify_users(self, arrived=False)
         d1 = BaseUser.log_off(self)
         d2 = db.user_add_to_total_time_online(self.id_,
             int(self.session.get_online_time()))
         d3 = db.user_set_last_logout(self.id_)
-        return defer.DeferredList([d1, d2, d3])
+        yield defer.DeferredList([d1, d2, d3])
 
     def get_log(self):
         return db.user_get_log(self.name)
@@ -578,12 +580,12 @@ class RegUser(BaseUser):
     @defer.inlineCallbacks
     def add_title(self, id_):
         yield db.user_add_title(self.id_, id_)
-        self._load_titles()
+        yield self._load_titles()
 
     @defer.inlineCallbacks
     def remove_title(self, id_):
         yield db.user_del_title(self.id_, id_)
-        self._load_titles()
+        yield self._load_titles()
 
     @defer.inlineCallbacks
     def add_notification(self, user):
@@ -646,18 +648,12 @@ class RegUser(BaseUser):
         defer.returnValue(self._adjourned)
 
     def has_title(self, title):
-        if self._titles is None:
-            self._load_titles()
         return BaseUser.has_title(self, title)
 
     def on_duty_as(self, title):
-        if self._titles is None:
-            self._load_titles()
         return title in self._on_duty_titles
 
     def get_titles(self):
-        if self._titles is None:
-            self._load_titles()
         return BaseUser.get_titles(self)
 
     def save_history(self, game_id, result_char, user_rating, color_char,
