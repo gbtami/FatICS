@@ -450,6 +450,6 @@ if __name__ == '__main__':
     except FormulaError:
         print('success')
     else:
-        print 'FAIL'
+        print('FAIL')
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

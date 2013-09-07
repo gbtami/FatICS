@@ -115,7 +115,7 @@ if 1:
         assert(name in dbkeys)
         num = dbkeys[name]
         if val is not None:
-            d = adb.runQuery("""INSERT INTO formula SET user_id=%s,num=%s,f=%s ON DUPLICATE KEY UPDATE f=%s""",
+            d = adb.runOperation("""INSERT INTO formula SET user_id=%s,num=%s,f=%s ON DUPLICATE KEY UPDATE f=%s""",
                 (user_id, num, val, val))
         else:
             # It is OK to not actually delete any rows; in that
@@ -161,7 +161,7 @@ if 1:
 
     def user_set_alias(user_id, name, val):
         if val is not None:
-            d = adb.runQuery("""INSERT INTO user_alias SET user_id=%s,name=%s,val=%s ON DUPLICATE KEY UPDATE val=%s""",
+            d = adb.runOperation("""INSERT INTO user_alias SET user_id=%s,name=%s,val=%s ON DUPLICATE KEY UPDATE val=%s""",
                 (user_id, name, val, val))
         else:
             def do_del(txn):
@@ -458,12 +458,11 @@ if 1:
         defer.returnValue([r['channel_id'] for r in rows])
 
     def channel_new(chid, name):
-        cursor = db.cursor()
+        """Create a new channel entry in the database."""
         if name is not None:
-            cursor = query(cursor, """INSERT INTO channel SET channel_id=%s,name=%s""", (chid, name,))
+            return adb.runOperation("""INSERT INTO channel SET channel_id=%s,name=%s""", (chid, name,))
         else:
-            cursor = query(cursor, """INSERT INTO channel SET channel_id=%s""", (chid,))
-        cursor.close()
+            return adb.runOperation("""INSERT INTO channel SET channel_id=%s""", (chid,))
 
     def channel_add_user(chid, user_id):
         return adb.runOperation("""INSERT INTO channel_user

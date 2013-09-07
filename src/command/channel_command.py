@@ -24,6 +24,7 @@ from .command import ics_command, Command, requires_registration
 import admin
 import find_user
 import global_
+import channel
 
 
 @ics_command('inchannel', 'n', admin.Level.user)
@@ -43,7 +44,11 @@ class Inchannel(Command):
                 try:
                     ch = global_.channels[args[0]]
                 except KeyError:
-                    conn.write(_('Invalid channel number.\n'))
+                    if args[0] < 0 or args[0] > channel.CHANNEL_MAX:
+                        conn.write(_('Invalid channel number.\n'))
+                    else:
+                        conn.write(_('There are %d players in channel %d.\n') %
+                            (0, args[0]))
                 else:
                     on = ch.get_online()
                     if len(on) > 0:
@@ -69,7 +74,7 @@ class Chkick(Command):
         if not u:
             return
         try:
-            ch = global_.channels[chid]
+            ch = yield global_.channels.get(chid)
         except KeyError:
             conn.write(_('Invalid channel number.\n'))
             return
@@ -83,7 +88,7 @@ class Chtopic(Command):
     def run(self, args, conn):
         (chid, topic) = args
         try:
-            ch = global_.channels[chid]
+            ch = yield global_.channels.get(chid)
         except KeyError:
             conn.write(_('Invalid channel number.\n'))
             return

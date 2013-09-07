@@ -34,7 +34,9 @@ def notify_users(user, arrived):
             user.write(_('Present company includes: %s\n')
                 % ' '.join((n.name for n in nlist)))
 
+        assert(user.session.notified_online is not None)
         adj_list = yield user.get_adjourned()
+        assert(user.session.notified_online is not None)
         for adj in adj_list:
             if adj['white_user_id'] == user.id_:
                 opp_name = adj['black_name']

@@ -22,6 +22,7 @@ from .command import Command, ics_command
 import global_
 import admin
 import find_user
+import channel
 
 from game_constants import PLAYED, EXAMINED
 
@@ -81,10 +82,15 @@ class TellCommand(Command, ToldMixin):
             return (None, None)
         else:
             if type(args[0]) in [int, long]:
+                # we do not try to look up channels in the db, because
+                # we are only interested in channels with users online.
                 try:
                     ch = global_.channels[args[0]]
                 except KeyError:
-                    conn.write(_('Invalid channel number.\n'))
+                    if ch < 0 or ch > channel.CHANNEL_MAX:
+                            conn.write(_('Invalid channel number.\n'))
+                    else:
+                        conn.write(_('Channel is empty.\n'))
                 else:
                     if conn.user not in ch.online and (
                             not conn.user.has_title('TD')):

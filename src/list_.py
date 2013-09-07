@@ -244,7 +244,7 @@ class ChannelList(MyList):
             raise ListError(_('The channel must be a number.\n'))
 
         try:
-            ch = global_.channels[val]
+            ch = yield global_.channels.get(val)
         except KeyError:
             raise ListError(_('Invalid channel number.\n'))
 
@@ -262,7 +262,7 @@ class ChannelList(MyList):
             raise ListError(_('The channel must be a number.\n'))
 
         try:
-            ch = global_.channels[val]
+            ch = yield global_.channels.get(val)
         except KeyError:
             raise ListError(_('Invalid channel number.\n'))
 

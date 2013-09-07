@@ -112,7 +112,7 @@ class TestChannel(Test):
         t.write('+ch 0\n')
         self.expect("[0] added to your channel list", t)
         t.write('inch 0\n')
-        self.expect_re(r'0: .*admin', t)
+        self.expect_re(r'0 "admin": .*admin', t)
         self.close(t)
 
         # XXX want to do a server restart here to check whether
@@ -120,7 +120,7 @@ class TestChannel(Test):
 
         t = self.connect_as_admin()
         t.write('inch 0\n')
-        self.expect_re(r'0: .*admin', t)
+        self.expect_re(r'0 "admin": .*admin', t)
         t.write('-ch 0\n')
         self.expect("[0] removed from your channel list", t)
         self.close(t)

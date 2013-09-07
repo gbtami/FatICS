@@ -49,6 +49,7 @@ class BaseUser(object):
     def __hash__(self):
         return hash(self.name)
 
+    @defer.inlineCallbacks
     def log_on(self, conn):
         assert(not self.is_online)
         self.vars_.update(global_.var_defaults.get_transient_vars())
@@ -66,23 +67,22 @@ class BaseUser(object):
         self.write(server.get_copyright_notice())
         self.write(db.get_server_message('motd'))
         for ch in self.channels:
-            global_.channels[ch].log_on(self)
+            (yield global_.channels.get(ch)).log_on(self)
 
-        d = db.user_log_add(self.name, login=True, ip=conn.ip)
-        return d
+        yield db.user_log_add(self.name, login=True, ip=conn.ip)
 
+    @defer.inlineCallbacks
     def log_off(self):
         assert(self.is_online)
 
         for ch in self.channels:
-            global_.channels[ch].log_off(self)
-        self.session.close()
+            (yield global_.channels.get(ch)).log_off(self)
+        yield self.session.close()
         self.is_online = False
         global_.online.remove(self)
         notify.notify_pin(self, arrived=False)
 
-        d = db.user_log_add(self.name, login=False, ip=self.session.conn.ip)
-        return d
+        yield db.user_log_add(self.name, login=False, ip=self.session.conn.ip)
 
     def write(self, s):
         """ Write a string to the user. """
@@ -524,12 +524,9 @@ class RegUser(BaseUser):
 
     @defer.inlineCallbacks
     def set_passwd(self, passwd):
-        self.passwd_hash = yield bcrypt.hashpw(passwd, bcrypt.gensalt())
+        self.passwd_hash = yield threads.deferToThread(
+            _hash_passwd_thread, passwd, bcrypt.gensalt())
         yield db.user_set_passwd(self.id_, self.passwd_hash)
-
-    def _check_passwd_thread(self, passwd):
-        bhash = bcrypt.hashpw(passwd, self.passwd_hash)
-        return (bhash == self.passwd_hash)
 
     # check if an unencrypted password is correct
     @defer.inlineCallbacks
@@ -538,7 +535,9 @@ class RegUser(BaseUser):
         if not is_legal_passwd(passwd):
             defer.returnValue(False)
         else:
-            ret = yield threads.deferToThread(self._check_passwd_thread, passwd)
+            ret = (self.passwd_hash ==
+                (yield threads.deferToThread(_hash_passwd_thread,
+                    passwd, self.passwd_hash)))
         defer.returnValue(ret)
 
     def remove(self):
@@ -863,11 +862,18 @@ def make_passwd():
 
 @defer.inlineCallbacks
 def add_user(name, email, passwd, real_name):
-    pwhash = bcrypt.hashpw(passwd, bcrypt.gensalt())
+    pwhash = yield threads.deferToThread(_hash_passwd_thread,
+        passwd, bcrypt.gensalt())
     user_id = yield db.user_add(name, email, pwhash, real_name,
         admin.Level.user)
     for chid in global_.channels.get_default_channels():
         yield db.channel_add_user(chid, user_id)
     defer.returnValue(user_id)
+
+
+def _hash_passwd_thread(passwd, salt):
+    """Hash a password. This function runs in a separate thread
+    to avoid blocking the server."""
+    return bcrypt.hashpw(passwd, salt)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

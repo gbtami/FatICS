@@ -466,6 +466,7 @@ INSERT INTO `user` SET user_id=1,user_name='admin',user_passwd='$2a$12$vUOlVpT6H
 UNLOCK TABLES;
 
 LOCK TABLES `channel` WRITE;
+INSERT INTO `channel` VALUES (0,'admin','Admins only',NULL,NULL,NULL);
 INSERT INTO `channel` VALUES (1,'help','Help for new (and not-so-new) users. :-)','This is the help channel.  You can get help by asking a question here; use "tell 1 My question is...".',1,NULL);
 UNLOCK TABLES;
 

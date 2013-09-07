@@ -150,13 +150,14 @@ class Session(object):
 
         # remove ftells
         if self.ftell:
+            ch0 = global_.channels[0]
             self.ftell.session.ftell_admins.remove(self.user)
-            global_.channels[0].tell("I am logging out now - conversation forwarding stopped.", self.user)
+            ch0.tell("I am logging out now - conversation forwarding stopped.", self.user)
 
         if self.ftell_admins:
-            ch = global_.channels[0]
+            ch0 = global_.channels[0]
             for adm in self.ftell_admins:
-                ch.tell(A_("*%s* has logged out - conversation forwarding stopped.") % self.user.name, adm)
+                ch0.tell(A_("*%s* has logged out - conversation forwarding stopped.") % self.user.name, adm)
                 adm.write(A_("%s, whose tells you were forwarding, has logged out.\n") % self.user.name)
                 adm.session.ftell = None
             self.ftell_admins = []

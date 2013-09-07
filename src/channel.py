@@ -245,25 +245,32 @@ class ChannelList(object):
         for ch in rows:
             id_ = ch['channel_id']
             self.all_[id_] = Channel(ch)
+        # some admin code assumes channel 0 is loaded
+        assert(0 in self.all_)
 
     def __getitem__(self, key):
+        """Look up a channel by number. Raise KeyError if the channel
+        does not exist or is not loaded from the db."""
         assert(isinstance(key, (int, long)))
         if key < 0 or key > CHANNEL_MAX:
             raise KeyError
-        try:
-            return self.all_[key]
-        except KeyError:
-            self.all_[key] = self._make_ch(key)
-            return self.all_[key]
+        return self.all_[key]
 
     def __iter__(self):
         return iter(self.all_.values())
 
-    def _make_ch(self, key):
-        name = None
-        db.channel_new(key, name)
-        return Channel({'channel_id': key, 'name': None, 'descr': None,
-            'topic': None})
+    @defer.inlineCallbacks
+    def get(self, key):
+        """Like __getitem__, but loads the channel from the db when
+        necessary. Returns a deferred which fires with the result."""
+        if key < 0 or key > CHANNEL_MAX:
+            raise KeyError
+        if key not in self.all_:
+            name = None
+            self.all_[key] = Channel({'channel_id': key, 'name': name,
+                'descr': None, 'topic': None})
+            yield db.channel_new(key, name)
+        defer.returnValue(self.all_[key])
 
     def get_default_channels(self):
         return [1]
