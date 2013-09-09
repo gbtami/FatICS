@@ -102,8 +102,9 @@ class Unseek(Command):
                 conn.write(_('You have no seek %d.\n') % n)
         else:
             if conn.user.session.seeks:
-                for s in conn.user.session.seeks:
+                for s in conn.user.session.seeks[:]:
                     s.remove()
+                assert(not conn.user.session.seeks)
                 conn.write(_('Your seeks have been removed.\n'))
             else:
                 conn.write(_('You have no active seeks.\n'))

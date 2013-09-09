@@ -208,7 +208,7 @@ DROP TABLE IF EXISTS `game`;
 CREATE TABLE `game` (
   `game_id` int(8) NOT NULL AUTO_INCREMENT,
   `white_user_id` INT(8) COMMENT 'ID of the white player or NULL for guest',
-  `black_user_id` INT(8) COMMENT 'ID of the black p layer or NULL for guest',
+  `black_user_id` INT(8) COMMENT 'ID of the black player or NULL for guest',
   `white_rating` char(4) NOT NULL COMMENT '0 for no rating', -- TODO: use smallint instead
   `black_rating` char(4) NOT NULL COMMENT '0 for no rating',
   `eco` char(5) NOT NULL,

@@ -39,7 +39,7 @@ from .test import *
 
 from twisted.internet import reactor
 
-conn_count = 1000
+conn_count = 800
 start_time = time.time()
 class TestProtocol(protocol.Protocol):
     state = 'unconnected'

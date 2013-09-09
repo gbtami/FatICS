@@ -51,6 +51,7 @@ class TellTest(Test):
         self.expect('tells you: test 2', t)
 
         self.close(t)
+        self.close(t2)
 
 
     def test_bad_tell(self):

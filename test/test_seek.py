@@ -501,7 +501,12 @@ class TestSought(Test):
         self.expect('%3d ++++ GuestABCD(U)        2  12 unrated blitz chess960 bronstein [black]' % n2, t)
         self.expect('2 ads displayed.', t)
 
-        self.close(t)
+        t.write('quit\n')
+        self.expect('Your seeks have been removed.', t)
+        t.close()
+
+        t2.write('unseek\n')
+        self.expect('Your seeks have been removed.', t2)
         self.close(t2)
 
     def test_sought(self):
@@ -530,6 +535,7 @@ class TestSought(Test):
 
         self.close(t)
         self.close(t2)
+        self.close(t3)
 
 # <s> 47 w=GuestWWPQ ti=01 rt=0P t=2 i=12 r=u tp=blitz c=W rr=0-9999 a=f f=f
 class TestSeekinfo(Test):

@@ -4,15 +4,17 @@ cd `dirname $0`
 
 PIDFILE=chessd.pid
 LOGFILE=chessd.log
+PYTHON=/usr/bin/python2.7
+TWISTD="$PYTHON /usr/bin/twistd"
 
 case "$1" in
   start)
     echo "Starting chessd...."
-    twistd --logfile $LOGFILE --pidfile $PIDFILE -r epoll -oy src/chessd.tac
+    $TWISTD --logfile $LOGFILE --pidfile $PIDFILE -r epoll -oy src/chessd.tac
     ;;
   run)
     echo "Running chessd in the foreground...."
-    twistd --pidfile $PIDFILE -r epoll -noy src/chessd.tac
+    $TWISTD --pidfile $PIDFILE -r epoll -noy src/chessd.tac
     ;;
   test)
     echo "Running test suite...."
@@ -50,7 +52,7 @@ case "$1" in
     ;;
   profile)
     echo "Running chessd in profile mode...."
-    twistd --logfile $LOGFILE --profile profile-chessd.data --savestats --profiler cProfile -r epoll -noy src/chessd.tac
+    $TWISTD --logfile $LOGFILE --profile profile-chessd.data --savestats --profiler cProfile -r epoll -noy src/chessd.tac
     ;;
   stop)
     if [ -f $PIDFILE ]; then

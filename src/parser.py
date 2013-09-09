@@ -41,6 +41,7 @@ def _do_parse(s, conn):
     """ Returns a deferred. """
     assert(conn.user.is_online)
     assert(conn.session.commands)
+    assert(conn.user.censor is not None)
     s = s.strip()
 
     # for testing unicode cleanliness

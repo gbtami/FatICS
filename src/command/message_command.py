@@ -95,8 +95,10 @@ class Fmessage(Command, FormatMessage):
             conn.write(_('You are muted.\n'))
             return
         u2 = yield find_user.by_prefix_for_user(args[0], conn)
+        # XXX maybe this check should be combined with the one in 'message'
         if u2:
-            if conn.user.name in u2.censor and not conn.user.is_admin():
+            u2censor = yield u2.get_censor()
+            if conn.user.name in u2censor and not conn.user.is_admin():
                 conn.write(_('%s is censoring you.\n') % u2.name)
                 return
             msgs = yield db.get_messages_range(conn.user.id_, args[1], args[1])
@@ -206,7 +208,8 @@ class Messages(Command, FormatMessage):
                 if to.is_guest:
                     conn.write(_('Only registered players can have messages.\n'))
                     return
-                if conn.user.name in to.censor and not conn.user.is_admin():
+                tocensor = yield to.get_censor()
+                if conn.user.name in tocensor and not conn.user.is_admin():
                     conn.write(_('%s is censoring you.\n') % to.name)
                     return
                 message_id = yield db.send_message(conn.user.id_, to.id_,

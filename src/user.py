@@ -416,14 +416,6 @@ class RegUser(BaseUser):
         self.tz = pytz.timezone(self.vars_['tzone'])
         yield self._load_titles()
 
-    def _get_censor(self):
-        if self._censor is None:
-            self._censor = set([dbu['user_name'] for dbu in
-                db.user_get_censored(self.id_)])
-        return self._censor
-    _censor = None
-    censor = property(fget=_get_censor)
-
     def get_display_name(self):
         """Get the name displayed for other users, e.g. admin(*)(SR).  Titles
         for which the light is turned off are not included. """
@@ -500,8 +492,8 @@ class RegUser(BaseUser):
         for a in (yield db.user_get_aliases(self.id_)):
             self.aliases[a['name']] = a['val']
 
-        #self.censor = set([dbu['user_name'] for dbu in
-        #    db.user_get_censored(self.id_)])
+        yield self.get_censor()
+        assert(self.censor is not None)
         for dbu in (yield db.user_get_noplayed(self.id_)):
             self.noplay.add(dbu['user_name'])
 
@@ -586,6 +578,17 @@ class RegUser(BaseUser):
     def remove_title(self, id_):
         yield db.user_del_title(self.id_, id_)
         yield self._load_titles()
+
+    @defer.inlineCallbacks
+    def get_censor(self):
+        """Get the set of players this user has censored, loading them
+        from the DB if necessary (i.e. when this user is offline)."""
+        try:
+            self.censor
+        except AttributeError:
+            self.censor = set([dbu['user_name'] for dbu in
+                (yield db.user_get_censored(self.id_))])
+        defer.returnValue(self.censor)
 
     @defer.inlineCallbacks
     def add_notification(self, user):
@@ -809,16 +812,17 @@ class GuestUser(BaseUser):
         self.channels = global_.channels.get_default_guest_channels()
         self.vars_ = global_.var_defaults.get_default_vars()
         assert('formula' in self.vars_)
-        self.censor = set()
         self.is_muted = False
         self.is_playbanned = False
         self.tz = pytz.timezone(self.vars_['tzone'])
+        self.censor = set()
 
     def log_on(self, conn):
         self._titles = set(['unregistered'])
         self._title_str = '(U)'
         self.notifiers = set()
         self.notified = set()
+        self.censor = set()
         self._history = []
         return BaseUser.log_on(self, conn)
 

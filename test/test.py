@@ -185,9 +185,10 @@ class Test(unittest.TestCase):
             pass
 
     def tearDown(self):
-        pass
         """ Make sure that all tests shut down cleanly. """
-        """t = self.connect_as_guest('GuestWXYZ')
+        pass
+        '''
+        t = self.connect_as_guest('GuestWXYZ')
         t.write('who\n')
         try:
             self.expect('1 player displayed.', t)
@@ -195,11 +196,11 @@ class Test(unittest.TestCase):
             # The test left open connections lying around.
             # Nuke all players to give the remaining tests a clean
             # environment.
-            self.close(t)
-            self._nuke_all_players()
+            #self.close(t)
+            #self._nuke_all_players()
             raise
 
-        self.close(t)"""
+        self.close(t)'''
 
 # test decorators
 """def with_guest(f):

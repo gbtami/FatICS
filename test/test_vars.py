@@ -52,6 +52,7 @@ class TestVarsCommand(Test):
         self.expect('Following: GuestEFGH', t)
 
         self.close(t)
+        self.close(t2)
 
     def test_other_vars(self):
         t = self.connect_as_admin()
@@ -174,6 +175,7 @@ class TestBusyString(Test):
         self.expect_not('\r\n(GuestABCD foo bar)\r\n', t2)
 
         self.close(t)
+        self.close(t2)
 
 class TestIvars(Test):
     def test_ivars(self):

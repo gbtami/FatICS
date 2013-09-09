@@ -665,11 +665,8 @@ if 1:
         defer.returnValue(rows)'''
 
     def user_get_censored(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT user_name FROM user LEFT JOIN censor ON (user.user_id=censor.censored) WHERE censorer=%s""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        return adb.runQuery("""SELECT user_name FROM user LEFT JOIN censor ON (user.user_id=censor.censored) WHERE censorer=%s""",
+            (user_id,))
 
     # noplay list
     @defer.inlineCallbacks

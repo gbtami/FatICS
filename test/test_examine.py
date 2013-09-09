@@ -159,6 +159,7 @@ class TestExamine(Test):
         self.expect('History of testplayer cleared.', t)
 
         self.close(t)
+        self.close(t2)
 
     def test_examine_history_last(self):
         t = self.connect_as_guest('GuestABCD')

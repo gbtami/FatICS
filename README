@@ -22,6 +22,7 @@ System requirements
 * The python-bcrypt module
 * The netaddr module
 * The pytz module
+* The python-openssl (pyOpenSSL) module
 * GNU gettext
 * (optional) The pexpect module, for timeseal/zipseal tests
 * (optional) sockjs-twisted, for html5 web clients. http://sockjs.org/
