@@ -94,6 +94,8 @@ class NoRating(object):
 
 
 def update_ratings(game, white_score, black_score):
+    """Update the ratings for both players after a game.  Return a
+    Deferrred."""
     wp = glicko2.Player(game.white_rating.glicko2_rating(),
         game.white_rating.glicko2_rd(), game.white_rating.volatility,
         game.white_rating.ltime)
@@ -132,17 +134,18 @@ def update_ratings(game, white_score, black_score):
 
     ltime = datetime.datetime.utcnow()
 
-    game.white.set_rating(game.speed_variant,
+    d1 = game.white.set_rating(game.speed_variant,
         white_rating, white_rd, wp.vol,
         white_win, white_loss, white_draw, ltime)
-    game.black.set_rating(game.speed_variant,
+    d2 = game.black.set_rating(game.speed_variant,
         black_rating, black_rd, bp.vol,
         black_win, black_loss, black_draw, ltime)
+    return defer.DeferredList([d1, d2])
 
 
 @defer.inlineCallbacks
 def show_ratings(user, conn):
-    rows = yield db.user_get_ratings(user.id_)
+    rows = yield db.user_get_ratings_for_finger(user.id_)
     if not rows:
         conn.write(_('%s has not played any rated games.\n\n') % user.name)
     else:

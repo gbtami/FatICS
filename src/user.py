@@ -68,7 +68,6 @@ class BaseUser(object):
         self.write(global_.server_message['motd'])
         for ch in self.channels:
             (yield global_.channels.get(ch)).log_on(self)
-
         yield db.user_log_add(self.name, login=True, ip=conn.ip)
 
     @defer.inlineCallbacks
@@ -497,6 +496,7 @@ class RegUser(BaseUser):
         for dbu in (yield db.user_get_noplayed(self.id_)):
             self.noplay.add(dbu['user_name'])
 
+        yield self._load_ratings()
         self.get_history()
 
     @defer.inlineCallbacks
@@ -672,28 +672,34 @@ class RegUser(BaseUser):
         db.user_del_history(self.id_)
 
     def get_rating(self, speed_variant):
-        if self._rating is None:
-            self._load_ratings()
+        """Get the rating for a certain speed/variant combination."""
+        assert(self.is_online)
         if speed_variant in self._rating:
             return self._rating[speed_variant]
         else:
             return rating.NoRating(is_guest=False)
 
+    @defer.inlineCallbacks
     def set_rating(self, speed_variant,
             rating, rd, volatility, win, loss, draw, ltime):
-        db.user_set_rating(self.id_, speed_variant.speed.id_,
+        """Set a new rating for a given speed and variant.  Return
+        a Deferred."""
+        yield db.user_set_rating(self.id_, speed_variant.speed.id_,
             speed_variant.variant.id_, rating, rd, volatility, win, loss,
             draw, win + loss + draw, ltime)
-        self._load_ratings() # TODO: don't reload all ratings
+        yield self._load_ratings() # TODO: don't reload all ratings
 
     def del_rating(self, sv):
+        """Delete a rating for a given speed and variant.  Return a
+        Deferred."""
         if self._rating is not None and sv in self._rating:
             del self._rating[sv]
         return db.user_del_rating(self.id_, sv.speed.id_, sv.variant.id_)
 
+    @defer.inlineCallbacks
     def _load_ratings(self):
         self._rating = {}
-        for row in db.user_get_all_ratings(self.id_):
+        for row in (yield db.user_get_all_ratings(self.id_)):
             sv = speed_variant.from_ids(row['speed_id'],
                 row['variant_id'])
             self._rating[sv] = rating.Rating(row['rating'],

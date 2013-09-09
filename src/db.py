@@ -793,7 +793,8 @@ if 1:
         cursor = query(cursor, """DELETE FROM history WHERE user_id=%s""", (user_id,))
         cursor.close()
 
-    def user_get_ratings(user_id):
+    def user_get_ratings_for_finger(user_id):
+        """Get a list of ratings suitable for display in finger notis."""
         return adb.runQuery("""
             SELECT * FROM (
                 SELECT rating.variant_id AS variant_id,rating.speed_id AS speed_id,variant_name,speed_name,rating,rd,volatility,win,loss,draw,total,best,when_best,ltime
@@ -805,20 +806,23 @@ if 1:
         (user_id,))
 
     def user_get_all_ratings(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT variant_id,speed_id,rating,rd,volatility,win,loss,draw,total,best,when_best,ltime FROM rating WHERE user_id=%s""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
+        """Get all of a user's ratings for all variants and speeds."""
+        return adb.runQuery("""SELECT variant_id,speed_id,rating,rd,volatility,win,loss,draw,total,best,when_best,ltime FROM rating WHERE user_id=%s""",
+            (user_id,))
 
     def user_set_rating(user_id, speed_id, variant_id,
             rating, rd, volatility, win, loss, draw, total, ltime):
-        cursor = db.cursor()
-        cursor = query(cursor, """UPDATE rating SET rating=%s,rd=%s,volatility=%s,win=%s,loss=%s,draw=%s,total=%s,ltime=%s WHERE user_id = %s AND speed_id = %s and variant_id = %s""", (rating, rd, volatility, win, loss, draw, total, ltime, user_id, speed_id, variant_id))
-        if cursor.rowcount == 0:
-            cursor = query(cursor, """INSERT INTO rating SET rating=%s,rd=%s,volatility=%s,win=%s,loss=%s,draw=%s,total=%s,ltime=%s,user_id=%s,speed_id=%s,variant_id=%s""", (rating, rd, volatility, win, loss, draw, total, ltime, user_id, speed_id, variant_id))
-        assert(cursor.rowcount == 1)
-        cursor.close()
+        def do(txn):
+            txn.execute("""UPDATE rating SET rating=%s,rd=%s,volatility=%s,win=%s,loss=%s,draw=%s,total=%s,ltime=%s WHERE user_id = %s AND speed_id = %s and variant_id = %s""",
+                (rating, rd, volatility, win, loss, draw, total, ltime,
+                user_id, speed_id, variant_id))
+            if txn.rowcount == 0:
+                txn.execute("""INSERT INTO rating SET rating=%s,rd=%s,volatility=%s,win=%s,loss=%s,draw=%s,total=%s,ltime=%s,user_id=%s,speed_id=%s,variant_id=%s""",
+                    (rating, rd, volatility, win, loss, draw, total, ltime,
+                    user_id, speed_id, variant_id))
+            if txn.rowcount != 1:
+                raise UpdateError
+        return adb.runInteraction(do)
 
     def user_del_rating(user_id, speed_id, variant_id):
         return adb.runOperation("""DELETE FROM rating WHERE user_id = %s AND speed_id = %s and variant_id = %s""",

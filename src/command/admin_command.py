@@ -231,7 +231,7 @@ class Asetrating(Command):
             log_admin(conn.user, "clears %s %s rating for %s" %
                 (speed_name, variant_name, u.name))
         else:
-            u.set_rating(sv, urating, rd, volatility, win, loss, draw,
+            yield u.set_rating(sv, urating, rd, volatility, win, loss, draw,
                 datetime.datetime.utcnow())
             conn.write(A_('Set %s %s rating for %s.\n' %
                 (speed_name, variant_name, u.name)))

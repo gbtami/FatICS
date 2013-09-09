@@ -899,7 +899,7 @@ class PlayedGame(Game):
                     (white_score, black_score) = (0.0, 1.0)
                 else:
                     raise RuntimeError('game.result: unexpected result code')
-                rating.update_ratings(self, white_score, black_score)
+                yield rating.update_ratings(self, white_score, black_score)
 
         if self.bug_link and self.bug_link.is_active:
             if result_code == '1-0':
