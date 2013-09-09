@@ -56,7 +56,12 @@ class TestProtocol(protocol.Protocol):
 
     def dataReceived(self, data):
         if self.state == 'prompt':
-            # already done
+            if 'Thank you for using' in data:
+                self.transport.loseConnection()
+                self.factory.conns.remove(self)
+                self.factory.num_quit += 1
+                if self.factory.num_quit == self.factory.num_done:
+                    self.factory.tester.finish()
             return
         self.allData += data
         if 'login:' in data:
@@ -70,7 +75,6 @@ class TestProtocol(protocol.Protocol):
             if self.factory.num_done == conn_count:
                 print('finished with all %d logins' % conn_count)
                 self.factory.tester.shut_down()
-                self.factory.tester.finished.callback(self)
         elif 'limit for guests' in data:
             print('ERROR: limit for guests reached')
             self.state = 'error'
@@ -80,21 +84,17 @@ class TestProtocol(protocol.Protocol):
             self.state = 'some data received'
 
     def quit(self):
-        if (self.state != 'prompt'):
+        if self.state != 'prompt':
             print('ERROR: state %s {%s}' % (self.state, self.allData))
             self.factory.error = 1
         #self.factory.tester.assert_(self.status == 'prompt')
         self.transport.write('quit\r\n')
-
-        self.transport.loseConnection()
-        self.factory.conns.remove(self)
 
     def connectionLost(self, reason):
         self.state = 'connectionLost'
 
 class TestLoad(Test):
     def test_load(self):
-        self._skip('tmp')
         t = self.connect_as_admin()
         t.write('asetmaxplayer 10005\n')
         self.expect('Previous', t)
@@ -110,7 +110,6 @@ class TestLoad(Test):
         fact.num_started = 0
         fact.error = 0
         fact.conns = []
-        #fact.shut_down = self.shut_down
         self.factory = fact
 
         # trying to start all connections at once seems to cause problems
@@ -135,14 +134,19 @@ class TestLoad(Test):
 
     def shut_down(self):
         print("shutting down %d conns" % len(self.factory.conns))
+        self.factory.num_quit = 0
         for c in self.factory.conns[:]:
             c.quit()
-        for c in self.factory.conns:
-            self.assert_(c.state == 'connectionLost')
         self.assert_(self.factory.num_done == conn_count)
-        self.assert_(len(self.factory.conns) == 0)
+
+    def finish(self):
+        #self.assert_(self.factory.num_quit == self.factory.num_done)
+        #for c in self.factory.conns[:]:
+        #    self.factory.conns.remove(c)
+
         reactor.callFromThread(reactor.stop)
         if self.factory.error:
             self.fail()
+        self.finished.callback(self)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
