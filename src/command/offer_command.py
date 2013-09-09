@@ -45,7 +45,7 @@ class Accept(Command):
             if not o or o not in conn.user.session.offers_received:
                 conn.write(_('There is no offer %d to accept.\n') % args[0])
             else:
-                o.accept()
+                yield o.accept()
         else:
             # TODO: find by user
             pass

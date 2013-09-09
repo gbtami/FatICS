@@ -77,8 +77,11 @@ def _do_parse(s, conn):
     # expanded, but leading $ are stripped (which Jin depends on).
     # This behavior mimics the original FICS.
     if conn.session.game:
-        if conn.session.game.parse_move(s.encode('ascii'), conn):
-            return defer.succeed(block_codes.BLKCMD_GAME_MOVE)
+        mv = conn.session.game.parse_move(s.encode('ascii'), conn)
+        if mv:
+            d = conn.session.game.execute_move(mv, conn)
+            d.addCallback(lambda x: block_codes.BLKCMD_GAME_MOVE)
+            return d
 
     if expand_aliases:
         try:

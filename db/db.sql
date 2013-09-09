@@ -203,14 +203,13 @@ CREATE TABLE `ip_filter` (
 
 -- game
 -- This table could be very large.
--- TODO: store overtime_move_num and overtime_bonus in a separate table,
--- so we have a record of that information?
+-- TODO: store overtime_move_num and overtime_bonus in a separate table?
 DROP TABLE IF EXISTS `game`;
 CREATE TABLE `game` (
   `game_id` int(8) NOT NULL AUTO_INCREMENT,
-  `white_name` varchar(17) NOT NULL,
+  `white_user_id` INT(8) COMMENT 'ID of the white player or NULL for guest',
+  `black_user_id` INT(8) COMMENT 'ID of the black p layer or NULL for guest',
   `white_rating` char(4) NOT NULL COMMENT '0 for no rating', -- TODO: use smallint instead
-  `black_name` varchar(17) NOT NULL,
   `black_rating` char(4) NOT NULL COMMENT '0 for no rating',
   `eco` char(5) NOT NULL,
   `speed_id` TINYINT NOT NULL,
@@ -220,16 +219,33 @@ CREATE TABLE `game` (
   -- `private` BOOLEAN NOT NULL DEFAULT 0,
   `time` int(3) COMMENT 'initial time',
   `inc` int(3) COMMENT 'increment',
-  `rated` BOOLEAN NOT NULL,
-  `result` ENUM('1-0', '0-1', '1/2-1/2', '*') NOT NULL,
-  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta', 'Rep',
-     'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB', '50') NOT NULL,
-  `ply_count` SMALLINT NOT NULL,
+  `is_rated` BOOLEAN NOT NULL COMMENT 'is the game rated?',
+  `ply_count` SMALLINT NOT NULL COMMENT 'number of half-moves in the game',
   `movetext` TEXT,
   `when_started` TIMESTAMP NOT NULL,
-  `when_ended` TIMESTAMP NOT NULL,
-  INDEX(`white_name`),
-  INDEX(`black_name`),
+  `when_ended` TIMESTAMP NOT NULL
+    COMMENT 'when the game was finished or adjourned',
+  `is_adjourned` BOOLEAN COMMENT 'is this an adjourned game?',
+
+  -- for games with overtime-style clocks only
+  `overtime_move_num` INT(4) DEFAULT NULL COMMENT 'time control for overtime clocks',
+  `overtime_bonus` INT(4) DEFAULT NULL COMMENT 'minutes added at time control for overtime clocks',
+
+  -- for completed games only
+  `result` ENUM('1-0', '0-1', '1/2-1/2', '*') DEFAULT NULL,
+  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta', 'Rep',
+     'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB', '50') DEFAULT NULL,
+
+  -- for adjourned games only
+  `white_clock` float DEFAULT NULL,
+  `black_clock` float DEFAULT NULL,
+  `adjourn_reason` ENUM('Agr', 'Dis') DEFAULT NULL,
+  `white_material` TINYINT DEFAULT NULL,
+  `black_material` TINYINT DEFAULT NULL,
+  `draw_offered` BOOLEAN DEFAULT NULL,
+
+  INDEX(`white_user_id`),
+  INDEX(`black_user_id`),
   INDEX(`when_ended`),
   PRIMARY KEY (`game_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -404,48 +420,6 @@ CREATE TABLE `user_comment` (
   `when_added` TIMESTAMP NOT NULL,
   PRIMARY KEY(`comment_id`),
   INDEX(`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
--- TODO: eliminate adjourned_game and use game for everything
-
--- adjourned (stored) games
--- this is similar to the `game` table, but uses player IDs instead
--- of names (since it only stores games between registered players),
--- stores the clocks for both players, and does not store a result.
-DROP TABLE IF EXISTS `adjourned_game`;
-CREATE TABLE `adjourned_game` (
-  `adjourn_id` int(8) NOT NULL AUTO_INCREMENT,
-  `white_user_id` int(8) NOT NULL,
-  -- `white_rating` smallint(4),
-  `white_clock` float NOT NULL,
-  `black_user_id` int(8) NOT NULL,
-  -- `black_rating` smallint(4),
-  `black_clock` float NOT NULL,
-  `eco` char(5) NOT NULL,
-  `speed_id` TINYINT NOT NULL,
-  `variant_id` TINYINT NOT NULL,
-  `clock_name` ENUM('fischer', 'bronstein', 'hourglass', 'overtime', 'untimed')
-    DEFAULT 'fischer',
-  `time` int(3) COMMENT 'initial time',
-  `inc` int(3) COMMENT 'increment',
-  `rated` BOOLEAN NOT NULL,
-  `adjourn_reason` ENUM('Agr', 'Dis'),
-  `ply_count` SMALLINT NOT NULL,
-  `movetext` TEXT,
-  `white_material` TINYINT NOT NULL,
-  `black_material` TINYINT NOT NULL,
-  `when_started` TIMESTAMP NOT NULL,
-  `when_adjourned` TIMESTAMP NOT NULL,
-  `idn` INT(4) DEFAULT NULL COMMENT 'chess960 position ID, if any',
-  `overtime_move_num` INT(4) DEFAULT NULL COMMENT 'time control for overtime clocks',
-  `overtime_bonus` INT(4) DEFAULT NULL COMMENT 'minutes added at time control for overtime clocks',
-  PRIMARY KEY (`adjourn_id`),
-  INDEX(`white_user_id`),
-  INDEX(`black_user_id`),
-  -- really we want the index to be unique ignoring the color assignments
-  -- (if there is a game A vs. B, don't allow B vs. A), but I don't know of
-  -- a way to enforce this constraint with MySQL
-  UNIQUE INDEX(`white_user_id`,`black_user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 DROP TABLE IF EXISTS `server_message`;

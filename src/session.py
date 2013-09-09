@@ -16,6 +16,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import time
 import traceback
 
@@ -87,6 +89,7 @@ class Session(object):
         assert(self.login_time is not None)
         return time.time() - self.login_time
 
+    @defer.inlineCallbacks
     def close(self):
         assert(not self.closed)
         self.closed = True
@@ -107,7 +110,7 @@ class Session(object):
 
         if self.game:
             try:
-                self.game.leave(self.user)
+                yield self.game.leave(self.user)
                 assert(self.game is None)
             except:
                 print('exception ending game due to logout')

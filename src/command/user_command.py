@@ -250,7 +250,7 @@ class Stored(Command):
                     entry['online'] = "Y" if global_.online.is_online(opp_name) else "N"
 
                     flags = entry['speed_abbrev'] + entry['variant_abbrev']
-                    entry['flags'] = flags + 'r' if entry['rated'] else 'u'
+                    entry['flags'] = flags + 'r' if entry['is_rated'] else 'u'
 
                     half_moves = entry['movetext'].count(' ') + 1
                     next_move_color = "B" if half_moves % 2 else "W"
@@ -259,7 +259,7 @@ class Stored(Command):
                         next_move_number)
 
                     entry['eco'] = entry['eco'][:3]
-                    entry['when_adjourned_str'] = u.format_datetime(entry['when_adjourned'])
+                    entry['when_adjourned_str'] = u.format_datetime(entry['when_ended'])
                     conn.write('%(id)2d: %(user_color)1s %(opp_str)-15s %(online)s [%(flags)3s%(time)3s %(inc)3s] %(white_material)2s-%(black_material)-2s %(next_move)-4s %(eco)s %(when_adjourned_str)-s\n' %
                         entry)
                     i = i + 1

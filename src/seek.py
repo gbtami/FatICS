@@ -109,10 +109,10 @@ class Seek(MatchStringParser):
         assert(self.side in [None, WHITE, BLACK])
 
         self.tags = {
-            'rated': self.rated,
+            'is_rated': self.rated,
             'speed_name': self.speed_name,
             'variant_name': self.variant_name,
-            'clock_name': self.clock_name,
+            'clock': self.clock_name,
             'time': self.time,
             'inc': self.inc,
             'idn': self.idn,
@@ -199,7 +199,7 @@ class Seek(MatchStringParser):
 
         # build the seek string
         dname = self.a.get_display_name()
-        rated_str = 'rated' if self.tags['rated'] else 'unrated'
+        rated_str = 'rated' if self.tags['is_rated'] else 'unrated'
         speed_name = self.speed_variant.speed.name
         variant_str = '' if self.variant_name == 'chess' else (
             ' %s' % self.variant_name)
@@ -227,7 +227,7 @@ class Seek(MatchStringParser):
 
         # original FICS example:
         # <s> 47 w=GuestWWPQ ti=01 rt=0P t=2 i=12 r=u tp=blitz c=W rr=0-9999 a=f f=f
-        rated_char = 'r' if self.tags['rated'] else 'u'
+        rated_char = 'r' if self.tags['is_rated'] else 'u'
         if self.side is None:
             color_char = '?'
         else:

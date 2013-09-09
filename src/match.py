@@ -325,10 +325,10 @@ class Challenge(Offer, MatchStringParser):
         if tags:
             # copy match parameters
             self.side = tags['side']
-            self.rated = tags['rated']
+            self.rated = tags['is_rated']
             self.speed_name = tags['speed_name']
             self.variant_name = tags['variant_name']
-            self.clock_name = tags['clock_name']
+            self.clock_name = tags['clock']
             self.time = tags['time']
             self.inc = tags['inc']
             self.idn = tags['idn']

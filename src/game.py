@@ -270,6 +270,7 @@ class Game(object):
         del global_.games[self.number]
 
     def get_eco_sync(self):
+        """Get a tuple containing eco code information for this game."""
         i = min(self.variant.pos.ply, 36)
         row = None
         while i >= self.variant.pos.start_ply:
@@ -286,6 +287,8 @@ class Game(object):
 
     @defer.inlineCallbacks
     def get_eco(self):
+        """Get a tuple containing eco code information for this game.
+        Return a Deferred that fires with the result."""
         i = min(self.variant.pos.ply, 36)
         row = None
         while i >= self.variant.pos.start_ply:
@@ -369,26 +372,35 @@ class Game(object):
         conn.write_nowrap('      {Still in progress} *\n\n')
 
     def parse_move(self, s, conn):
+        """Check if the given string represents a move for this
+        game."""
         try:
             mv = self.variant.parse_move(s, conn)
             parsed = mv is not None
-            illegal = False
+            legal = True
         except variant.base_variant.IllegalMoveError:
-            illegal = True
+            legal = False
             parsed = True
         if parsed:
             if self.gtype == PLAYED and (
                     self.get_user_side(conn.user) != self.variant.get_turn()):
                 conn.write(_('It is not your move.\n'))
-            elif illegal:
+            elif not legal:
                 conn.write(_('Illegal move (%s).\n') % s)
                 # Re-send the board in case of an illegal move.
                 # Eboard depends on this if legality checking is off.
                 self.send_board(conn.user, True)
-            else:
-                self.variant.do_move(mv)
-                self.next_move(mv, conn)
-        return parsed
+        if parsed and legal:
+            return mv
+        else:
+            return None
+
+    @defer.inlineCallbacks
+    def execute_move(self, mv, conn):
+        """Actually execute a move after a call to parse_move() was
+        successful.  Returns a Deferred."""
+        self.variant.do_move(mv)
+        yield self.next_move(mv, conn)
 
     def ginfo(self, conn):
         conn.write(_('Game %d: Game information.\n\n') % self.number)
@@ -587,6 +599,7 @@ class PlayedGame(Game):
                 for p in self.players | self.observers:
                     p.write_("Game %d: All players agree no minimum move time during the game.\n", self.number)
 
+    @defer.inlineCallbacks
     def _resume(self, adj, a, b):
         """ Resume an adjourned game. """
         if adj['white_user_id'] == a.id_:
@@ -615,12 +628,12 @@ class PlayedGame(Game):
         self.white_rating = self.white.get_rating(self.speed_variant)
         self.black_rating = self.black.get_rating(self.speed_variant)
         self.inc = adj['inc']
-        self.rated = adj['rated']
+        self.rated = adj['is_rated']
         self.tags = {
             'time': adj['time'],
             'inc': adj['inc']
         }
-        self.clock_name = adj['clock_name']
+        self.clock_name = adj['clock']
         self.clock = clock.clock_names[self.clock_name](self,
             adj['white_clock'], adj['black_clock'])
         self.idn = adj['idn'] # for chess960
@@ -630,10 +643,9 @@ class PlayedGame(Game):
         self.when_started = adj['when_started']
 
         # clear the game in the database
-        d1 = a.remove_adjourned(adj)
-        d2 = b.remove_adjourned(adj)
-        d3 = db.delete_adjourned(adj['adjourn_id'])
-        return defer.DeferredList([d1, d2, d3])
+        yield a.remove_adjourned(adj)
+        yield b.remove_adjourned(adj)
+        yield db.delete_adjourned(adj['game_id'])
 
     def _init_new(self, chal):
         side = chal.side
@@ -741,10 +753,10 @@ class PlayedGame(Game):
         assert(char in ['W', 'B'])
         return WHITE if char == 'W' else BLACK
 
+    @defer.inlineCallbacks
     def next_move(self, mv, conn):
         # decline all offers to the player who just moved
-        # This declines non-game offers like partnership offers,
-        # but who cares?
+        # XXX this declines non-game offers like partnership offers
         u = self.get_user_to_move()
         offers = [o for o in self.pending_offers if o.a == u]
         for o in offers:
@@ -773,7 +785,7 @@ class PlayedGame(Game):
                             (lag_secs, self.bug_link.get_side_user(moved_side)))
                         self.bug_link.clock.moretime(moved_side, lag_secs)
             if self.get_user_to_move().vars_['autoflag']:
-                self.clock.check_flag(self, moved_side)
+                yield self.clock.check_flag(self, moved_side)
             if self.is_active:
                 if self.variant.pos.ply > 2:
                     self.clock.add_increment(moved_side)
@@ -797,9 +809,11 @@ class PlayedGame(Game):
                     # mate, and the linked game can never provide a piece
                     # to stop it
                     if self.variant.get_turn() == WHITE:
-                        self.result('%s checkmated' % self.white_name, '0-1')
+                        yield self.result('%s checkmated'
+                            % self.white_name, '0-1')
                     else:
-                        self.result('%s checkmated' % self.black_name, '1-0')
+                        yield self.result('%s checkmated'
+                            % self.black_name, '1-0')
                 elif self.bug_link.variant.pos.is_checkmate:
                     # linked game is also a mate.  If the mating players are on
                     # the same team, that team wins; otherwise it's a draw.
@@ -808,37 +822,50 @@ class PlayedGame(Game):
                     if self.bug_link.variant.get_turn() != self.variant.get_turn():
                         self.is_active = False
                         if self.variant.get_turn() == WHITE:
-                            self.bug_link.result('%s and %s checkmated' % (self.bug_link.black_name, self.white_name), '1-0')
-                            self.result('%s and %s checkmated' % (self.bug_link.black_name, self.white_name), '0-1')
+                            yield self.bug_link.result('%s and %s checkmated' %
+                                (self.bug_link.black_name, self.white_name),
+                                '1-0')
+                            yield self.result('%s and %s checkmated' %
+                                (self.bug_link.black_name, self.white_name),
+                                '0-1')
                         else:
-                            self.bug_link.result('%s and %s checkmated' % (self.bug_link.white_name, self.black_name, '0-1'))
-                            self.result('%s and %s checkmated' % (self.bug_link.white_name, self.black_name), '1-0')
+                            yield self.bug_link.result('%s and %s checkmated'
+                                % (self.bug_link.white_name, self.black_name,
+                                '0-1'))
+                            yield self.result('%s and %s checkmated' %
+                                (self.bug_link.white_name, self.black_name),
+                                '1-0')
                     else:
                         self.is_active = False
-                        self.bug_link.result('Game drawn by mate on both boards', '1/2-1/2')
-                        self.result('Game drawn by mate on both boards', '1/2-1/2')
+                        yield self.bug_link.result(
+                            'Game drawn by mate on both boards',
+                            '1/2-1/2')
+                        yield self.result('Game drawn by mate on both boards',
+                            '1/2-1/2')
             elif self.variant.pos.is_stalemate:
                 if self.bug_link.variant.pos.is_stalemate:
                     self.is_active = False
-                    self.bug_link.result('Game drawn by stalemate', '1/2-1/2')
-                    self.result('Game drawn by stalemate', '1/2-1/2')
+                    yield self.bug_link.result('Game drawn by stalemate',
+                        '1/2-1/2')
+                    yield self.result('Game drawn by stalemate', '1/2-1/2')
                 elif self.bug_link.variant.pos.is_checkmate:
                     if self.bug_link.variant.get_turn() == WHITE:
-                        self.bug_link.result('%s checkmated'
+                        yield self.bug_link.result('%s checkmated'
                             % self.bug_link.white_name, '0-1')
                     else:
-                        self.bug_link.result('%s checkmated'
+                        yield self.bug_link.result('%s checkmated'
                             % self.bug_link.black_name, '1-0')
         else:
             if self.variant.pos.is_checkmate:
                 if self.variant.get_turn() == WHITE:
-                    self.result('%s checkmated' % self.white_name, '0-1')
+                    yield self.result('%s checkmated' % self.white_name, '0-1')
                 else:
-                    self.result('%s checkmated' % self.black_name, '1-0')
+                    yield self.result('%s checkmated' % self.black_name, '1-0')
             elif self.variant.pos.is_stalemate:
-                self.result('Game drawn by stalemate', '1/2-1/2')
+                yield self.result('Game drawn by stalemate', '1/2-1/2')
             elif self.variant.pos.is_draw_nomaterial:
-                self.result('Neither player has mating material', '1/2-1/2')
+                yield self.result('Neither player has mating material',
+                    '1/2-1/2')
 
     def observe(self, u):
         """ For some reason it seems that FICS only sends gameinfo strings
@@ -847,6 +874,7 @@ class PlayedGame(Game):
         if u.session.ivars['gameinfo']:
             u.write(self.gameinfo_str)
 
+    @defer.inlineCallbacks
     def result(self, msg, result_code):
         self.when_ended = datetime.datetime.utcnow()
         line = '\n{Game %d (%s vs. %s) %s} %s\n' % (self.number,
@@ -875,18 +903,18 @@ class PlayedGame(Game):
 
         if self.bug_link and self.bug_link.is_active:
             if result_code == '1-0':
-                self.bug_link.result("%s's partner won" %
+                yield self.bug_link.result("%s's partner won" %
                     self.white.session.partner.name, '0-1')
             elif result_code == '0-1':
-                self.bug_link.result("%s's partner won" %
+                yield self.bug_link.result("%s's partner won" %
                     self.black.session.partner.name, '1-0')
             elif result_code == '1/2-1/2':
-                self.bug_link.result("Partners' game drawn", '1/2-1/2')
+                yield self.bug_link.result("Partners' game drawn", '1/2-1/2')
             elif result_code == '*':
                 if 'Game adjourned' in msg:
-                    self.bug_link.adjourn("Partners' game adjourned")
+                    yield self.bug_link.adjourn("Partners' game adjourned")
                 elif 'Game aborted' in msg:
-                    self.bug_link.result("Partners' game aborted", '*')
+                    yield self.bug_link.result("Partners' game aborted", '*')
                 else:
                     print('unexpected incomplete game message %s' % msg)
                     assert(False)
@@ -923,14 +951,16 @@ class PlayedGame(Game):
         else:
             return False
 
+    @defer.inlineCallbacks
     def resign(self, user):
         side = self.get_user_side(user)
         if side == WHITE:
-            self.result('%s resigns' % user.name, '0-1')
+            yield self.result('%s resigns' % user.name, '0-1')
         else:
             assert(side == BLACK)
-            self.result('%s resigns' % user.name, '1-0')
+            yield self.result('%s resigns' % user.name, '1-0')
 
+    @defer.inlineCallbacks
     def leave(self, user):
         side = self.get_user_side(user)
         opp = self.get_opp(user)
@@ -939,14 +969,14 @@ class PlayedGame(Game):
                 (user.vars_['noescape'] and opp.vars_['noescape'])
                 or not self.variant.can_adjourn):
             res = '0-1' if side == WHITE else '1-0'
-            self.result('%s forfeits by disconnection' % user.name, res)
+            yield self.result('%s forfeits by disconnection' % user.name, res)
         elif opp.is_guest or self.variant.pos.ply < 10:
             # registered player quits while playing a guest, or
             # game too short to adjourn: abort
-            self.result('%s aborts by disconnection' % user.name, '*')
+            yield self.result('%s aborts by disconnection' % user.name, '*')
         else:
             # two registered players; adjourn game
-            self.adjourn('%s lost connection; game adjourned' % user.name)
+            yield self.adjourn('%s lost connection; game adjourned' % user.name)
 
     @defer.inlineCallbacks
     def adjourn(self, reason):
@@ -955,25 +985,25 @@ class PlayedGame(Game):
         data = self.tags.copy()
         data.update({
             'white_user_id': self.white.id_,
-            #'white_rating': int(self.white_rating),
+            'white_rating': str(self.white_rating),
             'white_clock': self.clock.get_white_time(),
             'black_user_id': self.black.id_,
-            #'black_rating': int(self.black_rating),
+            'black_rating': str(self.black_rating),
             'black_clock': self.clock.get_black_time(),
             'movetext': self.get_movetext(),
             'white_material': self.variant.pos.material[1],
             'black_material': self.variant.pos.material[0],
-            'eco': self.get_eco_sync()[1],
+            'eco': (yield self.get_eco())[1],
             'ply_count': self.get_ply_count(),
             'variant_id': self.speed_variant.variant.id_,
             'speed_id': self.speed_variant.speed.id_,
             'speed_name': self.speed_variant.speed.name,
             'variant_name': self.speed_variant.variant.name,
-            'clock_name': self.clock_name,
+            'clock': self.clock_name,
             'idn': self.idn,
-            'rated': self.rated,
+            'is_rated': self.rated,
             'when_started': self.when_started,
-            'when_adjourned': datetime.datetime.utcnow()
+            'when_ended': datetime.datetime.utcnow()
         })
         if self.clock_name == 'overtime':
             data.update({
@@ -991,10 +1021,17 @@ class PlayedGame(Game):
         data['black_name'] = self.black.name
         data['variant_abbrev'] = self.speed_variant.variant.abbrev
         data['speed_abbrev'] = self.speed_variant.speed.abbrev
-        data['adjourn_id'] = db.adjourned_game_add(data)
+        data['draw_offered'] = 0  # XXX
+        data['is_adjourned'] = 1
+
+        # unused completed game fields
+        data['result'] = None
+        data['result_reason'] = None
+
+        data['game_id'] = yield db.game_add(data)
         yield self.white.add_adjourned(data)
         yield self.black.add_adjourned(data)
-        self.result(reason, '*')
+        yield self.result(reason, '*')
 
     def free(self):
         super(PlayedGame, self).free()

@@ -17,6 +17,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import datetime
 
 import speed_variant
@@ -223,10 +225,11 @@ class ExaminedGame(Game):
         #self.variant.pos.get_last_move().time = 0.0
         assert(self.variant.pos.get_last_move() == mv)
         mv.time = 0.0
-        super(ExaminedGame, self).next_move(mv, conn)
+        d = super(ExaminedGame, self).next_move(mv, conn)
         for p in self.players | self.observers:
             p.write_('Game %d: %s moves: %s\n', (self.number, conn.user.name, mv.to_san()))
         self._check_result()
+        return d
 
     def leave(self, user):
         self.players.remove(user)
@@ -242,6 +245,7 @@ class ExaminedGame(Game):
             for p in self.observers:
                 p.write_('Game %d (which you were observing) has no examiners.\n', (self.number,))
             self.free()
+        return defer.succeed(None)
 
     def result(self, msg, result_code):
         for p in self.players | self.observers:

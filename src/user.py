@@ -773,11 +773,13 @@ class RegUser(BaseUser):
     @defer.inlineCallbacks
     def remove_adjourned(self, adj):
         """Remove the given game from the adjourned game list.  Raise KeyError
-        if no such game."""
-        adj_id = adj['adjourn_id']
+        if no such game. The adjourned game is expected to be removed from
+        the DB by the caller."""
+        game_id = adj['game_id']
         adj_list = yield self.get_adjourned()
+        assert(adj_list)
         for i in range(len(adj_list) - 1, -1, -1):
-            if adj_list[i]['adjourn_id'] == adj_id:
+            if adj_list[i]['game_id'] == game_id:
                 del adj_list[i]
                 return
         raise KeyError

@@ -16,6 +16,8 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import global_
 
 
@@ -149,7 +151,8 @@ class Abort(Offer):
     def accept(self):
         Offer.accept(self)
         self.game.pending_offers.remove(self)
-        self.game.result('Game aborted by agreement', '*')
+        d = self.game.result('Game aborted by agreement', '*')
+        assert(d.called)
 
     def withdraw(self, notify=True):
         Offer.withdraw(self, notify)
@@ -190,10 +193,11 @@ class Adjourn(Offer):
         Offer.decline(self, notify)
         self.game.pending_offers.remove(self)
 
+    @defer.inlineCallbacks
     def accept(self):
         Offer.accept(self)
         self.game.pending_offers.remove(self)
-        self.game.adjourn('Game adjourned by agreement')
+        yield self.game.adjourn('Game adjourned by agreement')
 
     def withdraw(self, notify=True):
         Offer.withdraw(self, notify)
@@ -207,6 +211,9 @@ class Draw(Offer):
         self.a = user
         self.b = game.get_opp(user)
         self.game = game
+
+    @defer.inlineCallbacks
+    def finish_init(self, game, user):
         offers = [o for o in game.pending_offers if o.name == self.name]
         if len(offers) > 1:
             raise RuntimeError('more than one draw offer in game %d'
@@ -216,17 +223,17 @@ class Draw(Offer):
             if o.a == self.a:
                 user.write(_('You are already offering a draw.\n'))
             else:
-                o.accept()
+                yield o.accept()
         else:
             # check for draw by 50-move rule, repetition
             # The old fics checked for 50-move draw before repetition,
             # and we do the same so the adjudications are identical.
             if game.variant.pos.is_draw_fifty():
-                game.result('Game drawn by the 50 move rule', '1/2-1/2')
+                yield game.result('Game drawn by the 50 move rule', '1/2-1/2')
                 return
             elif game.variant.pos.is_draw_repetition(game.get_user_side(
                     self.a)):
-                game.result('Game drawn by repetition', '1/2-1/2')
+                yield game.result('Game drawn by repetition', '1/2-1/2')
                 return
 
             game.pending_offers.append(self)
@@ -240,10 +247,11 @@ class Draw(Offer):
             self._register()
             self.pendinfo('draw', '#')
 
+    @defer.inlineCallbacks
     def accept(self):
         Offer.accept(self)
         self.game.pending_offers.remove(self)
-        self.game.result('Game drawn by agreement', '1/2-1/2')
+        yield self.game.result('Game drawn by agreement', '1/2-1/2')
 
     def decline(self, notify=True):
         Offer.decline(self, notify)

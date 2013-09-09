@@ -391,7 +391,7 @@ if 1:
             txn.execute("""DELETE FROM history WHERE user_id=%s""", (uid,))
             txn.execute("""DELETE FROM rating WHERE user_id=%s""", (uid,))
             txn.execute("""DELETE FROM message WHERE to_user_id=%s""", (uid,))
-            txn.execute("""DELETE FROM adjourned_game WHERE %s IN
+            txn.execute("""DELETE FROM game WHERE %s IN
                 (white_user_id, black_user_id)""", (uid,))
         return adb.runInteraction(do_del)
 
@@ -733,79 +733,61 @@ if 1:
         d = adb.runQuery("""SELECT eco,nic,long_,nic.fen AS fen FROM nic LEFT JOIN eco USING(hash) WHERE nic = %s LIMIT 100""", (nic,))
         return d
 
-    # game
-    def game_add(white_name, white_rating, black_name, black_rating,
-            eco, variant_id, speed_id, time, inc, rated, result, result_reason,
-            ply_count, movetext, when_started, when_ended):
+    def game_add(g):
+        """Add a completed or adjourned game to the main game table."""
         cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO game SET white_name=%s,white_rating=%s,black_name=%s,black_rating=%s,eco=%s,variant_id=%s,speed_id=%s,time=%s,inc=%s,rated=%s,result=%s,result_reason=%s,ply_count=%s,movetext=%s,when_started=%s,when_ended=%s""", (white_name,
-            white_rating, black_name, black_rating, eco, variant_id,
-            speed_id, time, inc, rated, result, result_reason, ply_count,
-            movetext, when_started, when_ended))
-        game_id = cursor.lastrowid
-        cursor.close()
-        return game_id
-
-    # adjourned games
-    def adjourned_game_add(g):
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO adjourned_game
+        cursor = query(cursor, """INSERT INTO game
             SET white_user_id=%(white_user_id)s,
-                white_clock=%(white_clock)s,
                 black_user_id=%(black_user_id)s,
+                white_clock=%(white_clock)s,
                 black_clock=%(black_clock)s,
+                white_rating=%(white_rating)s,
+                black_rating=%(black_rating)s,
                 eco=%(eco)s,variant_id=%(variant_id)s,speed_id=%(speed_id)s,
-                time=%(time)s,inc=%(inc)s,rated=%(rated)s,
+                time=%(time)s,inc=%(inc)s,is_rated=%(is_rated)s,
                 adjourn_reason=%(adjourn_reason)s,ply_count=%(ply_count)s,
                 movetext=%(movetext)s,
                 white_material=%(white_material)s,
                 black_material=%(black_material)s,
                 when_started=%(when_started)s,
-                when_adjourned=%(when_adjourned)s""", g)
-        adjourn_id = cursor.lastrowid
+                when_ended=%(when_ended)s,
+                clock=%(clock)s,
+                result=%(result)s,
+                result_reason=%(result_reason)s,
+                draw_offered=%(draw_offered)s,
+                is_adjourned=%(is_adjourned)s
+                """, g)
+                #overtime_move_num=%(overtime_move_num),
+                #overtime_bonus=%(overtime_bonus),
+        game_id = cursor.lastrowid
         cursor.close()
-        return adjourn_id
+        return game_id
 
     def get_adjourned(user_id):
-        return adb.runQuery("""SELECT adjourn_id,white_user_id,black_user_id,
-                white_clock,black_clock,eco,speed_name,speed_abbrev,variant_name,variant_abbrev,clock_name,
-                adjourned_game.time AS time,adjourned_game.inc AS inc,rated,
+        """ Look up adjourned games by the given user."""
+        return adb.runQuery("""SELECT game_id,white_user_id,black_user_id,
+                white_clock,black_clock,eco,speed_name,speed_abbrev,variant_name,variant_abbrev,clock,
+                game.time AS time,game.inc AS inc,is_rated,
                 adjourn_reason,ply_count,movetext,white_material,black_material,
-                when_started,when_adjourned,idn,overtime_move_num,
+                when_started,when_ended,idn,overtime_move_num,
                 overtime_bonus,white.user_name as white_name,
                 black.user_name as black_name
-            FROM adjourned_game
+            FROM game
                 LEFT JOIN user AS white
                     ON (white.user_id = white_user_id)
                 LEFT JOIN user AS black
                     ON (black.user_id = black_user_id)
                 LEFT JOIN variant USING(variant_id)
                 LEFT JOIN speed USING(speed_id)
-            WHERE white_user_id=%s or black_user_id=%s""",
-            (user_id, user_id))
+                LEFT JOIN game_idn USING(game_id)
+            WHERE %s IN (white_user_id, black_user_id)
+            AND is_adjourned=1""", (user_id,))
 
-    '''def get_adjourned_between(id1, id2):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT adjourn_id,white_user_id,
-                white_clock,black_user_id,black_clock,
-                eco,speed_name,variant_name,
-                clock_name,time,inc,
-                rated,adjourn_reason,ply_count,movetext,
-                when_started,when_adjourned,idn,overtime_move_num,
-                overtime_bonus
-            FROM adjourned_game LEFT JOIN variant USING(variant_id)
-                LEFT JOIN speed USING(speed_id)
-            WHERE (white_user_id=%s AND black_user_id=%s)
-                OR (white_user_id=%s AND black_user_id=%s)""",
-            (id1, id2, id2, id1))
-        row = cursor.fetchone()
-        cursor.close()
-        return row'''
-
-    def delete_adjourned(adjourn_id):
+    def delete_adjourned(game_id):
         def do_del(txn):
-            txn.execute("""DELETE FROM adjourned_game WHERE adjourn_id=%s""",
-                (adjourn_id,))
+            txn.execute("""DELETE FROM game WHERE game_id=%s
+                AND is_adjourned=1""",
+                (game_id,))
             if txn.rowcount != 1:
                 raise DeleteError()
         return adb.runInteraction(do_del)

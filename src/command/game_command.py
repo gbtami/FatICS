@@ -65,7 +65,10 @@ class Abort(Command, GameMixin):
             return'''
         g = conn.user.session.game
         if g.variant.pos.ply < 2:
-            g.result('Game aborted on move 1 by %s' % conn.user.name, '*')
+            d = g.result('Game aborted on move 1 by %s' % conn.user.name, '*')
+            # g.result() returns a deferred in case it needs to access
+            # the db, but when aborting it should not need to
+            assert(d.called)
         else:
             offer.Abort(g, conn.user)
 
@@ -85,25 +88,28 @@ class Adjourn(Command, GameMixin):
 
 @ics_command('draw', 'o')
 class Draw(Command, GameMixin):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is None:
             g = self._get_played_game(conn)
             if not g:
                 return
-            offer.Draw(g, conn.user)
+            o = offer.Draw(g, conn.user)
+            yield o.finish_init(g, conn.user)
         else:
             conn.write('TODO: DRAW PARAM\n')
 
 
 @ics_command('resign', 'o')
 class Resign(Command, GameMixin):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
             conn.write('TODO: RESIGN PLAYER\n')
             return
         g = self._get_played_game(conn)
         if g:
-            g.resign(conn.user)
+            yield g.resign(conn.user)
 
 
 @ics_command('eco', 'oo')
@@ -181,12 +187,14 @@ class Moretime(Command, GameMixin):
 
 @ics_command('flag', '')
 class Flag(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if not conn.user.session.game:
             conn.write(_("You are not playing a game.\n"))
             return
         g = conn.user.session.game
-        if not g.clock.check_flag(g, opp(g.get_user_side(conn.user))):
+        flagged = yield g.clock.check_flag(g, opp(g.get_user_side(conn.user)))
+        if not flagged:
             conn.write(_('Your opponent is not out of time.\n'))
 
 
