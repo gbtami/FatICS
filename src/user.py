@@ -65,7 +65,7 @@ class BaseUser(object):
         if not self.session.ivars['nowrap']:
             conn.transport.enableWrapping(self.vars_['width'])
         self.write(server.get_copyright_notice())
-        self.write(db.get_server_message('motd'))
+        self.write(global_.server_message['motd'])
         for ch in self.channels:
             (yield global_.channels.get(ch)).log_on(self)
 

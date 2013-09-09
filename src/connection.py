@@ -26,7 +26,6 @@ from zope.interface import implements
 import telnet
 import parser
 import global_
-import db
 import login
 import utf8
 import session
@@ -63,7 +62,7 @@ class Connection(basic.LineReceiver):
         global_.langs['en'].install(names=['ngettext'])
         self.session = session.Session(self)
         self.factory.connections.append(self)
-        self.write(db.get_server_message('welcome'))
+        self.write(global_.server_message['welcome'])
         self.login()
         self.session.login_last_command = time.time()
         self.ip = self.transport.getPeer().host
@@ -86,7 +85,7 @@ class Connection(basic.LineReceiver):
         """ Enter the login state, waiting for a username. """
         self.state = 'login'
         self.claimed_user = None
-        self.write(db.get_server_message('login'))
+        self.write(global_.server_message['login'])
         if self.transport.compatibility:
             # the string "freechess.org" must appear somewhere in this message;
             # otherwise, Babas will refuse to connect
@@ -309,7 +308,7 @@ class Connection(basic.LineReceiver):
         self.transport.loseConnection()
         if reason == 'quit':
             #timeseal.print_stats()
-            self.write(db.get_server_message('logout'))
+            self.write(global_.server_message['logout'])
 
     def connectionLost(self, reason):
         basic.LineReceiver.connectionLost(self, reason)

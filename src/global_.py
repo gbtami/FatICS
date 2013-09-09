@@ -41,6 +41,9 @@ __builtin__.__dict__['N_'] = lambda s: s
 # admin messages
 __builtin__.__dict__['A_'] = lambda s: s
 
+# server messages
+server_message = {}
+
 # bughouse partners
 partners = []
 
@@ -91,8 +94,8 @@ command # pacify pyflakes
 
 @defer.inlineCallbacks
 def init():
-    server.init()
     db.init()
+    yield server.init()
     yield channel.init()
     yield filter_.init()
     var.init_vars()

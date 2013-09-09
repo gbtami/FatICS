@@ -499,7 +499,7 @@ class FilterTest(Test):
         t.write('-filter 127.0.0.1\n')
         self.expect('127.0.0.1/32 is not on the filter list.', t)
 
-        self.connect_as_guest()
+        self.close(self.connect_as_guest())
 
         self.close(t)
 
@@ -519,7 +519,7 @@ class FilterTest(Test):
         t.write('-filter 127.0.0.0/16\n')
         self.expect('127.0.0.0/16 removed from the filter list.', t)
 
-        self.connect_as_guest()
+        self.close(self.connect_as_guest())
 
         self.close(t)
 

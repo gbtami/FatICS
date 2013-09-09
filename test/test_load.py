@@ -94,6 +94,7 @@ class TestProtocol(protocol.Protocol):
 
 class TestLoad(Test):
     def test_load(self):
+        self._skip('tmp')
         t = self.connect_as_admin()
         t.write('asetmaxplayer 10005\n')
         self.expect('Previous', t)

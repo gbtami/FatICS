@@ -19,7 +19,6 @@
 import user
 import filter_
 import global_
-import db
 import find_user
 import config
 
@@ -66,7 +65,7 @@ def get_user(name, conn):
                 conn.loseConnection('filtered')
                 u = None
             if u and global_.online.guest_count >= config.maxguest:
-                conn.write(db.get_server_message('full_unreg'))
+                conn.write(global_.server_message['full_unreg'])
                 conn.loseConnection('guests full')
                 u = None
         else:
@@ -80,7 +79,7 @@ def get_user(name, conn):
             pmax = config.maxplayer if u.is_admin() else (config.maxplayer -
                 config.admin_reserve)
             if len(global_.online) >= pmax:
-                conn.write(db.get_server_message('full'))
+                conn.write(global_.server_message['full'])
                 conn.loseConnection('players full')
                 u = None
 

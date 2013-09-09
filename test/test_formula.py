@@ -87,6 +87,7 @@ class TestFormula(Test):
         self.expect('f1 unset.', t)
 
         self.close(t)
+        self.close(t2)
 
     def test_formula_registered(self):
         t = self.connect_as_guest('GuestABCD')

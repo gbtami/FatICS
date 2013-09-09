@@ -16,13 +16,19 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import time
 import subprocess
+
+import global_
+import db
 
 VERSION = "0.1"
 hg_label = None
 
 
+@defer.inlineCallbacks
 def init():
     global start_time
     start_time = time.time()
@@ -34,6 +40,12 @@ def init():
             stdout=subprocess.PIPE).communicate()[0]
     except:
         pass
+
+    # server messages
+    rows = yield db.get_server_messages()
+    for row in rows:
+        global_.server_message[row['server_message_name']] = row[
+            'server_message_text']
 
 
 def get_version():

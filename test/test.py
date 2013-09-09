@@ -186,8 +186,7 @@ class Test(unittest.TestCase):
 
     def tearDown(self):
         """ Make sure that all tests shut down cleanly. """
-        pass
-        '''
+        #pass
         t = self.connect_as_guest('GuestWXYZ')
         t.write('who\n')
         try:
@@ -200,7 +199,7 @@ class Test(unittest.TestCase):
             #self._nuke_all_players()
             raise
 
-        self.close(t)'''
+        self.close(t)
 
 # test decorators
 """def with_guest(f):

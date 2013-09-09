@@ -498,15 +498,6 @@ if 1:
             topic,user_name AS topic_who_name,topic_when
             FROM channel LEFT JOIN user ON(channel.topic_who=user.user_id)""")
 
-    '''def channel_get_members(id):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT user_name FROM channel_user
-            LEFT JOIN user USING (user_id)
-            WHERE channel_id=%s""", (id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return [r[0] for r in rows]'''
-
     @defer.inlineCallbacks
     def user_in_channel(user_id, chid):
         """Check whether a user is in a given channel."""
@@ -593,19 +584,6 @@ if 1:
             if txn.rowcount != 1:
                 raise DeleteError()
         return adb.runInteraction(do_del)
-
-    '''def user_get_notified(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notified) WHERE notifier=%s""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
-
-    def user_get_notifiers(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notifier) WHERE notified=%s""", (user_id,))
-        rows = cursor.fetchall()
-        return rows'''
 
     def user_get_notified(user_id):
         return adb.runQuery("""SELECT user_name FROM user LEFT JOIN user_notify ON (user.user_id=user_notify.notified) WHERE notifier=%s""",
@@ -1160,12 +1138,9 @@ if 1:
             (game_id, idn))
         cursor.close()
 
-    def get_server_message(name):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT server_message_text FROM server_message
-            WHERE server_message_name = %s""", (name,))
-        row = cursor.fetchone()
-        cursor.close()
-        return row[0]
+    def get_server_messages():
+        """Fetch all dynamic server messages in the DB."""
+        return adb.runQuery("""SELECT server_message_name,server_message_text
+            FROM server_message""")
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
