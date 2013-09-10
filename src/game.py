@@ -969,6 +969,9 @@ class PlayedGame(Game):
 
     @defer.inlineCallbacks
     def leave(self, user):
+        if not self.is_active:
+            print('leave() on inactive game')
+            return
         side = self.get_user_side(user)
         opp = self.get_opp(user)
         opp.write_('\nYour opponent, %s, has lost contact or quit.\n', (user.name,))
