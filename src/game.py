@@ -215,6 +215,7 @@ class Game(object):
 
     def next_move(self, mv, conn):
         self.send_boards()
+        return defer.succeed(None)
 
     def get_user_side(self, user):
         if user == self.white:
@@ -260,7 +261,7 @@ class Game(object):
         u.session.observed.remove(self)
         self.observers.remove(u)
 
-    def free(self):
+    def _free(self):
         for o in self.pending_offers[:]:
             o.decline(notify=False)
         assert(not self.pending_offers)
@@ -876,6 +877,13 @@ class PlayedGame(Game):
 
     @defer.inlineCallbacks
     def result(self, msg, result_code):
+        self.is_active = False
+        try:
+            self.when_ended
+        except AttributeError:
+            pass
+        else:
+            assert(False)  # game.result() called twice
         self.when_ended = datetime.datetime.utcnow()
         line = '\n{Game %d (%s vs. %s) %s} %s\n' % (self.number,
             self.white_name, self.black_name, msg, result_code)
@@ -887,7 +895,6 @@ class PlayedGame(Game):
             u.write_nowrap(line, prompt=True)
 
         self.clock.stop()
-        self.is_active = False
         if result_code != '*':
             history.history.save_game(self, msg, result_code)
             if self.rated:
@@ -922,7 +929,7 @@ class PlayedGame(Game):
                 print('unexpected result code %s' % result_code)
                 assert(False)
 
-        self.free()
+        self._free()
 
     def moretime(self, secs, u):
         """ Player "u" adds more time to the clock of his or her
@@ -1033,8 +1040,8 @@ class PlayedGame(Game):
         yield self.black.add_adjourned(data)
         yield self.result(reason, '*')
 
-    def free(self):
-        super(PlayedGame, self).free()
+    def _free(self):
+        super(PlayedGame, self)._free()
         assert(self.white.session.game == self)
         assert(self.black.session.game == self)
         self.white.session.game = None

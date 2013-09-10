@@ -158,16 +158,17 @@ class ExaminedGame(Game):
                 break
         self.send_boards()
 
+    @defer.inlineCallbacks
     def _check_result(self):
         if self.variant.pos.is_checkmate:
             if self.variant.get_turn() == WHITE:
-                self.result('%s checkmated' % self.white_name, '0-1')
+                yield self.result('%s checkmated' % self.white_name, '0-1')
             else:
-                self.result('%s checkmated' % self.black_name, '1-0')
+                yield self.result('%s checkmated' % self.black_name, '1-0')
         elif self.variant.pos.is_stalemate:
-            self.result('Game drawn by stalemate', '1/2-1/2')
+            yield self.result('Game drawn by stalemate', '1/2-1/2')
         elif self.variant.pos.is_draw_nomaterial:
-            self.result('Neither player has mating material', '1/2-1/2')
+            yield self.result('Neither player has mating material', '1/2-1/2')
 
     def mexamine(self, u, conn):
         # GuestWYMW has made you an examiner of game 81.
@@ -219,17 +220,17 @@ class ExaminedGame(Game):
             (self.number, ' '.join(olist), len(olist)))
         return True
 
+    @defer.inlineCallbacks
     def next_move(self, mv, conn):
         self.moves = self.moves[0:self.variant.pos.ply]
         self.moves.append(mv.to_san())
         #self.variant.pos.get_last_move().time = 0.0
         assert(self.variant.pos.get_last_move() == mv)
         mv.time = 0.0
-        d = super(ExaminedGame, self).next_move(mv, conn)
+        yield super(ExaminedGame, self).next_move(mv, conn)
         for p in self.players | self.observers:
             p.write_('Game %d: %s moves: %s\n', (self.number, conn.user.name, mv.to_san()))
-        self._check_result()
-        return d
+        yield self._check_result()
 
     def leave(self, user):
         self.players.remove(user)
@@ -244,15 +245,16 @@ class ExaminedGame(Game):
         if not self.players:
             for p in self.observers:
                 p.write_('Game %d (which you were observing) has no examiners.\n', (self.number,))
-            self.free()
+            self._free()
         return defer.succeed(None)
 
     def result(self, msg, result_code):
         for p in self.players | self.observers:
             p.write_('Game %d: %s %s\n', (self.number, msg, result_code))
+        return defer.succeed(None)
 
-    def free(self):
-        super(ExaminedGame, self).free()
+    def _free(self):
+        super(ExaminedGame, self)._free()
         assert(not self.players)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
