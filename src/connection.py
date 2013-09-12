@@ -278,13 +278,11 @@ class Connection(basic.LineReceiver):
             if self.user:
                 self.user.write_prompt()
 
+    @defer.inlineCallbacks
     def loseConnection(self, reason):
         if self.state == 'quitting':
             # already quitting
             return
-        if self.d:
-            self.d.cancel()
-            self.d = None
         self.state = 'quitting'
         if self.timeout_check:
             self.timeout_check.cancel()
@@ -297,13 +295,17 @@ class Connection(basic.LineReceiver):
             # we don't want to have to wait for the first connection
             # to finish closing before logging in.
             self.logged_in_again = True
+        # XXX is this necessary / a good idea?
+        if self.d:
+            self.d.cancel()
+            self.d = None
         # We prefer to call log_off() before the connection is closed so
         # we can print messages such as forfeit by disconnection,
         # but if the user disconnects abruptly then log_off() will be
         # called in connectionLost() instead.
         if self.user:
             assert(self.user.is_online)
-            self.user.log_off()
+            yield self.user.log_off()
             self.user = None
         self.transport.loseConnection()
         if reason == 'quit':
@@ -321,6 +323,7 @@ class Connection(basic.LineReceiver):
                 self.logged_in_again = False
             else:
                 # abrupt disconnection
+                # XXX we should wait for the Deferred returned by log_off()
                 self.user.log_off()
                 self.user = None
                 self.state = 'quitting'

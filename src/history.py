@@ -16,10 +16,14 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import db
 
 
+# XXX no need to use a class here
 class History(object):
+    @defer.inlineCallbacks
     def save_game(self, game, msg, result_code):
         if 'by adjudication' in msg:
             result_reason = 'Adj'
@@ -62,7 +66,7 @@ class History(object):
             'movetext': game.get_movetext(),
             'white_material': game.variant.pos.material[1],
             'black_material': game.variant.pos.material[0],
-            'eco': game.get_eco_sync()[1],
+            'eco': (yield game.get_eco())[1],
             'ply_count': game.get_ply_count(),
             'variant_id': game.speed_variant.variant.id_,
             'speed_id': game.speed_variant.speed.id_,
@@ -92,10 +96,10 @@ class History(object):
         data['variant_abbrev'] = game.speed_variant.variant.abbrev
         data['speed_abbrev'] = game.speed_variant.speed.abbrev
 
-        game_id = db.game_add(data)
+        game_id = yield db.game_add(data)
 
         if game.idn is not None:
-            db.game_add_idn(game_id, game.idn)
+            yield db.game_add_idn(game_id, game.idn)
 
         flags = '%s%s' % (game.speed_variant.speed.abbrev,
             game.speed_variant.variant.abbrev)
@@ -112,18 +116,22 @@ class History(object):
             assert(result_code == '1/2-1/2')
             white_result_char = '='
             black_result_char = '='
-        game.white.save_history(game_id, white_result_char,
+        yield game.white.save_history(game_id, white_result_char,
             data['white_rating'], 'W', game.black.name, data['black_rating'],
             data['eco'][0:3], flags, game.white_time, game.inc, result_reason,
             game.when_ended, data['movetext'], game.idn)
-        game.black.save_history(game_id, black_result_char,
+        yield game.black.save_history(game_id, black_result_char,
             data['black_rating'], 'B', game.white.name, data['white_rating'],
             data['eco'][0:3], flags, game.white_time, game.inc, result_reason,
             game.when_ended, data['movetext'], game.idn)
-        return game_id
+        defer.returnValue(game_id)
 
 
+@defer.inlineCallbacks
 def show_for_user(user, conn):
+    # XXX this is ugly and should be redesigned
+    if not user.is_guest:
+        yield user.load_history()
     hist = user.get_history()
     if not hist:
         conn.write(_('%s has no history games.\n') % user.name)

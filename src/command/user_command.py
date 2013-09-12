@@ -208,7 +208,7 @@ class History(Command):
         else:
             u = conn.user
         if u:
-            history.show_for_user(u, conn)
+            yield history.show_for_user(u, conn)
 
 
 @ics_command('stored', 'o')

@@ -158,6 +158,7 @@ class LogoutTest(Test):
     def test_logout(self):
         t = self.connect_as_admin()
         t.write('quit\n')
+        self.expect('Logging you out.', t)
         self.expect('Thank you for using', t)
         t.close()
 

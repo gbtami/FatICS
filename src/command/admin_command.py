@@ -49,7 +49,7 @@ class Aclearhistory(Command):
         u = yield find_user.exact_for_user(args[0], conn)
         if u:
             # disallow clearing history for higher adminlevels?
-            u.clear_history()
+            yield u.clear_history()
             conn.write(A_('History of %s cleared.\n') % u.name)
             log_admin(conn.user, "clears history of %s" % u.name)
 
@@ -317,7 +317,7 @@ class Nuke(Command):
                     % u.name)
             else:
                 u.write_('\n\n**** You have been kicked out by %s! ****\n\n', (conn.user.name,))
-                u.session.conn.loseConnection('nuked')
+                yield u.session.conn.loseConnection('nuked')
                 if not u.is_guest:
                     yield db.add_comment_async(conn.user.id_, u.id_, 'Nuked.')
                 conn.write('Nuked: %s\n' % u.name)

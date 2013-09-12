@@ -301,8 +301,6 @@ class Challenge(Offer, MatchStringParser):
     def finish_init(self, a, b, args=None, tags=None):
         """ Initiate a new offer.  "a" is the player issuing the offer;
         "b" receives the request """
-        Offer.__init__(self, 'match offer')
-
         self.a = a
         self.b = b
 

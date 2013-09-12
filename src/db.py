@@ -675,14 +675,6 @@ if 1:
         ret = [r['user_name'] for r in rows]
         defer.returnValue(ret)
 
-    # eco
-    def get_eco_sync(hash_):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT eco,long_ FROM eco WHERE hash=%s""", (hash_,))
-        row = cursor.fetchone()
-        cursor.close()
-        return row
-
     @defer.inlineCallbacks
     def get_eco(hash_):
         rows = yield adb.runQuery("""SELECT eco,long_ FROM eco WHERE hash=%s""",
@@ -710,9 +702,9 @@ if 1:
 
     def game_add(g):
         """Add a completed or adjourned game to the main game table."""
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO game
-            SET white_user_id=%(white_user_id)s,
+        def do(txn, g):
+            txn.execute("""INSERT INTO game SET
+                white_user_id=%(white_user_id)s,
                 black_user_id=%(black_user_id)s,
                 white_clock=%(white_clock)s,
                 black_clock=%(black_clock)s,
@@ -734,9 +726,8 @@ if 1:
                 """, g)
                 #overtime_move_num=%(overtime_move_num),
                 #overtime_bonus=%(overtime_bonus),
-        game_id = cursor.lastrowid
-        cursor.close()
-        return game_id
+            return txn.lastrowid
+        return adb.runInteraction(do, g)
 
     def get_adjourned(user_id):
         """ Look up adjourned games by the given user."""
@@ -768,8 +759,10 @@ if 1:
         return adb.runInteraction(do_del)
 
     def user_get_history(user_id):
-        cursor = db.cursor(cursors.DictCursor)
-        cursor = query(cursor, """SELECT game_id, num, result_char, user_rating,
+        """Get recent game history for the given user.  In the future
+        this function could be extended to allow looking farther back."""
+        return adb.runQuery("""SELECT game_id, num, result_char,
+                user_rating,
                 color_char, opp_name, opp_rating, h.eco, flags, h.time,
                 h.inc, h.result_reason, h.when_ended, movetext, idn
             FROM history AS h LEFT JOIN game USING(game_id)
@@ -777,21 +770,20 @@ if 1:
             WHERE user_id=%s
             ORDER BY when_ended ASC
             LIMIT 10""", (user_id,))
-        rows = cursor.fetchall()
-        cursor.close()
-        return rows
 
     def user_add_history(entry, user_id):
-        cursor = db.cursor()
+        """Add a history entry for a user, removing old entries if
+        necessary."""
         entry.update({'user_id': user_id})
-        cursor = query(cursor, """DELETE FROM history WHERE user_id=%s AND num=%s""", (user_id, entry['num']))
-        cursor = query(cursor, """INSERT INTO history SET user_id=%(user_id)s,game_id=%(game_id)s, num=%(num)s, result_char=%(result_char)s, user_rating=%(user_rating)s, color_char=%(color_char)s, opp_name=%(opp_name)s, opp_rating=%(opp_rating)s, eco=%(eco)s, flags=%(flags)s, time=%(time)s, inc=%(inc)s, result_reason=%(result_reason)s, when_ended=%(when_ended)s""", entry)
-        cursor.close()
+        def do(txn):
+            txn.execute("""DELETE FROM history WHERE user_id=%s AND num=%s""", (user_id, entry['num']))
+            txn.execute("""INSERT INTO history SET user_id=%(user_id)s,game_id=%(game_id)s, num=%(num)s, result_char=%(result_char)s, user_rating=%(user_rating)s, color_char=%(color_char)s, opp_name=%(opp_name)s, opp_rating=%(opp_rating)s, eco=%(eco)s, flags=%(flags)s, time=%(time)s, inc=%(inc)s, result_reason=%(result_reason)s, when_ended=%(when_ended)s""", entry)
+        return adb.runInteraction(do)
 
     def user_del_history(user_id):
-        cursor = db.cursor()
-        cursor = query(cursor, """DELETE FROM history WHERE user_id=%s""", (user_id,))
-        cursor.close()
+        """Delete all entries from a user's history."""
+        return adb.runOperation("""DELETE FROM history WHERE user_id=%s""",
+            (user_id,))
 
     def user_get_ratings_for_finger(user_id):
         """Get a list of ratings suitable for display in finger notis."""
@@ -1137,10 +1129,8 @@ if 1:
             return None
 
     def game_add_idn(game_id, idn):
-        cursor = db.cursor()
-        cursor = query(cursor, """INSERT INTO game_idn VALUES(%s,%s)""",
+        return adb.runOperation("""INSERT INTO game_idn VALUES(%s,%s)""",
             (game_id, idn))
-        cursor.close()
 
     def get_server_messages():
         """Fetch all dynamic server messages in the DB."""

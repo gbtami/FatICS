@@ -116,8 +116,9 @@ class Password(Command):
 
 @ics_command('quit', '', admin.Level.user)
 class Quit(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
-        conn.loseConnection('quit')
-
+        conn.write(_('Logging you out.\n'))
+        yield conn.loseConnection('quit')
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -270,22 +270,6 @@ class Game(object):
         assert(not self.observers)
         del global_.games[self.number]
 
-    def get_eco_sync(self):
-        """Get a tuple containing eco code information for this game."""
-        i = min(self.variant.pos.ply, 36)
-        row = None
-        while i >= self.variant.pos.start_ply:
-            hash_ = self.variant.pos.history.get_hash(i)
-            row = db.get_eco_sync(hash_)
-            if row:
-                break
-            i -= 1
-        if row:
-            ret = (i, row['eco'], row['long_'])
-        else:
-            ret = (0, 'A00', 'Unknown')
-        return ret
-
     @defer.inlineCallbacks
     def get_eco(self):
         """Get a tuple containing eco code information for this game.
@@ -885,18 +869,10 @@ class PlayedGame(Game):
         else:
             assert(False)  # game.result() called twice
         self.when_ended = datetime.datetime.utcnow()
-        line = '\n{Game %d (%s vs. %s) %s} %s\n' % (self.number,
-            self.white_name, self.black_name, msg, result_code)
-        self.white.write_nowrap(line, prompt=True)
-        self.black.write_nowrap(line, prompt=True)
-        for u in self.observers:
-            u.write_nowrap(line, prompt=True)
-        for u in global_.online.gin_var:
-            u.write_nowrap(line, prompt=True)
 
         self.clock.stop()
         if result_code != '*':
-            history.history.save_game(self, msg, result_code)
+            yield history.history.save_game(self, msg, result_code)
             if self.rated:
                 if result_code == '1-0':
                     (white_score, black_score) = (1.0, 0.0)
@@ -928,6 +904,17 @@ class PlayedGame(Game):
             else:
                 print('unexpected result code %s' % result_code)
                 assert(False)
+
+        # this comes at the end, so we don't notify players that their
+        # games are over until everything is cleaned up
+        line = '\n{Game %d (%s vs. %s) %s} %s\n' % (self.number,
+            self.white_name, self.black_name, msg, result_code)
+        self.white.write_nowrap(line, prompt=True)
+        self.black.write_nowrap(line, prompt=True)
+        for u in self.observers:
+            u.write_nowrap(line, prompt=True)
+        for u in global_.online.gin_var:
+            u.write_nowrap(line, prompt=True)
 
         self._free()
 

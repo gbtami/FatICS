@@ -73,9 +73,8 @@ class BaseUser(object):
     @defer.inlineCallbacks
     def log_off(self):
         assert(self.is_online)
-
         for ch in self.channels:
-            (yield global_.channels.get(ch)).log_off(self)
+            global_.channels[ch].log_off(self)
         yield self.session.close()
         self.is_online = False
         global_.online.remove(self)
@@ -273,6 +272,7 @@ class BaseUser(object):
     def save_history(self, game_id, result_char, user_rating, color_char,
             opp_name, opp_rating, eco, flags, initial_time, inc,
             result_reason, when_ended, movetext, idn):
+        """Save history for user.  Return a deferred."""
         assert(self._history is not None)
         if len(self._history) == 0:
             num = 0
@@ -287,10 +287,11 @@ class BaseUser(object):
             'result_reason': result_reason, 'when_ended': when_ended,
             'movetext': movetext, 'idn': idn}
         self._history.append(entry)
-        return entry
+        return defer.succeed(entry)
 
     def clear_history(self):
         self._history = []
+        return defer.succeed(None)
 
     def get_history_game(self, num, conn):
         hist = self.get_history()
@@ -497,7 +498,13 @@ class RegUser(BaseUser):
             self.noplay.add(dbu['user_name'])
 
         yield self._load_ratings()
-        self.get_history()
+        yield self.load_history()
+
+    @defer.inlineCallbacks
+    def load_history(self):
+        histrows = yield db.user_get_history(self.id_)
+        self._history = list(histrows)
+        #self._history = [e for e in (yield db.user_get_history(self.id_))]
 
     @defer.inlineCallbacks
     def log_off(self):
@@ -639,8 +646,9 @@ class RegUser(BaseUser):
             yield db.user_del_noplay(self.id_, user.id_)
 
     def get_history(self):
-        if self._history is None:
-            self._history = [e for e in db.user_get_history(self.id_)]
+        #if self._history is None:
+            #self._history = [e for e in (yield db.user_get_history(self.id_))]
+        assert(self._history is not None)
         return self._history
 
     @defer.inlineCallbacks
@@ -659,17 +667,20 @@ class RegUser(BaseUser):
     def get_titles(self):
         return BaseUser.get_titles(self)
 
+    @defer.inlineCallbacks
     def save_history(self, game_id, result_char, user_rating, color_char,
             opp_name, opp_rating, eco, flags, initial_time, inc,
             result_reason, when_ended, movetext, idn):
-        entry = BaseUser.save_history(self, game_id, result_char, user_rating,
-            color_char, opp_name, opp_rating, eco, flags, initial_time, inc,
-            result_reason, when_ended, movetext, idn)
-        db.user_add_history(entry, self.id_)
+        """Save history for a user.  Return a Deferred."""
+        entry = yield BaseUser.save_history(self, game_id, result_char,
+            user_rating, color_char, opp_name, opp_rating, eco, flags,
+            initial_time, inc, result_reason, when_ended, movetext, idn)
+        yield db.user_add_history(entry, self.id_)
 
     def clear_history(self):
-        BaseUser.clear_history(self)
-        db.user_del_history(self.id_)
+        d = BaseUser.clear_history(self)
+        assert(d.called)
+        return db.user_del_history(self.id_)
 
     def get_rating(self, speed_variant):
         """Get the rating for a certain speed/variant combination."""
