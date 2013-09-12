@@ -4,7 +4,7 @@ cd `dirname $0`
 
 PIDFILE=chessd.pid
 LOGFILE=chessd.log
-PYTHON=/usr/bin/python2.7
+PYTHON=/usr/bin/env python
 TWISTD="$PYTHON /usr/bin/twistd"
 
 case "$1" in
