@@ -99,9 +99,11 @@ class TestEco(Test):
         t = self.connect_as_guest()
 
         t.write('eco n\n')
-        self.expect('No player named "n" is online', t)
+        self.expect('You need to specify at least', t)
         t.write('eco e\n')
-        self.expect('No player named "e" is online', t)
+        self.expect('You need to specify at least', t)
+        t.write('eco no\n')
+        self.expect('No player named "no" is online', t)
         t.write('eco a b\n')
         self.expect('Usage:', t)
         t.write('eco A00\n')
@@ -113,6 +115,12 @@ class TestEco(Test):
 
         t.write('eco e a98\n')
         self.expect('  ECO: A98\r\n  NIC: -----\r\n LONG: Dutch: Ilyin-Zhenevsky, 8.Qc2\r\n  FEN: rnb1qrk1/ppp1b1pp/3ppn2/5p2/2PP4/2N2NP1/PPQ1PPBP/R1B2RK1 b - -\r\n\r\n  ECO: A98\r\n  NIC: -----\r\n LONG: Dutch: Ilyin-Zhenevsky, 8.Qc2 Nc6\r\n  FEN: r1b1qrk1/ppp1b1pp/2nppn2/5p2/2PP4/2N2NP1/PPQ1PPBP/R1B2RK1 w - -\r\n\r\n  ECO: A98\r\n  NIC: -----\r\n LONG: Dutch: Ilyin-Zhenevsky, 8.Qc2 Qh5\r\n  FEN: rnb2rk1/ppp1b1pp/3ppn2/5p1q/2PP4/2N2NP1/PPQ1PPBP/R1B2RK1 w - -', t)
+
+
+        # make sure messages are in order
+        t.write('eco e d98\nf\n')
+        self.expect(' LONG: Grünfeld: Russian, Smyslov, 8.Be3 Nfd7 9.Rd1 Nc6', t)
+        self.expect('Finger of Guest', t)
 
         t.write('eco n VO.11\n')
         self.expect('  ECO: A00n\r\n  NIC: VO.11\r\n LONG: Grob\r\n  FEN: rnbqkbnr/pppppppp/8/8/6P1/8/PPPPPP1P/RNBQKBNR b KQkq -', t)

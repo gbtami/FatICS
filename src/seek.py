@@ -25,7 +25,8 @@ import game
 import formula
 
 from match import MatchStringParser, MatchError
-from game_constants import *
+from game_constants import WHITE, BLACK
+from twisted.internet import defer
 
 # Wait 90 seconds after a seek ends to reuse its seek number
 # (this is the value GICS uses; original FICS is likely the
@@ -47,6 +48,7 @@ def find_free_slot():
                 and global_.seeks[i].expired_time <= expiration_time):
             return i
         i += 1
+
 
 def find_matching(seek):
     """ Find all seeks that match a given seek.  Returns a list of
@@ -76,6 +78,8 @@ _seekinfo_titles_map = {
     'WIM': 0x40,
     'WFM': 0x80,
 }
+
+
 def _seekinfo_titles(u):
     """ Convert a user's title into the weird bitfield format used
     by original FICS. """
@@ -84,6 +88,7 @@ def _seekinfo_titles(u):
         if t in _seekinfo_titles_map:
             ret |= _seekinfo_titles_map[t]
     return ret
+
 
 class Seek(MatchStringParser):
     def __init__(self, user, args):
@@ -104,10 +109,10 @@ class Seek(MatchStringParser):
         assert(self.side in [None, WHITE, BLACK])
 
         self.tags = {
-            'rated': self.rated,
+            'is_rated': self.rated,
             'speed_name': self.speed_name,
             'variant_name': self.variant_name,
-            'clock_name': self.clock_name,
+            'clock': self.clock_name,
             'time': self.time,
             'inc': self.inc,
             'idn': self.idn,
@@ -127,10 +132,10 @@ class Seek(MatchStringParser):
         self.speed_variant = speed_variant.from_names(self.speed_name,
             self.variant_name)
 
-        variant_str = '' if self.variant_name == 'chess' else (
+        '''variant_str = '' if self.variant_name == 'chess' else (
             ' %s' % self.variant_name)
         clock_str = '' if self.clock_name == 'fischer' else (
-            ' %s' % self.clock_name)
+            ' %s' % self.clock_name)'''
 
     def _parse_args(self, args):
         """ Parse the args, including seek-specific parsing. """
@@ -194,7 +199,7 @@ class Seek(MatchStringParser):
 
         # build the seek string
         dname = self.a.get_display_name()
-        rated_str = 'rated' if self.tags['rated'] else 'unrated'
+        rated_str = 'rated' if self.tags['is_rated'] else 'unrated'
         speed_name = self.speed_variant.speed.name
         variant_str = '' if self.variant_name == 'chess' else (
             ' %s' % self.variant_name)
@@ -216,13 +221,13 @@ class Seek(MatchStringParser):
 
         # not currently translated, for efficiency
         seek_str = '\n%s (%s) seeking %d %d %s %s%s%s%s%s ("play %d" to respond)\n' % (
-                self.a.name, self.rating, self.tags['time'], self.tags['inc'],
-                rated_str, speed_name, variant_str, clock_str,
-                side_str, mf_str, self.num)
+            self.a.name, self.rating, self.tags['time'], self.tags['inc'],
+            rated_str, speed_name, variant_str, clock_str,
+            side_str, mf_str, self.num)
 
         # original FICS example:
         # <s> 47 w=GuestWWPQ ti=01 rt=0P t=2 i=12 r=u tp=blitz c=W rr=0-9999 a=f f=f
-        rated_char = 'r' if self.tags['rated'] else 'u'
+        rated_char = 'r' if self.tags['is_rated'] else 'u'
         if self.side is None:
             color_char = '?'
         else:
@@ -238,13 +243,13 @@ class Seek(MatchStringParser):
         count = 0
         for u in global_.online:
             assert(u.is_online)
-            assert('formula' in u.vars)
+            assert('formula' in u.vars_)
             if not u.session.game:
                 # seekinfo
                 if u.session.ivars['seekinfo']:
                     u.write_nowrap(seekinfo_str)
 
-                if u.vars['seek']:
+                if u.vars_['seek']:
                     # showownseek is both a variable and an ivariable
                     if self.rated and (u.is_guest or u.is_ratedbanned):
                         continue
@@ -254,11 +259,11 @@ class Seek(MatchStringParser):
                         continue
                     if u.censor_or_noplay(self.a):
                         continue
-                    if u == self.a and not (u.vars['showownseek']
+                    if u == self.a and not (u.vars_['showownseek']
                             and u.session.ivars['showownseek']):
                         continue
                     count += 1
-                    u.write(seek_str)
+                    u.write_nowrap(seek_str, prompt=True)
 
         # set the string for use in the "sought" display
         self._str = '%3d %4s %-17s %3d %3d %-7s %-10s%-9s %4d-%4d%s' % (
@@ -277,8 +282,8 @@ class Seek(MatchStringParser):
         self.a = b
         try:
             if self.formula:
-                f = self.a.vars['formula']
-                if not formula.check_formula(self, self.b.vars['formula']):
+                #f = self.a.vars['formula']
+                if not formula.check_formula(self, self.b.vars_['formula']):
                     return False
             return True
         finally:
@@ -291,17 +296,19 @@ class Seek(MatchStringParser):
         assert(self.b is None)
         self.b = b
         try:
-            return formula.check_formula(self, b.vars['formula'])
+            return formula.check_formula(self, b.vars_['formula'])
         finally:
             self.b = None
 
+    @defer.inlineCallbacks
     def accept(self, b):
         assert(self.check_formula(b))
         assert(not self.a.censor_or_noplay(b))
         assert(not self.expired)
         self.b = b
         # will remove this seek
-        game.PlayedGame(self)
+        g = game.PlayedGame(self)
+        yield g.finish_init(self)
         assert(self.expired)
 
     def remove(self):

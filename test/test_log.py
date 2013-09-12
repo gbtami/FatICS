@@ -81,9 +81,12 @@ class TestLlogons(Test):
         time.sleep(1)
 
         t2 = self.connect_as_guest('GuestABCD')
+        time.sleep(1)
         t.write('llogons 1\n')
         self.expect(': GuestABCD            login  from %s\r\n' % LOCAL_IP, t)
+        time.sleep(1)
         self.close(t2)
+        time.sleep(1)
         t.write('llogons 1\n')
         self.expect(': GuestABCD            logout from %s\r\n' % LOCAL_IP, t)
 

@@ -18,10 +18,14 @@
 
 from test.test import *
 
+from twisted.internet import defer
+
 import random
 
 from pgn import Pgn
-from db import db
+import db
+
+db.init()
 
 class TestChess960(Test):
     def test_bad_idn(self):
@@ -159,6 +163,7 @@ class TestChess960(Test):
 
 
 class TestPgn(Test):
+    @defer.inlineCallbacks
     def test_pgn(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_guest('GuestEFGH')
@@ -172,7 +177,7 @@ class TestPgn(Test):
         for g in pgn:
             print 'game %s' % g
             assert(g.tags['FEN'])
-            idn = db.idn_from_fen(g.tags['FEN'])
+            idn = yield db.idn_from_fen(g.tags['FEN'])
             if idn is None:
                 print('could not get idn for fen %s' % g.tags['FEN'])
                 assert(False)

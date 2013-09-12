@@ -16,11 +16,11 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import connection
 import global_
+from twisted.internet import defer
 
-from db import db
 
+@defer.inlineCallbacks
 def notify_users(user, arrived):
     """ Send a message to all users notified about the given user. """
 
@@ -29,11 +29,19 @@ def notify_users(user, arrived):
     # notify of adjourned games
     adjourned_opps = []
     if arrived:
-        for adj in db.get_adjourned(user.id):
-            if adj['white_user_id'] == user.id:
+        nlist = user.session.notifiers_online
+        if nlist:
+            user.write(_('Present company includes: %s\n')
+                % ' '.join((n.name for n in nlist)))
+
+        assert(user.session.notified_online is not None)
+        adj_list = yield user.get_adjourned()
+        assert(user.session.notified_online is not None)
+        for adj in adj_list:
+            if adj['white_user_id'] == user.id_:
                 opp_name = adj['black_name']
             else:
-                assert(adj['black_user_id'] == user.id)
+                assert(adj['black_user_id'] == user.id_)
                 opp_name = adj['white_name']
             assert(opp_name)
             opp = global_.online.find_exact(opp_name)
@@ -45,31 +53,29 @@ def notify_users(user, arrived):
             '%d players who have an adjourned game with you are online: %s\n',
             len(adjourned_opps), (len(adjourned_opps), ' '.join(adjourned_opps)))
 
-    nlist = []
-    for nname in user.notified:
-        u = global_.online.find_exact(nname)
-        if u:
-            if arrived:
-                if u.name not in adjourned_opps:
-                    u.write_("\nNotification: %s has arrived.\n", name)
-                    nlist.append(u.name)
-            else:
-                u.write_("\nNotification: %s has departed.\n", name)
-                nlist.append(u.name)
-
-    if nlist and user.vars['notifiedby']:
+    nlist = user.session.notified_online
+    for u in nlist:
         if arrived:
-            user.write(_('The following players were notified of your arrival: %s\n') % ' '.join(nlist))
+            if u.name not in adjourned_opps:
+                u.write_("\nNotification: %s has arrived.\n", name)
         else:
-            user.write(_('The following players were notified of your departure: %s\n') % ' '.join(nlist))
+            u.write_("\nNotification: %s has departed.\n", name)
 
-    for nname in user.notifiers:
-        u = global_.online.find_exact(nname)
-        if u and u.vars['notifiedby'] and u.name not in nlist:
+    if user.vars_['notifiedby']:
+        if arrived:
+            user.write(_('The following players were notified of your arrival: %s\n')
+                % ' '.join((n.name for n in nlist)))
+        else:
+            user.write(_('The following players were notified of your departure: %s\n')
+                % ' '.join((n.name for n in nlist)))
+
+    for u in user.session.notifiers_online - nlist:
+        if u.vars_['notifiedby']:
             if arrived:
                 u.write_("\nNotification: %s has arrived and isn't on your notify list.\n", name)
             else:
                 u.write_("\nNotification: %s has departed and isn't on your notify list.\n", name)
+
 
 def notify_pin(user, arrived):
     """ Notify users who have the pin variable or ivariable set. """
@@ -79,8 +85,7 @@ def notify_pin(user, arrived):
         else:
             pin_ivar_str = '\n<wd> %s\n' % user.name
         for u in global_.online.pin_ivar:
-            u.write_nowrap(pin_ivar_str)
-            connection.written_users.add(u)
+            u.write_nowrap(pin_ivar_str, prompt=True)
 
     if global_.online.pin_var:
         if arrived:
@@ -94,8 +99,8 @@ def notify_pin(user, arrived):
             pin_var_str = '\n[%s has disconnected.]\n' % user.name
         for u in global_.online.pin_var:
             if u.is_admin() and arrived:
-                u.session.conn.write(admin_pin_var_str)
+                u.write_nowrap(admin_pin_var_str, prompt=True)
             else:
-                u.session.conn.write(pin_var_str)
+                u.write_nowrap(pin_var_str, prompt=True)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

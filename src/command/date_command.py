@@ -20,12 +20,13 @@
 import datetime
 import pytz
 import time
+import config
 
 import time_format
+import server
 
 from .command import ics_command, Command
 
-from server import server
 
 @ics_command('date', '')
 class Date(Command):
@@ -39,11 +40,12 @@ class Date(Command):
         #conn.write(_("GMT            - %s\n") %
         #    dt.strftime("%a %b %e, %H:%M GMT %Y"))
 
+
 @ics_command('uptime', '')
 class Uptime(Command):
     def run(self, args, conn):
-        conn.write(_("FatICS version : %s\n") % server.version)
-        conn.write(_("Server location: %s\n" % server.location))
+        conn.write(_("FatICS version : %s\n") % server.get_version())
+        conn.write(_("Server location: %s\n" % config.location))
         conn.write(_("The server has been up since %s.\n")
             % time.strftime("%a %b %e, %H:%M UTC %Y", time.gmtime(server.start_time)))
         conn.write(_("Up for: %s\n") % time_format.hms_words(time.time() -

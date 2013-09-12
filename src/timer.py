@@ -16,16 +16,21 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import time
 
 import global_
-import game
-import connection
+import config
 
-from config import config
+from game_constants import PLAYED
 
-heartbeat_timeout = 5
+heartbeat_timeout = 10
+
+
 def heartbeat():
+    dlist = []
+
     # idle timeout
     if config.idle_timeout:
         now = time.time()
@@ -46,13 +51,16 @@ def heartbeat():
 
     # forfeit games on time
     for g in global_.games.values():
-        if g.gtype == game.PLAYED and g.clock.is_ticking:
+        if g.gtype == PLAYED and g.clock.is_ticking:
             u = g.get_user_to_move()
             opp = g.get_opp(u)
-            if opp.vars['autoflag']:
+            if opp.vars_['autoflag']:
                 # TODO: send auto-flagging message a la original fics.
-                g.clock.check_flag(g, g.get_user_side(u))
+                d = g.clock.check_flag(g, g.get_user_side(u))
+                if d:
+                    dlist.append(d)
 
-    connection.send_prompts()
+    if dlist:
+        return defer.DeferredList(dlist)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

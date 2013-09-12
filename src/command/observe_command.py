@@ -18,11 +18,14 @@
 #
 
 from .command import ics_command, Command
-from command_parser import BadCommandError
+from parser import BadCommandError
 
 import game
-import user
 import global_
+import find_user
+
+from game_constants import EXAMINED, PLAYED
+
 
 @ics_command('observe', 'i')
 class Observe(Command):
@@ -40,6 +43,7 @@ class Observe(Command):
                 assert(conn.user not in g.observers)
                 g.observe(conn.user)
 
+
 @ics_command('follow', 'o')
 class Follow(Command):
     def run(self, args, conn):
@@ -54,8 +58,7 @@ class Follow(Command):
                 # no need to change conn.user.session.pfollow
                 conn.write(_("You will not follow any player's games.\n"))
         else:
-            u2 = user.find_by_prefix_for_user(args[0], conn,
-                online_only=True)
+            u2 = find_user.online_by_prefix_for_user(args[0], conn)
             if u2:
                 if u2 == conn.user:
                     conn.write(_("You can't follow your own games.\n"))
@@ -84,6 +87,7 @@ class Follow(Command):
                     g.observe(conn.user)
                     assert(g in conn.user.session.observed)
 
+
 @ics_command('allobservers', 'o')
 class Allobservers(Command):
     def run(self, args, conn):
@@ -105,7 +109,8 @@ class Allobservers(Command):
             conn.write(ngettext(
                 '  %(count)d game displayed (of %(total)d in progress).\n',
                 '  %(count)d games displayed (of %(total)d in progress).\n',
-                    count) % {'count': count, 'total': len(global_.games)})
+                count) % {'count': count, 'total': len(global_.games)})
+
 
 @ics_command('pfollow', 'o')
 class Pfollow(Command):
@@ -122,8 +127,7 @@ class Pfollow(Command):
                 # no need to change conn.user.session.pfollow
                 conn.write(_("You will not follow any player's partner's games.\n"))
         else:
-            u2 = user.find_by_prefix_for_user(args[0], conn,
-                online_only=True)
+            u2 = find_user.online_by_prefix_for_user(args[0], conn)
             if u2:
                 if conn.user.session.following:
                     if u2 == conn.user.session.following and conn.user.session.pfollow:
@@ -145,9 +149,10 @@ class Pfollow(Command):
                 # observing it, start observing it.
                 g = u2.session.game
                 if (g and g.variant.name == 'bughouse' and
-                    g.bug_link not in conn.user.session.observed and
-                    conn.user not in g.players):
+                        g.bug_link not in conn.user.session.observed and
+                        conn.user not in g.players):
                     g.bug_link.observe(conn.user)
+
 
 @ics_command('unobserve', 'n')
 class Unobserve(Command):
@@ -167,6 +172,7 @@ class Unobserve(Command):
                 for g in conn.user.session.observed.copy():
                     g.unobserve(conn.user)
                 assert(not conn.user.session.observed)
+
 
 @ics_command('primary', 'n')
 class Primary(Command):
@@ -191,6 +197,7 @@ class Primary(Command):
                 else:
                     conn.write('You are not observing game %d.\n' % g.number)
 
+
 @ics_command('games', 'no')
 class Games(Command):
     def run(self, args, conn):
@@ -213,7 +220,7 @@ class Games(Command):
         # ratings
 
         for g in games:
-            if g.gtype == game.PLAYED:
+            if g.gtype == PLAYED:
                 rated_char = 'r' if g.rated else 'u'
                 line = "%3d %4s %-11.11s %4s %-10.10s [ %c%c%3d %3d]" % (
                     g.number, g.white_rating, g.white_name, g.black_rating,
@@ -225,8 +232,8 @@ class Games(Command):
                     g.variant.pos.material[1], g.variant.pos.material[0],
                     'W' if g.variant.get_turn() else 'B',
                     g.variant.pos.ply // 2 + 1)
-            elif g.gtype == game.EXAMINED:
-                if g.gtype == game.EXAMINED:
+            elif g.gtype == EXAMINED:
+                if g.gtype == EXAMINED:
                     gtype = "Exam."
                 else:
                     gtype = "Setup"

@@ -52,6 +52,7 @@ class TestVarsCommand(Test):
         self.expect('Following: GuestEFGH', t)
 
         self.close(t)
+        self.close(t2)
 
     def test_other_vars(self):
         t = self.connect_as_admin()
@@ -151,6 +152,30 @@ class TestVars(Test):
         t.write('set interface Thief 1.23 Midget edition\n')
         self.expect('interface set to "Thief 1.23 Midget edition"', t)
         self.close(t)
+
+class TestBusyString(Test):
+    def test_busy_guest(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestABCD')
+        t2.write('set busy foo bar\n')
+
+        # original FICS prints 'Your "busy" string was set to "foo bar"'
+        self.expect('busy set to "foo bar"', t2)
+
+        t.write('finger guestabcd\n')
+        self.expect('\r\n(GuestABCD foo bar)\r\n', t)
+
+        t.write('asetidle guestabcd 4\n')
+        self.expect('set to 240', t)
+
+        t.write('tell GuestABCD hi\n')
+        self.expect('(told GuestABCD, who foo bar (idle: 4 mins))\r\n', t)
+
+        t2.write('finger\n')
+        self.expect_not('\r\n(GuestABCD foo bar)\r\n', t2)
+
+        self.close(t)
+        self.close(t2)
 
 class TestIvars(Test):
     def test_ivars(self):

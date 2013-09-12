@@ -21,6 +21,7 @@ from offer import Offer
 
 import global_
 
+
 class Partner(Offer):
     def __init__(self, a, b):
         Offer.__init__(self, 'partnership request')
@@ -44,14 +45,14 @@ class Partner(Offer):
         self.a = a
         self.b = b
         a.write(_('Making a partnership offer to %s.\n') % b.name)
-        b.write_('\n%s offers to be your bughouse partner; type "partner %s" to accept.\n', (a.name,a.name))
+        b.write_('\n%s offers to be your bughouse partner; type "partner %s" to accept.\n', (a.name, a.name))
         self._register()
         self.pendinfo('partner', '#')
 
     def accept(self):
         Offer.accept(self)
         self.a.write_("\n%s agrees to be your partner.\n", (self.b.name,))
-        self.b.write_("You agree to be %s's partner.\n", (self.a.name,))
+        self.b.write(_("You agree to be %s's partner.\n") % (self.a.name,))
 
         # end any existing partnerships
         if self.a.session.partner:
@@ -85,14 +86,15 @@ class Partner(Offer):
 
     def withdraw_logout(self):
         Offer.withdraw_logout(self)
-        self.a.write_('Partnership offer to %s withdrawn.\n', (self.b.name,))
+        self.a.write(_('Partnership offer to %s withdrawn.\n') % (self.b.name,))
         self.b.write_('\n%s, who was offering a partnership with you, has departed.\n',
             (self.a.name,))
 
     def decline_logout(self):
         Offer.decline_logout(self)
         self.a.write_('\n%s, whom you were offering a partnership with, has departed.\n', (self.b.name,))
-        self.b.write_('Partnership offer from %s removed.\n', (self.a.name,))
+        self.b.write(_('Partnership offer from %s removed.\n') % (self.a.name,))
+
 
 def end_partnership(p1, p2):
     """ P1 ends the partnership with P2. """
@@ -105,7 +107,7 @@ def end_partnership(p1, p2):
     p2.write_('\nYour partner has ended partnership.\n')
     for o in p1.session.offers_sent[:]:
         if o.name == 'match offer' and o.variant_name == 'bughouse':
-            o.b.write_("\n%s, who was challenging you, has ended partnership.\nChallenge from %s removed.\n", (p1.name,p1.name))
+            o.b.write_("\n%s, who was challenging you, has ended partnership.\nChallenge from %s removed.\n", (p1.name, p1.name))
             o.withdraw_partner()
             o.b.session.partner.write_("\n%s's partner has ended partnership.\n'", (p2.name))
             o.b.session.partner.write_("\nPartner's challenge from %s removed.\n'", (p1.name))

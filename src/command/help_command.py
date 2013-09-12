@@ -22,11 +22,12 @@ import re
 
 from .command import ics_command, Command
 import global_
-from server import server
+import server
 
 import trie
 
 help_dir = 'help/'
+
 
 @ics_command('help', 'o')
 class Help(Command):
@@ -45,9 +46,9 @@ class Help(Command):
         # non-admins should not be able to see/view documentation for
         # admin commands.
         if conn.user.is_admin():
-            cmds = global_.command_list.admin_cmds
+            cmds = global_.admin_commands
         else:
-            cmds = global_.command_list.cmds
+            cmds = global_.commands
 
         if args[0] == 'commands':
             help_cmds = [c.name for c in cmds.itervalues()]
@@ -86,6 +87,8 @@ class Help(Command):
 # separately, using the optional "stats" and "text" parameters.
 # I am not convinced that is useful enough to be worth the extra
 # implementation complexity.
+
+
 @ics_command('next', '')
 class Next(Command):
     def run(self, args, conn):

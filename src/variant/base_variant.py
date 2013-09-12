@@ -18,11 +18,13 @@
 
 import time_format
 
-from game_constants import *
+from game_constants import (WHITE, BLACK, opp, PLAYED, EXAMINED, file_)
+
 
 class IllegalMoveError(Exception):
     def __init__(self, reason):
         self.reason = reason
+
 
 class BaseVariant(object):
     """ Methods common to all variants. """
@@ -33,7 +35,7 @@ class BaseVariant(object):
             side = BLACK
         else:
             side = WHITE
-        if user.vars['flip']:
+        if user.vars_['flip']:
             side = opp(side)
 
         s = []
@@ -57,9 +59,9 @@ class BaseVariant(object):
         for r in range(0, 8):
             rank = 8 - r if side == WHITE else r + 1
             s.append('    %d  |' % rank)
-            for f in range(0,  8):
-                file_ = f + 1 if side == WHITE else 8 - f
-                piece_char = self.pos.board[0x10 * (rank - 1) + file_ - 1]
+            for f in range(0, 8):
+                curfile = f + 1 if side == WHITE else 8 - f
+                piece_char = self.pos.board[0x10 * (rank - 1) + curfile - 1]
                 if piece_char == '-':
                     piece_char = ' '
                 elif piece_char.islower():
@@ -119,7 +121,7 @@ class BaseVariant(object):
             for f in range(8):
                 board_str += self.pos.board[0x10 * r + f]
         side_str = 'W' if self.pos.wtm else 'B'
-        ep = -1 if not self.pos.ep else file(self.pos.ep)
+        ep = -1 if not self.pos.ep else file_(self.pos.ep)
         w_oo = int(self.pos.check_castle_flags(True, True))
         w_ooo = int(self.pos.check_castle_flags(True, False))
         b_oo = int(self.pos.check_castle_flags(False, True))

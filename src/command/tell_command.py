@@ -19,12 +19,13 @@
 
 from .command import Command, ics_command
 
-import channel
-import user
 import global_
 import admin
+import find_user
+import channel
 
 from game_constants import PLAYED, EXAMINED
+
 
 class ToldMixin(object):
     def _told(self, u, conn):
@@ -34,12 +35,21 @@ class ToldMixin(object):
             elif u.session.game.gtype == EXAMINED:
                 conn.write(_("(told %s, who is examining a game)\n") % u.name)
             else:
+                # XXX who is setting up a position
                 assert(False)
+        elif u.vars_['busy']:
+            conn.write(_("(told %(name)s, who %(busy)s (idle: %(mins)d mins))\n") %
+                       {'busy': u.vars_['busy'], 'name': u.name,
+                       # XXX original FICS prints "secs" or "mins"
+                       'mins': (u.session.get_idle_time() // 60)})
         elif u.session.get_idle_time() >= 180:
-            conn.write(_("(told %s, who has been idle for %d minutes)\n") %
-                       (u.name, (u.session.get_idle_time() / 60)))
+            conn.write(_("(told %(name)s, who has been idle %(mins)d mins)\n") %
+                       {'name': u.name,
+                       # XXX original FICS prints "secs" or "mins"
+                       'mins': (u.session.get_idle_time() // 60)})
         else:
             conn.write(_("(told %s)\n") % u.name)
+
 
 class TellCommand(Command, ToldMixin):
     def _do_tell(self, args, conn):
@@ -64,40 +74,51 @@ class TellCommand(Command, ToldMixin):
             ch = conn.session.last_tell_ch
             if not ch:
                 conn.write(_('No previous channel.\n'))
+        elif args[0] == '!':
+            global_.commands['shout'].run(args[1:], conn)
+            return (None, None)
+        elif args[0] == '^':
+            global_.commands['cshout'].run(args[1:], conn)
+            return (None, None)
         else:
             if type(args[0]) in [int, long]:
+                # we do not try to look up channels in the db, because
+                # we are only interested in channels with users online.
                 try:
-                    ch = channel.chlist[args[0]]
+                    ch = global_.channels[args[0]]
                 except KeyError:
-                    conn.write(_('Invalid channel number.\n'))
+                    if ch < 0 or ch > channel.CHANNEL_MAX:
+                            conn.write(_('Invalid channel number.\n'))
+                    else:
+                        conn.write(_('Channel is empty.\n'))
                 else:
                     if conn.user not in ch.online and (
                             not conn.user.has_title('TD')):
-                        conn.user.write(_('''(Not sent because you are not in channel %s.)\n''') % ch.id)
+                        conn.user.write(_('''(Not sent because you are not in channel %s.)\n''') % ch.id_)
                         ch = None
             else:
-                u = user.find_by_prefix_for_user(args[0], conn, online_only=True)
+                u = find_user.online_by_prefix_for_user(args[0], conn)
 
         if ch:
             count = ch.tell(args[1], conn.user)
-            conn.write(ngettext('(told %d player in channel %d)\n', '(told %d players in channel %d)\n', count) % (count, ch.id))
+            conn.write(ngettext('(told %d player in channel %d)\n', '(told %d players in channel %d)\n', count) % (count, ch.id_))
         elif u:
             if conn.user.name in u.censor and not conn.user.is_admin():
                 conn.write(_("%s is censoring you.\n") % u.name)
                 # TODO: notify admins they are censored
-            elif conn.user.is_guest and not u.vars['tell']:
+            elif conn.user.is_guest and not u.vars_['tell']:
                 conn.write(_('''Player "%s" isn't listening to unregistered users' tells.\n''' % u.name))
             else:
                 u.write_('\n%s tells you: %s\n',
                     (conn.user.get_display_name(), args[1]))
                 self._told(u, conn)
                 if u.session.ftell == conn.user or conn.user.session.ftell == u:
-                    for adm in channel.chlist[0].online:
+                    for adm in global_.channels[0].online:
                         if adm.hears_channels():
                             adm.write(A_("Fwd tell: %s told %s: %s\n") % (conn.user.name, u.name, args[1]))
 
-
         return (u, ch)
+
 
 @ics_command('tell', 'nS', admin.Level.user)
 class Tell(TellCommand):
@@ -105,13 +126,15 @@ class Tell(TellCommand):
         (u, ch) = self._do_tell(args, conn)
         if u is not None:
             conn.session.last_tell_user = u
-        else:
+        elif ch is not None:
             conn.session.last_tell_ch = ch
+
 
 @ics_command('xtell', 'nS', admin.Level.user)
 class Xtell(TellCommand):
     def run(self, args, conn):
         self._do_tell(args, conn)
+
 
 @ics_command('qtell', 'iS', admin.Level.user)
 class Qtell(Command):
@@ -122,26 +145,24 @@ class Qtell(Command):
         msg = args[1].replace('\\n', '\n:').replace('\\b', '\x07').replace('\\H', '\x1b[7m').replace('\\h', '\x1b[0m')
         msg = '\n:%s\n' % msg
         ret = 0 # 0 means success
-        if type(args[0]) == type(1):
+        if isinstance(args[0], (int, long)):
             # qtell channel
             try:
-                ch = channel.chlist[args[0]]
+                ch = global_.channels[args[0]]
             except KeyError:
                 ret = 1
             else:
                 ch.qtell(msg)
         else:
             # qtell user
-            try:
-                u = user.find_by_name_exact(args[0])
-                if not u or not u.is_online:
-                    ret = 1
-                else:
-                    args[0] = u.name
-                    u.write(msg)
-            except user.UsernameException:
+            u = global_.online.find_exact(args[0])
+            if not u:
                 ret = 1
+            else:
+                args[0] = u.name
+                u.write(msg)
         conn.write('*qtell %s %d*\n' % (args[0], ret))
+
 
 @ics_command('say', 'S')
 class Say(Command, ToldMixin):
@@ -165,7 +186,6 @@ class Say(Command, ToldMixin):
                 else:
                     conn.write(_('%s is no longer online.\n') % name)
             else:
-                # All other players have logged out after a bug game
                 conn.write(_("I don't know whom to say that to.\n"))
         if say_to:
             g = conn.user.session.game

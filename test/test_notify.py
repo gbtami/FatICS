@@ -172,6 +172,20 @@ class TestIdlenotify(Test):
         self.close(t)
         self.close(t2)
 
+    @with_player('TestPlayer')
+    def test_idlenotify_remove(self):
+        t = self.connect_as_admin()
+        t2 = self.connect_as('testplayer')
+
+        t2.write('+idlenot admin\n')
+        self.expect('admin added', t2)
+
+        t2.write('-idlenot admin\n')
+        self.expect('admin removed', t2)
+
+        self.close(t2)
+        self.close(t)
+
     def test_idlenotify_depart(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
@@ -193,6 +207,7 @@ class TestIdlenotify(Test):
 
         # should handle disconnect gracefully
         t.close()
+        t2.write('bye\n')
         self.close(t2)
 
     def test_bad_idlenotify(self):
@@ -239,21 +254,30 @@ class TestSummon(Test):
         self.close(t2)
 
 class TestZnotify(Test):
-    @with_player('TestPlayer')
     @with_player('testtwo')
+    @with_player('testthree')
     def test_znotify(self):
         t = self.connect_as_admin()
         t.write('znotify\n')
         self.expect('No one from your notify list is logged on.\r\nNo one logged in has you on their notify list.', t)
 
-        t.write('+notify testplayer\n')
-        t2 = self.connect_as('testplayer')
-        t3 = self.connect_as('testtwo')
+        t.write('+notify testtwo\n')
+        t2 = self.connect_as('testtwo')
+        t3 = self.connect_as('testthree')
         t3.write('+notify admin\n')
         self.expect('admin added to your notify list', t3)
 
         t.write('znot\n')
-        self.expect('Present company on your notify list:\r\n   TestPlayer\r\nThe following players have you on their notify list:\r\n   testtwo', t)
+        self.expect('Present company on your notify list:\r\n   testtwo\r\nThe following players have you on their notify list:\r\n   testthree', t)
+
+        t.write('asetidle testtwo 10\n')
+        t.write('asetidle testthree 20\n')
+        t.write('zn\n')
+        self.expect('Present company on your notify list:\r\n   testtwo(idle:10m)\r\nThe following players have you on their notify list:\r\n   testthree(idle:20m)', t)
+
+        # hide idle times
+        t.write('z n\n')
+        self.expect('Present company on your notify list:\r\n   testtwo\r\nThe following players have you on their notify list:\r\n   testthree', t)
 
         t.write('-notify testplayer\n')
         self.close(t2)
@@ -329,9 +353,9 @@ class TestPinVar(Test):
         self.expect('You will now hear logins/logouts.', t)
 
         t2 = self.connect_as_guest('GuestTest')
-        self.expect('[GuestTest has connected.]', t)
+        self.expect('[GuestTest has connected.]\r\nfics% ', t)
         self.close(t2)
-        self.expect('[GuestTest has disconnected.]', t)
+        self.expect('[GuestTest has disconnected.]\r\nfics% ', t)
 
         t.write('set pin\n')
         self.expect('You will not hear logins/logouts.', t)
@@ -379,7 +403,7 @@ class TestGinVar(Test):
 
         t = self.connect_as_admin()
         t2.write('resign\n')
-        self.expect('{Game %d (GuestTest vs. GuestTwo) GuestTest resigns} 0-1\r\n' % game_num, t)
+        self.expect('{Game %d (GuestTest vs. GuestTwo) GuestTest resigns} 0-1\r\nfics%% ' % game_num, t)
         self.close(t2)
         self.close(t3)
 

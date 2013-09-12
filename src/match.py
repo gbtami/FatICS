@@ -23,13 +23,13 @@ import copy
 import game
 import speed_variant
 import clock
-import command_parser
+import parser
 import formula
 import global_
 
 from offer import Offer
-from game_constants import *
-from db import db
+from game_constants import WHITE, BLACK, side_to_str, EXAMINED
+from twisted.internet import defer
 
 
 shortcuts = {
@@ -47,55 +47,57 @@ shortcuts = {
     'f': 'formula',
 }
 
+
 class MatchError(Exception):
     pass
+
 
 class MatchStringParser(object):
     """ Mixin used to parse both match and seek strings. """
     def _set_rated(self, val):
         assert(val in [True, False])
         if self.rated is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.rated = val
 
     def _set_side(self, val):
         assert(val in [WHITE, BLACK])
         if self.side is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.side = val
 
     def _set_variant_name(self, val):
         if self.variant_name is not None:
             # conflicting variants
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.variant_name = val
 
     def _set_clock_name(self, val):
         if self.clock_name is not None:
             # conflicting clock types
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.clock_name = val
 
     def _set_time(self, val):
         if self.time is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         assert(val >= 0)
         self.time = val
 
     def _set_inc(self, val):
         if self.inc is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         assert(val >= 0)
         self.inc = val
 
     def _set_manual(self, val):
         if self.manual is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.manual = val
 
     def _set_formula(self, val):
         if self.formula is not None:
-            raise command_parser.BadCommandError()
+            raise parser.BadCommandError()
         self.formula = val
 
     _idn_re = re.compile(r'idn=(\d+)')
@@ -164,7 +166,7 @@ class MatchStringParser(object):
                 if m:
                     # TODO: self._set_idn
                     if self.idn is not None:
-                        raise command_parser.BadCommandError
+                        raise parser.BadCommandError
                     self.idn = int(m.group(1))
                     if self.idn < -1 or self.idn > 959:
                         raise MatchError(_('An idn must be between 0 and 959.\n'))
@@ -190,11 +192,11 @@ class MatchStringParser(object):
                     continue
 
                 #print('got unknown keyword "%s"' % w)
-                raise command_parser.BadCommandError
+                raise parser.BadCommandError
 
         if len(times) > 2:
             # time odds not supported
-            raise command_parser.BadCommandError
+            raise parser.BadCommandError
         elif len(times) == 2:
             self._set_time(times[0])
             self._set_inc(times[1])
@@ -214,8 +216,8 @@ class MatchStringParser(object):
         if self.inc is None:
             if self.time is None:
                 # use user-defined defaults
-                self.time = u.vars['time']
-                self.inc = u.vars['inc']
+                self.time = u.vars_['time']
+                self.inc = u.vars_['inc']
             else:
                 # original FICS set the increment to 0 when only an
                 # initial time is given
@@ -272,6 +274,7 @@ class MatchStringParser(object):
         self.speed_variant = speed_variant.from_names(self.speed_name,
             self.variant_name)
 
+
 def check_censor_noplay(a, b):
     """ Test whether a user can play a given opponent. """
     if a.name in b.censor:
@@ -288,23 +291,26 @@ def check_censor_noplay(a, b):
         return False
     return True
 
+
 class Challenge(Offer, MatchStringParser):
     """ represents a match offer from one player to another """
-    def __init__(self, a, b, args=None, tags=None):
-        """ Initiate a new offer.  "a" is the player issuing the offer;
-        "b" receives the request """
+    def __init__(self):
         Offer.__init__(self, 'match offer')
 
+    @defer.inlineCallbacks
+    def finish_init(self, a, b, args=None, tags=None):
+        """ Initiate a new offer.  "a" is the player issuing the offer;
+        "b" receives the request """
         self.a = a
         self.b = b
 
         if a.is_guest or b.is_guest:
             self.adjourned = None
         else:
-            self.adjourned = db.get_adjourned_between(a.id, b.id)
+            self.adjourned = yield a.get_adjourned_with(b)
         if self.adjourned:
             if tags or args:
-                a.write_('You have an adjourned game with %s.  You cannot start a new game until you finish it.\n', b.name)
+                a.write(_('You have an adjourned game with %s.  You cannot start a new game until you finish it.\n') % b.name)
                 return
             tags = self.adjourned.copy()
             tags.update({
@@ -317,10 +323,10 @@ class Challenge(Offer, MatchStringParser):
         if tags:
             # copy match parameters
             self.side = tags['side']
-            self.rated = tags['rated']
+            self.rated = tags['is_rated']
             self.speed_name = tags['speed_name']
             self.variant_name = tags['variant_name']
-            self.clock_name = tags['clock_name']
+            self.clock_name = tags['clock']
             self.time = tags['time']
             self.inc = tags['inc']
             self.idn = tags['idn']
@@ -335,15 +341,21 @@ class Challenge(Offer, MatchStringParser):
                 self._check_open()
                 self._parse_args(args, a, b)
             except MatchError as e:
-                a.write(e[0])
+                a.write(e.args[0])
                 return
 
+        a_sent = a.session.offers_sent
+        b_sent = b.session.offers_sent
+        a_received = a.session.offers_received
+        b_received = b.session.offers_received
+
         # look for a matching offer from player b
-        o = next((o for o in a.session.offers_received if
+        o = next((o for o in a_received if
             o.name == self.name and o.equivalent_to(self)), None)
         if o:
             # a already received an identical offer, so just accept it
-            a.write_("Your challenge intercepts %s's challenge.\n", (o.a.name,))
+            a.write(_("Your challenge intercepts %s's challenge.\n")
+                % (o.a.name,))
             b.write_("%s's challenge intercepts your challenge.\n", (a.name,))
             # XXX don't send "Accepting" and "USER accepts" messages?
             o.accept()
@@ -351,7 +363,7 @@ class Challenge(Offer, MatchStringParser):
 
         # build the "Challenge:" string
         if self.side is not None:
-            side_str = ' [%s]' % game.side_to_str(self.side)
+            side_str = ' [%s]' % side_to_str(self.side)
         else:
             side_str = ''
 
@@ -379,17 +391,12 @@ class Challenge(Offer, MatchStringParser):
         #if self.board is not None:
         #    challenge_str = 'Loaded from a board'
 
-        a_sent = a.session.offers_sent
-        b_sent = b.session.offers_sent
-        a_received = a.session.offers_received
-        b_received = b.session.offers_received
-
         if self in a_sent:
             a.write_('You are already offering an identical match to %s.\n',
                 (b.name,))
             return
 
-        if not formula.check_formula(self, b.vars['formula']):
+        if not formula.check_formula(self, b.vars_['formula']):
             a.write_('Match request does not meet formula for %s:\n', b.name)
             b.write_('Ignoring (formula): %s\n', challenge_str)
             return
@@ -419,7 +426,6 @@ class Challenge(Offer, MatchStringParser):
             bpart.write_('Your bughouse partner was challenged: %s\n',
                 challenge_str)
             bpart.write_('Your game will be: %s\n', challenge_str2)
-
 
         o = next((o for o in b_sent if o.name == self.name and
             o.b == a), None)
@@ -462,7 +468,7 @@ class Challenge(Offer, MatchStringParser):
         if self.rated is None:
             if a.is_guest or b.is_guest or self.clock_name in [
                     'hourglass', 'untimed']:
-                a.write_('Setting match offer to unrated.\n')
+                a.write(_('Setting match offer to unrated.\n'))
                 self.rated = False
             else:
                 # Original FICS uses the 'rated' var, but we default to True
@@ -487,15 +493,15 @@ class Challenge(Offer, MatchStringParser):
                 raise MatchError(_('Your opponent has no partner for bughouse.\n'))
             apart = a.session.partner
             bpart = b.session.partner
-            assert(a.vars['bugopen'])
-            assert(b.vars['bugopen'])
-            assert(apart.vars['bugopen'])
-            assert(bpart.vars['bugopen'])
+            assert(a.vars_['bugopen'])
+            assert(b.vars_['bugopen'])
+            assert(apart.vars_['bugopen'])
+            assert(bpart.vars_['bugopen'])
             if a == bpart:
                 raise MatchError(_('You cannot challenge your partner to bughouse.\n'))
-            if not apart.vars['open'] or apart.session.game:
+            if not apart.vars_['open'] or apart.session.game:
                 raise MatchError(_('Your partner is not available to play right now.\n'))
-            if not bpart.vars['open'] or bpart.session.game:
+            if not bpart.vars_['open'] or bpart.session.game:
                 raise MatchError(_("Your opponent's partner is not available to play right now.\n"))
             assert(b != apart)
             assert(apart != bpart)
@@ -518,15 +524,16 @@ class Challenge(Offer, MatchStringParser):
         """ Test whether an opponent is open to match requests, and
         open the challenging player to match requests if necessary. """
         [a, b] = [self.a, self.b]
-        if not b.vars['open']:
+        if not b.vars_['open']:
             raise MatchError(_("%s is not open to match requests.\n") % b.name)
         if b.session.game:
-            if b.session.game.gtype == game.EXAMINED:
+            if b.session.game.gtype == EXAMINED:
                 raise MatchError(_("%s is examining a game.\n") % b.name)
             else:
                 raise MatchError(_("%s is playing a game.\n") % b.name)
 
-        if not a.vars['open']:
+        if not a.vars_['open']:
+            # XXX this returns a deferred that we should probably yield
             global_.vars_['open'].set(a, '1')
 
     def __eq__(self, other):
@@ -568,10 +575,12 @@ class Challenge(Offer, MatchStringParser):
 
         return False
 
+    @defer.inlineCallbacks
     def accept(self):
         Offer.accept(self)
 
         g = game.PlayedGame(self)
+        yield g.finish_init(self)
         if self.variant_name == 'bughouse':
             # this should probably be in another module
             chal2 = copy.copy(self)
@@ -582,14 +591,15 @@ class Challenge(Offer, MatchStringParser):
 
             chal2.side = g.get_user_side(self.b)
             g2 = game.PlayedGame(chal2)
+            yield g2.finish_init(chal2)
             g2.bug_link = g
             g.bug_link = g2
             g2.variant.pos.bug_link = g.variant.pos
             g.variant.pos.bug_link = g2.variant.pos
-            g.minmovetime = (g.white.vars['minmovetime']
-                or g.black.vars['minmovetime']
-                or g2.white.vars['minmovetime']
-                or g2.black.vars['minmovetime'])
+            g.minmovetime = (g.white.vars_['minmovetime']
+                or g.black.vars_['minmovetime']
+                or g2.white.vars_['minmovetime']
+                or g2.black.vars_['minmovetime'])
             g2.minmovetime = g.minmovetime
             # start clocks immediately for bug
             g.clock.start(WHITE)
@@ -609,10 +619,8 @@ class Challenge(Offer, MatchStringParser):
         Offer.withdraw_logout(self)
         self.a.write(_('Challenge to %s withdrawn.\n') %
             (self.b.name,))
-        self.b.write_('\n%s, who was challenging you, has departed.\n',
-            (self.a.name,))
-        self.b.write_('Challenge from %s removed.\n',
-            (self.a.name,))
+        self.b.write_('\n%s, who was challenging you, has departed.\nChallenge from %s removed.\n',
+            (self.a.name, self.a.name))
         if self.variant_name == 'bughouse':
             assert(self.b.session.partner)
             self.b.session.partner.write_('\n%s, who was challenging your partner, has departed.\n',
@@ -632,10 +640,8 @@ class Challenge(Offer, MatchStringParser):
         Offer.decline_logout(self)
         self.b.write(_('Challenge from %s removed.\n') %
             (self.a.name,))
-        self.a.write_('\n%s, whom you were challenging, has departed.\n',
-            (self.b.name,))
-        self.a.write_('Challenge to %s withdrawn.\n',
-            (self.b.name,))
+        self.a.write_('\n%s, whom you were challenging, has departed.\nChallenge to %s withdrawn.',
+            (self.b.name, self.b.name))
         if self.variant_name == 'bughouse':
             assert(self.a.session.partner)
             self.a.session.partner.write_('\n%s, whom your partner was challenging, has departed.\n',
@@ -659,10 +665,8 @@ class Challenge(Offer, MatchStringParser):
         Offer.decline(self, notify=False)
         self.b.write(_('Challenge from %s removed.\n') %
             (self.a.name,))
-        self.a.write_('\n%s, whom you were challenging, has become unavailable for matches.\n',
-            (self.b.name,))
-        self.a.write_('Challenge to %s withdrawn.\n',
-            (self.b.name,))
+        self.a.write_('\n%s, whom you were challenging, has become unavailable for matches.\nChallenge to %s withdrawn.',
+            (self.b.name, self.b.name))
         if self.variant_name == 'bughouse':
             assert(self.a.session.partner)
             self.a.session.partner.write_('\n%s, whom your partner was challenging, has become unavailable for matches.\n',

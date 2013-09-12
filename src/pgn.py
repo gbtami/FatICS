@@ -35,10 +35,12 @@ repetition_re = re.compile(r'''\s+drawn\s+by\s+repetition\s*$''')
 fifty_re = re.compile(r'''\s+drawn\s+by\s+the\s+50\s+move\s+rule\s*$''')
 nomaterial_re = re.compile(r'''[nN]either\s+player\s+has\s+mating\s+material\s*$''')
 
+
 class PgnError(Exception):
     def __init__(self, reason):
         self.reason = reason
-        print reason
+        print(reason)
+
 
 class PgnMove(object):
     def __init__(self, text, decorator):
@@ -48,6 +50,7 @@ class PgnMove(object):
 
     def add_comment(self, com):
         self.comments.append(com)
+
 
 class Pgn(object):
     def __init__(self, f):
@@ -105,6 +108,7 @@ class Pgn(object):
             yield PgnGame(tags, movetext_str)
 
         self.f.close()
+
 
 class PgnGame(object):
     def __init__(self, tags, movetext):
@@ -181,7 +185,7 @@ class PgnGame(object):
                 i = m.end()
                 continue
 
-            raise PgnError('unrecognized sytax in pgn: "%s"' % s[i:i+15])
+            raise PgnError('unrecognized sytax in pgn: "%s"' % s[i:i + 15])
 
     def __str__(self):
         return '%s vs. %s' % (self.tags['White'], self.tags['Black'])

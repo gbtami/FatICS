@@ -51,6 +51,7 @@ class TellTest(Test):
         self.expect('tells you: test 2', t)
 
         self.close(t)
+        self.close(t2)
 
 
     def test_bad_tell(self):
@@ -66,35 +67,38 @@ class TellTest(Test):
 
         self.close(t)
 
-    @with_player('auser')
+    @with_player('aduser')
     def test_ambiguous_tell(self):
-        t = self.connect_as('auser')
+        t = self.connect_as('aduser')
         t2 = self.connect_as_guest()
 
         # not ambiguous when admin is offline
-        t2.write('tell a blah blah\n')
+        t2.write('tell ad blah blah\n')
         self.expect('tells you: blah blah', t)
-        self.expect('(told auser)', t2)
+        self.expect('(told aduser)', t2)
 
         t3 = self.connect_as_admin()
         t2.write('tell a blah blah\n')
+        self.expect('You need to specify at least', t2)
+
+        t2.write('tell ad blah blah\n')
         self.expect('Ambiguous name', t2)
 
         self.close(t)
         self.close(t3)
 
-        t2.write('tell a blah blah\n')
-        self.expect('No player named "a" is online', t2)
+        t2.write('tell ad blah blah\n')
+        self.expect('No player named "ad" is online', t2)
 
         self.close(t2)
 
     def test_tell_idle(self):
-        self._skip('slow test')
         t = self.connect_as_admin()
-        time.sleep(181)
         t2 = self.connect_as_guest()
+        t.write('asetidle admin 3\n')
+        self.expect('set to 180', t)
         t2.write('tell admin hello\n')
-        self.expect('(told admin, who has been idle for 3 minutes)', t2)
+        self.expect('(told admin, who has been idle 3 mins)', t2)
         self.close(t2)
         self.close(t)
 

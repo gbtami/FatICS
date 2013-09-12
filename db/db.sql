@@ -95,6 +95,10 @@ CREATE TABLE `user_log` (
   KEY (`log_when`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+-- TODO: make a comlumn in user instead
+DROP TABLE IF EXISTS `removed_user`;
+CREATE TABLE `removed_user` LIKE `user`;
+
 DROP TABLE IF EXISTS `formula`;
 CREATE TABLE `formula` (
   `formula_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -105,6 +109,8 @@ CREATE TABLE `formula` (
   PRIMARY KEY (`formula_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+
+-- finger notes
 DROP TABLE IF EXISTS `note`;
 CREATE TABLE `note` (
   `note_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -130,26 +136,18 @@ CREATE TABLE `channel` (
   PRIMARY KEY (`channel_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;
 
--- A list of owners for each channel.
-DROP TABLE IF EXISTS `channel_owner`;
-CREATE TABLE `channel_owner` (
-  `channel_id` int(8) NOT NULL,
-  `user_id` int(8) NOT NULL,
-  KEY (`channel_id`),
-  KEY (`user_id`),
-  UNIQUE KEY (`user_id`,`channel_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
-
+-- Stores which users are in which channels.
 DROP TABLE IF EXISTS `channel_user`;
 CREATE TABLE `channel_user` (
   `channel_id` int(8) NOT NULL,
   `user_id` int(8) NOT NULL,
+  `is_owner` BOOLEAN NOT NULL DEFAULT 0,
   KEY (`channel_id`),
   KEY (`user_id`),
   UNIQUE KEY (`user_id`,`channel_id`)
 ) ENGINE=MyISAM;
 
--- titles
+-- titles for users, like (GM), (*), or (TM)
 DROP TABLE IF EXISTS `title`;
 CREATE TABLE `title` (
   `title_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -169,6 +167,7 @@ CREATE TABLE `user_title` (
   UNIQUE INDEX(`user_id`,`title_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+-- TODO: eliminate history and use game for everything
 -- history
 DROP TABLE IF EXISTS `history`;
 CREATE TABLE `history` (
@@ -203,14 +202,14 @@ CREATE TABLE `ip_filter` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- game
--- TODO: store overtime_move_num and overtime_bonus in a separate table,
--- so we have a record of that information?
+-- This table could be very large.
+-- TODO: store overtime_move_num and overtime_bonus in a separate table?
 DROP TABLE IF EXISTS `game`;
 CREATE TABLE `game` (
   `game_id` int(8) NOT NULL AUTO_INCREMENT,
-  `white_name` varchar(17) NOT NULL,
+  `white_user_id` INT(8) COMMENT 'ID of the white player or NULL for guest',
+  `black_user_id` INT(8) COMMENT 'ID of the black player or NULL for guest',
   `white_rating` char(4) NOT NULL COMMENT '0 for no rating', -- TODO: use smallint instead
-  `black_name` varchar(17) NOT NULL,
   `black_rating` char(4) NOT NULL COMMENT '0 for no rating',
   `eco` char(5) NOT NULL,
   `speed_id` TINYINT NOT NULL,
@@ -220,16 +219,33 @@ CREATE TABLE `game` (
   -- `private` BOOLEAN NOT NULL DEFAULT 0,
   `time` int(3) COMMENT 'initial time',
   `inc` int(3) COMMENT 'increment',
-  `rated` BOOLEAN NOT NULL,
-  `result` ENUM('1-0', '0-1', '1/2-1/2', '*') NOT NULL,
-  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta', 'Rep',
-     'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB', '50') NOT NULL,
-  `ply_count` SMALLINT NOT NULL,
+  `is_rated` BOOLEAN NOT NULL COMMENT 'is the game rated?',
+  `ply_count` SMALLINT NOT NULL COMMENT 'number of half-moves in the game',
   `movetext` TEXT,
   `when_started` TIMESTAMP NOT NULL,
-  `when_ended` TIMESTAMP NOT NULL,
-  INDEX(`white_name`),
-  INDEX(`black_name`),
+  `when_ended` TIMESTAMP NOT NULL
+    COMMENT 'when the game was finished or adjourned',
+  `is_adjourned` BOOLEAN COMMENT 'is this an adjourned game?',
+
+  -- for games with overtime-style clocks only
+  `overtime_move_num` INT(4) DEFAULT NULL COMMENT 'time control for overtime clocks',
+  `overtime_bonus` INT(4) DEFAULT NULL COMMENT 'minutes added at time control for overtime clocks',
+
+  -- for completed games only
+  `result` ENUM('1-0', '0-1', '1/2-1/2', '*') DEFAULT NULL,
+  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta', 'Rep',
+     'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB', '50') DEFAULT NULL,
+
+  -- for adjourned games only
+  `white_clock` float DEFAULT NULL,
+  `black_clock` float DEFAULT NULL,
+  `adjourn_reason` ENUM('Agr', 'Dis') DEFAULT NULL,
+  `white_material` TINYINT DEFAULT NULL,
+  `black_material` TINYINT DEFAULT NULL,
+  `draw_offered` BOOLEAN DEFAULT NULL,
+
+  INDEX(`white_user_id`),
+  INDEX(`black_user_id`),
   INDEX(`when_ended`),
   PRIMARY KEY (`game_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -246,6 +262,7 @@ CREATE TABLE `eco` (
   PRIMARY KEY (`eco_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+-- NIC codes
 DROP TABLE IF EXISTS `nic`;
 CREATE TABLE `nic` (
   `nic_id` int(4) NOT NULL AUTO_INCREMENT,
@@ -255,7 +272,7 @@ CREATE TABLE `nic` (
   PRIMARY KEY (`nic_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- notifications
+-- notifications of arrival and departure
 DROP TABLE IF EXISTS `user_notify`;
 CREATE TABLE `user_notify` (
   `notified` int(8) NOT NULL COMMENT 'id of the user receiving the notification',
@@ -263,6 +280,7 @@ CREATE TABLE `user_notify` (
   UNIQUE INDEX(`notified`, `notifier`)
 );
 
+-- TODO: combine with user_notify
 -- game notifications
 DROP TABLE IF EXISTS `user_gnotify`;
 CREATE TABLE `user_gnotify` (
@@ -298,7 +316,8 @@ CREATE TABLE user_alias (
   PRIMARY KEY (`alias_id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
--- speeds and variants
+-- speed
+-- lightning, blitz, etc.
 DROP TABLE IF EXISTS `speed`;
 CREATE TABLE `speed` (
   `speed_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -306,6 +325,9 @@ CREATE TABLE `speed` (
   `speed_abbrev` char(2) NOT NULL,
   PRIMARY KEY(`speed_id`)
 );
+
+-- variant
+-- chess, crazyhouse, etc.
 DROP TABLE IF EXISTS `variant`;
 CREATE TABLE `variant` (
   `variant_id` int(8) NOT NULL AUTO_INCREMENT,
@@ -379,6 +401,8 @@ CREATE TABLE `chess960_pos` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- for chess960
+-- stores the starting position of a game, represented by a number
+-- 0-959
 DROP TABLE IF EXISTS `game_idn`;
 CREATE TABLE `game_idn` (
   `game_id` int(8) NOT NULL,
@@ -398,44 +422,6 @@ CREATE TABLE `user_comment` (
   INDEX(`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- adjourned (stored) games
--- this is similar to the `games` table, but uses player IDs instead
--- of names (since it only stores games between registered players),
--- stores the clocks for both players, and does not store a result.
-DROP TABLE IF EXISTS `adjourned_game`;
-CREATE TABLE `adjourned_game` (
-  `adjourn_id` int(8) NOT NULL AUTO_INCREMENT,
-  `white_user_id` int(8) NOT NULL,
-  -- `white_rating` smallint(4),
-  `white_clock` float NOT NULL,
-  `black_user_id` int(8) NOT NULL,
-  -- `black_rating` smallint(4),
-  `black_clock` float NOT NULL,
-  `eco` char(5) NOT NULL,
-  `speed_id` TINYINT NOT NULL,
-  `variant_id` TINYINT NOT NULL,
-  `clock_name` ENUM('fischer', 'bronstein', 'hourglass', 'overtime', 'untimed')
-    DEFAULT 'fischer',
-  `time` int(3) COMMENT 'initial time',
-  `inc` int(3) COMMENT 'increment',
-  `rated` BOOLEAN NOT NULL,
-  `adjourn_reason` ENUM('Agr', 'Dis'),
-  `ply_count` SMALLINT NOT NULL,
-  `movetext` TEXT,
-  `when_started` TIMESTAMP NOT NULL,
-  `when_adjourned` TIMESTAMP NOT NULL,
-  `idn` INT(4) DEFAULT NULL COMMENT 'chess960 position ID, if any',
-  `overtime_move_num` INT(4) DEFAULT NULL COMMENT 'time control for overtime clocks',
-  `overtime_bonus` INT(4) DEFAULT NULL COMMENT 'minutes added at time control for overtime clocks',
-  PRIMARY KEY (`adjourn_id`),
-  INDEX(`white_user_id`),
-  INDEX(`black_user_id`),
-  -- really we want the index to be unique ignoring the color assignments
-  -- (if there is a game A vs. B, don't allow B vs. A), but I don't know of
-  -- a way to enforce this constraint with MySQL
-  UNIQUE INDEX(`white_user_id`,`black_user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
 DROP TABLE IF EXISTS `server_message`;
 CREATE TABLE `server_message` (
   `server_message_id` int(4) NOT NULL AUTO_INCREMENT,
@@ -445,12 +431,16 @@ CREATE TABLE `server_message` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- data
+-- TOOD: do not use a default password, but rather have the user
+-- run a small setup script that prompts for an admin password
+-- (and possibly other configuration details)
 LOCK TABLES `user` WRITE;
 -- admin account with password 'admin'
 INSERT INTO `user` SET user_id=1,user_name='admin',user_passwd='$2a$12$vUOlVpT6HhRBH3hCNrPW8.bqUwEZ/cRzLOOT142vmNYYxhq5bO4Sy',user_real_name='Admin Account',user_email='admin@fatics.org',user_admin_level=10000;
 UNLOCK TABLES;
 
 LOCK TABLES `channel` WRITE;
+INSERT INTO `channel` VALUES (0,'admin','Admins only',NULL,NULL,NULL);
 INSERT INTO `channel` VALUES (1,'help','Help for new (and not-so-new) users. :-)','This is the help channel.  You can get help by asking a question here; use "tell 1 My question is...".',1,NULL);
 UNLOCK TABLES;
 

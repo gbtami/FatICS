@@ -137,6 +137,7 @@ class TestHistory(Test):
 
         for i in range(1, 11):
             t2.write('rematch\n')
+            self.expect('Issuing:', t2)
             self.expect('Challenge:', t)
             t.write('a\n')
             self.expect('Creating:', t)

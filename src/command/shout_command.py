@@ -21,6 +21,7 @@ from .command import ics_command, Command, requires_registration
 
 import global_
 
+
 @ics_command('shout', 'S')
 class Shout(Command):
     @requires_registration
@@ -31,18 +32,22 @@ class Shout(Command):
         if conn.user.is_muted:
             conn.write(_('You are muted.\n'))
             return
-        if not conn.user.vars['shout'] or conn.user.in_silence():
+        if not conn.user.vars_['shout'] or conn.user.in_silence():
             conn.write(_("(Did not shout because you are not listening to shouts)\n"))
         else:
             count = 0
             name = conn.user.name
+            shouter = conn.user
             dname = conn.user.get_display_name()
+            shout_str = "\n%s shouts: %s\n" % (dname, args[0])
             for u in global_.online:
-                if u.vars['shout'] and not u.in_silence():
+                if u.vars_['shout'] and not u.in_silence() and u != shouter:
                     if name not in u.censor:
-                        u.write_("\n%s shouts: %s\n", (dname, args[0]))
+                        u.write_prompt(shout_str)
                         count += 1
+            conn.write("%s shouts: %s\n" % (dname, args[0]))
             conn.write(ngettext("(shouted to %d player)\n", "(shouted to %d players)\n", count) % count)
+
 
 @ics_command('it', 'S')
 class It(Command):
@@ -54,19 +59,22 @@ class It(Command):
         if conn.user.is_muted:
             conn.write(_('You are muted.\n'))
             return
-        if not conn.user.vars['shout'] or conn.user.in_silence():
+        if not conn.user.vars_['shout'] or conn.user.in_silence():
             conn.write(_("(Did not it-shout because you are not listening to shouts)\n"))
         else:
             count = 0
             name = conn.user.name
+            shouter = conn.user
             dname = conn.user.get_display_name()
+            shout_str = "\n--> %s %s\n" % (dname, args[0])
             for u in global_.online:
-                if u.vars['shout'] and not u.in_silence():
+                if u.vars_['shout'] and not u.in_silence() and u != shouter:
                     if name not in u.censor:
-                        u.write(_("\n--> %s %s\n") %
-                            (dname, args[0]))
+                        u.write_prompt(shout_str)
                         count += 1
+            conn.write("--> %s %s\n" % (dname, args[0]))
             conn.write(ngettext("(it-shouted to %d player)\n", "(it-shouted to %d players)\n", count) % count)
+
 
 @ics_command('cshout', 'S')
 class Cshout(Command):
@@ -79,17 +87,20 @@ class Cshout(Command):
         if conn.user.is_muted:
             conn.write(_('You are muted.\n'))
             return
-        if not conn.user.vars['cshout'] or conn.user.in_silence():
+        if not conn.user.vars_['cshout'] or conn.user.in_silence():
             conn.write(_("(Did not c-shout because you are not listening to c-shouts)\n"))
         else:
             count = 0
             name = conn.user.name
+            shouter = conn.user
             dname = conn.user.get_display_name()
+            shout_str = "\n%s c-shouts: %s\n" % (dname, args[0])
             for u in global_.online:
-                if u.vars['cshout'] and not u.in_silence():
+                if u.vars_['cshout'] and not u.in_silence() and u != shouter:
                     if name not in u.censor:
-                        u.write_("\n%s c-shouts: %s\n", (dname, args[0]))
+                        u.write_prompt(shout_str)
                         count += 1
+            conn.write("%s c-shouts: %s\n" % (dname, args[0]))
             conn.write(ngettext("(c-shouted to %d player)\n", "(c-shouted to %d players)\n", count) % count)
 
 

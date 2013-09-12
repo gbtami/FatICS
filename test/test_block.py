@@ -18,7 +18,7 @@
 
 from test import *
 
-finger_code = 37
+from block_codes import BLKCMD_FINGER, BLKCMD_ECO
 
 class TestBlock(Test):
     def test_block(self):
@@ -34,7 +34,11 @@ class TestBlock(Test):
         self.expect('%c0%c519%c%c\r\n' % (0x15, 0x16, 0x16, 0x17), t)
 
         t.write('3 finger\n')
-        self.expect('%c3%c%s%cFinger of ' % (0x15, 0x16, finger_code, 0x16), t)
+        self.expect('%c3%c%s%cFinger of ' % (0x15, 0x16, BLKCMD_FINGER, 0x16), t)
+        self.expect('\r\n%c' % 0x17, t)
+
+        t.write('4 eco e e48\n')
+        self.expect('%c4%c%s%c  ECO: E48' % (0x15, 0x16, BLKCMD_ECO, 0x16), t)
         self.expect('\r\n%c' % 0x17, t)
 
         t.write('1 iset block 0\n')

@@ -18,14 +18,16 @@ System requirements
 * Python 2.6 or 2.7
 * Twisted 8.2 or later
 * MySQL 5.0 or later
-* Mercurial
 * The MySQLdb Python module
 * The python-bcrypt module
 * The netaddr module
 * The pytz module
+* The python-openssl (pyOpenSSL) module
 * GNU gettext
 * (optional) The pexpect module, for timeseal/zipseal tests
 * (optional) sockjs-twisted, for html5 web clients. http://sockjs.org/
+* (optional) Mercurial, if you want to check out the latest versions
+  from Bitbucket
 
 Installation
 ------------

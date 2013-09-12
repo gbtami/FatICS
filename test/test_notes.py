@@ -65,28 +65,115 @@ class TestNotes(Test):
         self.expect_not('6:', t)
 
         self.close(t)
-    
+
     def test_notes_persistence(self):
         t = self.connect_as_admin()
 
         t.write('set 1 The quick brown fox jumps over the lazy dog.\n')
         self.expect('Note 1 set: The quick brown fox jumps over the lazy dog.', t)
+        t.write('set 2 foo bar\n')
+        self.expect('Note 2 set: foo bar', t)
         t.write('fi\n')
-        self.expect(' 1: The quick brown fox jumps over the lazy dog.', t)
+        self.expect('\r\n 1: The quick brown fox jumps over the lazy dog.', t)
+        self.expect('\r\n 2: foo bar', t)
 
         self.close(t)
 
         t = self.connect_as_guest()
         t.write('fi admin\n')
-        self.expect(' 1: The quick brown fox jumps over the lazy dog.', t)
+        self.expect('\r\n 1: The quick brown fox jumps over the lazy dog.', t)
+        self.expect('\r\n 2: foo bar', t)
         self.close(t)
 
         t = self.connect_as_admin()
+        t.write('set 2\n')
+        self.expect('Note 2 unset', t)
         t.write('set 1\n')
         self.expect('Note 1 unset', t)
 
+        t.write('set 8\n')
+        self.expect('You do not have that many lines set.', t)
+
         t.write('fi\n')
-        self.expect_not('1:', t)
+        self.expect_not('\r\n 1:', t)
+
+        self.close(t)
+
+    def test_notes_guest_insert(self):
+        t = self.connect_as_guest()
+        for i in range(10, 0, -1):
+            t.write('set 0 Note #%d\n' % (i))
+            self.expect('Inserted ', t)
+
+        t.write('f\n')
+        self.expect(' 1: Note #1\r\n', t)
+        self.expect(' 2: Note #2\r\n', t)
+        self.expect(' 3: Note #3\r\n', t)
+        self.expect(' 4: Note #4\r\n', t)
+        self.expect(' 5: Note #5\r\n', t)
+        self.expect(' 6: Note #6\r\n', t)
+        self.expect(' 7: Note #7\r\n', t)
+        self.expect(' 8: Note #8\r\n', t)
+        self.expect(' 9: Note #9\r\n', t)
+        self.expect('10: Note #10\r\n', t)
+
+        t.write('set 0\n')
+        self.expect("Inserted line 1 ''.", t)
+
+        t.write('f\n')
+        self.expect(' 1: \r\n', t)
+        self.expect(' 2: Note #1\r\n', t)
+        self.expect(' 3: Note #2\r\n', t)
+        self.expect(' 4: Note #3\r\n', t)
+        self.expect(' 5: Note #4\r\n', t)
+        self.expect(' 6: Note #5\r\n', t)
+        self.expect(' 7: Note #6\r\n', t)
+        self.expect(' 8: Note #7\r\n', t)
+        self.expect(' 9: Note #8\r\n', t)
+        self.expect('10: Note #9\r\n', t)
+
+        self.close(t)
+
+    def test_notes_reguser_insert(self):
+        t = self.connect_as_admin()
+        for i in range(10, 0, -1):
+            t.write('set 0 Note #%d\n' % i)
+            self.expect('Inserted ', t)
+        self.close(t)
+
+        t = self.connect_as_admin()
+        t.write('f\n')
+        self.expect(' 1: Note #1\r\n', t)
+        self.expect(' 2: Note #2\r\n', t)
+        self.expect(' 3: Note #3\r\n', t)
+        self.expect(' 4: Note #4\r\n', t)
+        self.expect(' 5: Note #5\r\n', t)
+        self.expect(' 6: Note #6\r\n', t)
+        self.expect(' 7: Note #7\r\n', t)
+        self.expect(' 8: Note #8\r\n', t)
+        self.expect(' 9: Note #9\r\n', t)
+        self.expect('10: Note #10\r\n', t)
+
+        t.write('set 0\n')
+        self.expect("Inserted line 1 ''.", t)
+        self.close(t)
+
+        t = self.connect_as_admin()
+        t.write('f\n')
+        self.expect(' 1: \r\n', t)
+        self.expect(' 2: Note #1\r\n', t)
+        self.expect(' 3: Note #2\r\n', t)
+        self.expect(' 4: Note #3\r\n', t)
+        self.expect(' 5: Note #4\r\n', t)
+        self.expect(' 6: Note #5\r\n', t)
+        self.expect(' 7: Note #6\r\n', t)
+        self.expect(' 8: Note #7\r\n', t)
+        self.expect(' 9: Note #8\r\n', t)
+        self.expect('10: Note #9\r\n', t)
+
+        for i in range(10, 0, -1):
+            t.write('set %d\n' % i)
+            self.expect('Note %d unset.' % i, t)
 
         self.close(t)
 

@@ -23,19 +23,24 @@ import calendar # for timegm
 
 import admin
 import rating
-import user
-import game
 import history
 import time_format
+import db
+import find_user
+import global_
+
+from twisted.internet import defer
 
 from .command import ics_command, Command
-from command_parser import BadCommandError
-from db import db
+from parser import BadCommandError
+
+from game_constants import EXAMINED, PLAYED
+
 
 class LogMixin(object):
     def _display_log(self, log, conn):
         for a in reversed(log):
-            if conn.user.is_admin() and not conn.user.vars['hideinfo']:
+            if conn.user.is_admin() and not conn.user.vars_['hideinfo']:
                 ip = _(' from %s') % a['log_ip']
             else:
                 ip = ''
@@ -43,11 +48,13 @@ class LogMixin(object):
             conn.write('%s: %-20s %-6s%s\n' %
                 (when, a['log_who_name'], a['log_which'], ip))
 
+
 @ics_command('finger', 'ooo')
 class Finger(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u = user.find_by_prefix_for_user(args[0], conn, min_len=2)
+            u = yield find_user.by_prefix_for_user(args[0], conn)
             flags = args[1:]
         else:
             u = conn.user
@@ -57,7 +64,7 @@ class Finger(Command):
             show_ratings = True
             show_comments = False
             show_admin_info = (conn.user.is_admin() and
-                not conn.user.vars['hideinfo'])
+                not conn.user.vars_['hideinfo'])
             for f in flags:
                 if f is None:
                     continue
@@ -78,14 +85,17 @@ class Finger(Command):
                 conn.write(_('On for: %s   Idle: %s\n')
                     % (time_format.hms_words(u.session.get_online_time()),
                         time_format.hms_words(u.session.get_idle_time())))
-                if u.vars['silence']:
+                if u.vars_['busy']:
+                    conn.write(_('(%(name)s %(busy)s)\n' % {
+                        'name': u.name, 'busy': u.vars_['busy']}))
+                if u.vars_['silence']:
                     conn.write(_('%s is in silence mode.\n') % u.name)
 
                 if u.session.game:
                     g = u.session.game
-                    if g.gtype == game.PLAYED:
+                    if g.gtype == PLAYED:
                         conn.write(_('(playing game %d: %s vs. %s)\n') % (g.number, g.white.name, g.black.name))
-                    elif g.gtype == game.EXAMINED:
+                    elif g.gtype == EXAMINED:
                         conn.write(_('(examining game %d)\n') % (g.number))
                     else:
                         assert(False)
@@ -102,7 +112,7 @@ class Finger(Command):
             #if u.is_guest:
             #    conn.write(_('%s is NOT a registered player.\n') % u.name)
             if show_ratings and not u.is_guest:
-                rating.show_ratings(u, conn)
+                yield rating.show_ratings(u, conn)
             if u.admin_level > admin.Level.user:
                 conn.write(A_('Admin level: %s\n') % admin.level.to_str(u.admin_level))
             if show_admin_info:
@@ -118,7 +128,7 @@ class Finger(Command):
                         total = u.get_total_time_online()
                         first = calendar.timegm(u.first_login.timetuple()) + (
                             1e-6 * u.first_login.microsecond)
-                        perc = round(100 * total / (time.time() - first), 1)
+                        perc = round(100 * total // (time.time() - first), 1)
                         conn.write(_('Total time online: %s\n') % time_format.hms_words(total, round_secs=True))
                         since = time.strftime("%a %b %e, %H:%M %Z %Y", time.gmtime(first))
                         # should be equivalent: since = u.first_login.replace(tzinfo=pytz.utc).astimezone(conn.user.tz).strftime('%a %b %e, %H:%M %Z %Y')
@@ -135,14 +145,13 @@ class Finger(Command):
                 else:
                     conn.write(_('Zipseal:     Off\n'))
                 if show_admin_info and (u.session.use_timeseal or
-                    u.session.use_zipseal):
+                        u.session.use_zipseal):
                     conn.write(A_('Acc:         %s\n') % u.session.timeseal_acc)
                     conn.write(A_('System:      %s\n') % u.session.timeseal_system)
 
-
             notes = u.notes if show_notes else []
             if (not u.is_guest and u.is_notebanned and u != conn.user and
-                not conn.user.is_admin()):
+                    not conn.user.is_admin()):
                 # hide notes
                 # XXX should hideinfo apply here?
                 notes = []
@@ -165,16 +174,17 @@ class Finger(Command):
                 # XXX TODO
                 pass
 
+
 @ics_command('ping', 'o')
 class Ping(Command):
     def run(self, args, conn):
         if args[0] is not None:
-            u2 = user.find_by_prefix_for_user(args[0], conn,
-                online_only=True)
+            u2 = find_user.online_by_prefix_for_user(args[0], conn)
         else:
             u2 = conn.user
 
         if u2:
+            assert(u2.is_online)
             pt = u2.session.ping_time
             if not u2.has_timeseal():
                 conn.write(_('Ping time not available; %s is not using zipseal.\n') %
@@ -187,33 +197,93 @@ class Ping(Command):
                 avg = 1000.0 * sum(pt) / len(pt)
                 conn.write(_('Average: %.3fms\n') % (avg))
 
+
 @ics_command('history', 'o')
 class History(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         u = None
         if args[0] is not None:
-            u = user.find_by_prefix_for_user(args[0], conn, min_len=2)
+            u = yield find_user.by_prefix_for_user(args[0], conn)
         else:
             u = conn.user
         if u:
-            history.show_for_user(u, conn)
+            yield history.show_for_user(u, conn)
+
+
+@ics_command('stored', 'o')
+class Stored(Command):
+    @defer.inlineCallbacks
+    def run(self, args, conn):
+        u = None
+
+        if args[0] is not None:
+            u = yield find_user.by_prefix_for_user(args[0], conn)
+        else:
+            u = conn.user
+        if u:
+
+            if u.is_guest:
+                conn.write(_('Only registered players may have stored games.\n'))
+            else:
+                adjourned = yield u.get_adjourned()
+
+                if not adjourned:
+                    conn.write(_('%s has no adjourned games.\n') % u.name)
+                    return
+
+                conn.write(_('Stored games for %s:\n') % u.name)
+                conn.write(_('    C Opponent       On Type          Str  M    ECO Date\n'))
+
+                i = 1
+
+                for entry in adjourned:
+                    entry['id'] = i
+
+                    is_white = entry['white_user_id'] == u.id_
+                    entry['user_color'] = is_white and 'W' or 'B'
+
+                    opp_name = (entry['black_name'] if is_white
+                        else entry['white_name'])
+                    entry['opp_str'] = opp_name[:15]
+
+                    entry['online'] = "Y" if global_.online.is_online(opp_name) else "N"
+
+                    flags = entry['speed_abbrev'] + entry['variant_abbrev']
+                    entry['flags'] = flags + 'r' if entry['is_rated'] else 'u'
+
+                    half_moves = entry['movetext'].count(' ') + 1
+                    next_move_color = "B" if half_moves % 2 else "W"
+                    next_move_number = half_moves // 2 + 1
+                    entry['next_move'] = "%s%d" % (next_move_color,
+                        next_move_number)
+
+                    entry['eco'] = entry['eco'][:3]
+                    entry['when_adjourned_str'] = u.format_datetime(entry['when_ended'])
+                    conn.write('%(id)2d: %(user_color)1s %(opp_str)-15s %(online)s [%(flags)3s%(time)3s %(inc)3s] %(white_material)2s-%(black_material)-2s %(next_move)-4s %(eco)s %(when_adjourned_str)-s\n' %
+                        entry)
+                    i = i + 1
+
 
 @ics_command('logons', 'o')
 class Logons(Command, LogMixin):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
-            u2 = user.find_by_prefix_for_user(args[0], conn)
+            u2 = yield find_user.by_prefix_for_user(args[0], conn)
         else:
             u2 = conn.user
         if u2:
-            log = u2.get_log()
+            log = yield u2.get_log()
             if not log:
                 conn.write('%s has not logged on.\n' % u2.name)
             else:
                 self._display_log(log, conn)
 
+
 @ics_command('llogons', 'p')
 class Llogons(Command, LogMixin):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is not None:
             if args[0] < 0:
@@ -222,15 +292,18 @@ class Llogons(Command, LogMixin):
         else:
             limit = 200
 
-        self._display_log(db.get_log_all(limit), conn)
+        rows = yield db.get_log_all(limit)
+        self._display_log(rows, conn)
+
 
 @ics_command('handles', 'w')
 class Handles(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if len(args[0]) < 2:
             conn.write(_('You need to specify at least two characters of the name.\n'))
         else:
-            ulist = db.user_get_matching(args[0], limit=100)
+            ulist = yield db.user_get_by_prefix(args[0], limit=100)
             if not ulist:
                 conn.write(_('There is no player matching the name %s.\n') %
                     args[0])

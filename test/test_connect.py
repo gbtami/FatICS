@@ -31,6 +31,15 @@ class ConnectTest(Test):
         self.expect('login:', t, "login prompt")
         t.close()
 
+    def test_long_line(self):
+        t = self.connect()
+        self.expect('login:', t)
+        t.write(('A' * 1022) + '\n')
+        self.expect(' should be at most ', t)
+        t.write(('A' * 1023) + '\n')
+        self.expect('line too long', t)
+        t.close()
+
 class LoginTest(Test):
     def test_login(self):
         t = self.connect()
@@ -106,12 +115,12 @@ class LoginTest(Test):
         t2 = self.connect()
         t2.write('admin\n%s\n' % admin_passwd)
         self.expect(' is already logged in', t2)
-        self.expect(' has arrived', t)
+        self.expect("admin has arrived; you can't both be logged in", t)
+        self.expect_EOF(t)
 
         t2.write('fi\n')
         self.expect('On for: ', t2)
 
-        self.close(t)
         self.close(t2)
 
     def test_failed_login(self):
@@ -119,6 +128,7 @@ class LoginTest(Test):
         logged in. """
         t = self.connect_as_admin()
         t2 = self.connect()
+        self.expect('login: ', t2)
         t2.write('admin\nwrongpass\n')
         self.expect('*** Invalid password! ***', t2)
 
@@ -140,12 +150,15 @@ class PromptTest(Test):
         t = self.connect()
         t.write('guest\n\n')
         self.expect('fics%', t, "fics% prompt")
+        # there should not be more than one prompt
+        self.expect_not('fics%', t)
         self.close(t)
 
 class LogoutTest(Test):
     def test_logout(self):
         t = self.connect_as_admin()
         t.write('quit\n')
+        self.expect('Logging you out.', t)
         self.expect('Thank you for using', t)
         t.close()
 

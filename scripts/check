@@ -1,2 +1,5 @@
 #!/bin/sh
-pyflakes src/*.py src/*/*.py | grep -v "undefined name 'N_'" | grep -v "undefined name '_" | grep -v "undefined name 'A_" | grep -v "undefined name 'ngettext"
+export PYFLAKES_BUILTINS=N_,_,A_,ngettext
+#pyflakes src/*.tac src/*.py src/*/*.py
+flake8 src/*tac src/*py src/*/*py | grep -v 'too long' | grep -v 'blank line, found' | grep -v under-indented | grep -v "at least two spaces before inline comment"
+2to3 -p -f print src/*py src/command/*py src/variant/*py 2>&1 | grep -v 'grammar tables' | grep -v "No files need to be modified"

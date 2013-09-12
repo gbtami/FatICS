@@ -17,13 +17,17 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import datetime
 
 import speed_variant
 import clock
+import global_
 
 from game import Game
-from game_constants import *
+from game_constants import WHITE, EXAMINED
+
 
 class ExaminedGame(Game):
     def __init__(self, user, hist_game=None):
@@ -45,8 +49,9 @@ class ExaminedGame(Game):
         self.when_started = datetime.datetime.utcnow()
 
         if hist_game is None:
+            # TODO: examining variants
             self.speed_variant = speed_variant.from_names('untimed', 'chess')
-            self.variant = speed_variant.variant_class[self.speed_variant.variant.name](self)
+            self.variant = global_.variant_class[self.speed_variant.variant.name](self)
             self.moves = []
             #self.white_name = list(self.players)[0].name
             #self.black_name = self.white_name
@@ -59,13 +64,18 @@ class ExaminedGame(Game):
             # XXX use the speed from history
             self.speed_variant = speed_variant.from_names('untimed',
                 variant_name)
-            self.variant = speed_variant.variant_class[self.speed_variant.variant.name](self)
+            self.variant = global_.variant_class[self.speed_variant.variant.name](self)
+            # idn will be set by caller for chess960
             self.moves = hist_game['movetext'].split(' ')
             self.white_name = hist_game['white_name']
             self.black_name = hist_game['black_name']
             self.result_code = hist_game['result']
             self.result_reason = hist_game['result_reason']
 
+    @defer.inlineCallbacks
+    def finish_init(self, user):
+        if self.variant.name == 'chess960':
+            yield self.variant.set_idn(self.idn)
         for uf in user.session.followed_by:
             if not uf.session.pfollow:
                 uf.write_('\n%s, whom you are following, has started examining a game.\n', user)
@@ -88,7 +98,7 @@ class ExaminedGame(Game):
             if not mv:
                 mv = self.variant.pos.move_from_san(san)
             if not mv:
-                print 'internal error: failed to parse move %s' % san
+                print('internal error: failed to parse move %s' % san)
             assert(mv)
             mv.time = 0.0
             self.variant.do_move(mv)
@@ -154,16 +164,17 @@ class ExaminedGame(Game):
                 break
         self.send_boards()
 
+    @defer.inlineCallbacks
     def _check_result(self):
         if self.variant.pos.is_checkmate:
             if self.variant.get_turn() == WHITE:
-                self.result('%s checkmated' % self.white_name, '0-1')
+                yield self.result('%s checkmated' % self.white_name, '0-1')
             else:
-                self.result('%s checkmated' % self.black_name, '1-0')
+                yield self.result('%s checkmated' % self.black_name, '1-0')
         elif self.variant.pos.is_stalemate:
-            self.result('Game drawn by stalemate', '1/2-1/2')
+            yield self.result('Game drawn by stalemate', '1/2-1/2')
         elif self.variant.pos.is_draw_nomaterial:
-            self.result('Neither player has mating material', '1/2-1/2')
+            yield self.result('Neither player has mating material', '1/2-1/2')
 
     def mexamine(self, u, conn):
         # GuestWYMW has made you an examiner of game 81.
@@ -215,16 +226,17 @@ class ExaminedGame(Game):
             (self.number, ' '.join(olist), len(olist)))
         return True
 
+    @defer.inlineCallbacks
     def next_move(self, mv, conn):
         self.moves = self.moves[0:self.variant.pos.ply]
         self.moves.append(mv.to_san())
         #self.variant.pos.get_last_move().time = 0.0
         assert(self.variant.pos.get_last_move() == mv)
         mv.time = 0.0
-        super(ExaminedGame, self).next_move(mv, conn)
+        yield super(ExaminedGame, self).next_move(mv, conn)
         for p in self.players | self.observers:
             p.write_('Game %d: %s moves: %s\n', (self.number, conn.user.name, mv.to_san()))
-        self._check_result()
+        yield self._check_result()
 
     def leave(self, user):
         self.players.remove(user)
@@ -232,22 +244,23 @@ class ExaminedGame(Game):
         user.session.game = None
         # user may be offline if he or she disconnected unexpectedly
         if user.is_online:
-            user.write_('You are no longer examining game %d.\n', self.number)
+            user.write_('You are no longer examining game %d.\n',
+                self.number)
         for p in self.players | self.observers:
             p.write_('\n%(name)s has stopped examining game %(num)d.\n', {'name': user.name, 'num': self.number})
         if not self.players:
             for p in self.observers:
                 p.write_('Game %d (which you were observing) has no examiners.\n', (self.number,))
-            self.free()
+            self._free()
+        return defer.succeed(None)
 
     def result(self, msg, result_code):
         for p in self.players | self.observers:
             p.write_('Game %d: %s %s\n', (self.number, msg, result_code))
+        return defer.succeed(None)
 
-    def free(self):
-        super(ExaminedGame, self).free()
-        for p in self.players:
-            assert(user.session.game == self)
-            p.session.game = None
+    def _free(self):
+        super(ExaminedGame, self)._free()
+        assert(not self.players)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -17,25 +17,27 @@
 #
 
 from datetime import datetime
+from twisted.internet import defer
 
 import list_
 import admin
-
-import db as dbmod
-from db import db
-from config import config
+import db
+import global_
+import config
 
 USER_CHANNEL_START = 1024
+
 
 class ChannelError(Exception):
     pass
 
+
 class Channel(object):
     def __init__(self, params):
-        self.id = params['channel_id']
-        assert(type(self.id) == type(1) or type(self.id) == type(1L))
+        self.id_ = params['channel_id']
+        assert(isinstance(self.id_, (int, long)))
         self.name = params['name']
-        self.desc = params['descr']
+        #self.desc = params['descr']
         if params['topic'] is None:
             self.topic = None
         else:
@@ -47,16 +49,16 @@ class Channel(object):
     def tell(self, msg, user):
         #if user.is_chmuzzled:
         #    user.write(_('You are muzzled in all channels.\n'))
-        if (self.id == 1 and not user.is_guest and user.is_newbie()
-            and user.vars['interface']):
+        if (self.id_ == 1 and not user.is_guest and user.is_newbie()
+                and user.vars_['interface']):
             # show interface string in ch 1 for newbies
-            msg = '[%s] %s' % (user.vars['interface'], msg)
-        msg = '\n%s(%d): %s\n' % (user.get_display_name(), self.id, msg)
+            msg = '[%s] %s' % (user.vars_['interface'], msg)
+        msg = '\n%s(%d): %s\n' % (user.get_display_name(), self.id_, msg)
         is_guest = user.is_guest
         count = 0
         name = user.name
         for u in self.online:
-            if is_guest and not u.vars['ctell']:
+            if is_guest and not u.vars_['ctell']:
                 continue
             if not u.hears_channels():
                 continue
@@ -80,48 +82,51 @@ class Channel(object):
     def show_topic(self, user):
         if self.topic:
             user.write_('\nTOPIC(%d): *** %s (%s at %s) ***\n',
-                (self.id, self.topic, self.topic_who_name,
+                (self.id_, self.topic, self.topic_who_name,
                 user.format_datetime(self.topic_when)))
         else:
-            user.write_('There is no topic for channel %d.\n', (self.id,))
+            user.write(_('There is no topic for channel %d.\n') % (self.id_,))
 
-    def check_owner(self, user):
+    @defer.inlineCallbacks
+    def _check_owner(self, user):
         """ Check whether a user is an owner of the channel allowed to
         perform operations on it, and if not, send an error message. """
+        # XXX maybe this could be done without checking the DB
         if not user.is_admin():
-            if not db.channel_is_owner(self.id, user.id):
+            if not (yield db.channel_is_owner(self.id_, user.id_)):
                 user.write(_("You don't have permission to do that.\n"))
-                return False
+                defer.returnValue(False)
 
-        if not self.has_member(user):
-            user.write(_("You are not in channel %d.\n") % (self.id,))
-            return False
+        if not (yield self._has_member(user)):
+            user.write(_("You are not in channel %d.\n") % (self.id_,))
+            defer.returnValue(False)
 
         if not user.hears_channels():
             user.write(_('You are not listening to channels.\n'))
-            return False
+            defer.returnValue(False)
 
-        return True
+        defer.returnValue(True)
 
+    @defer.inlineCallbacks
     def set_topic(self, topic, owner):
-        if not self.check_owner(owner):
+        if not (yield self._check_owner(owner)):
             return
 
         if topic in ['-', '.']:
             # clear the topic
             self.topic = None
-            db.channel_del_topic(self.id)
+            yield db.channel_del_topic(self.id_)
             for u in self.online:
                 if u.hears_channels():
                     u.write_('\n%s(%d): *** Cleared topic. ***\n',
-                        (owner.get_display_name(), self.id))
+                        (owner.get_display_name(), self.id_))
         else:
             # set a new topic
             self.topic = topic
             self.topic_who_name = owner.name
             self.topic_when = datetime.utcnow()
-            db.channel_set_topic({'channel_id': self.id,
-                'topic': topic, 'topic_who': owner.id,
+            yield db.channel_set_topic({'channel_id': self.id_,
+                'topic': topic, 'topic_who': owner.id_,
                 'topic_when': self.topic_when})
             for u in self.online:
                 if u.hears_channels():
@@ -131,97 +136,99 @@ class Channel(object):
         self.online.remove(user)
 
     def is_user_owned(self):
-        return self.id >= USER_CHANNEL_START
+        return self.id_ >= USER_CHANNEL_START
 
-    def has_member(self, user):
+    def _has_member(self, user):
+        """Check if a user is in a channel. Queries the database if the
+        user is offline. Returns a deferred."""
         if user.is_online:
-            return user in self.online
+            return defer.succeed(user in self.online)
         else:
             assert(not user.is_guest)
-            return db.user_in_channel(user.id, self.id)
+            return db.user_in_channel(user.id_, self.id_)
 
+    @defer.inlineCallbacks
     def add(self, user):
+        """Add a user to this channel."""
         if user in self.online:
             raise list_.ListError(_('[%s] is already on your channel list.\n') %
-                self.id)
+                self.id_)
+
+        self.online.append(user)
+        yield user.add_channel(self.id_)
 
         # channels above 1024 may be claimed by a user simply
         # by joining
         if self.is_user_owned():
             if user.is_guest:
                 raise list_.ListError(_('Only registered players can join channels %d and above.\n') % USER_CHANNEL_START)
-            if db.channel_user_count(self.id) == 0:
-                if (db.user_channels_owned(user.id) >= config.max_channels_owned
+            count = yield db.channel_user_count(self.id_)
+            if count == 1:
+                owned_count = yield db.user_channels_owned(user.id_)
+                if (owned_count >= config.max_channels_owned
                         and not user.has_title('TD')):
                     raise list_.ListError(_('You cannot own more than %d channels.\n') % config.max_channels_owned)
-                db.channel_add_owner(self.id, user.id)
-                user.write(_('You are now the owner of channel %d.\n') % self.id)
+                yield db.channel_set_owner(self.id_, user.id_, 1)
+                user.write(_('You are now the owner of channel %d.\n') % self.id_)
 
-        self.online.append(user)
-        user.add_channel(self.id)
         if self.topic:
             self.show_topic(user)
 
+    @defer.inlineCallbacks
     def remove(self, user):
         if user not in self.online:
             raise list_.ListError(_('[%s] is not on your channel list.\n') %
-                self.id)
+                self.id_)
 
         assert(user.is_online)
+        was_owner = not user.is_guest and (yield db.channel_is_owner(self.id_,
+            user.id_))
         self.online.remove(user)
-        user.remove_channel(self.id)
+        yield user.remove_channel(self.id_)
 
-        if not user.is_guest and self.is_user_owned():
-            try:
-                db.channel_del_owner(self.id, user.id)
-            except dbmod.DeleteError:
-                # user was not an owner
-                pass
-            else:
-                user.write(_('You are no longer an owner of channel %d.\n') % self.id)
-                # TODO? what if channel no longer has an owner?
+        if was_owner:
+            user.write(_('You are no longer an owner of channel %d.\n') % self.id_)
+            # TODO? what if channel no longer has an owner?
 
+    @defer.inlineCallbacks
     def kick(self, u, owner):
-        if not self.check_owner(owner):
+        if not (yield self._check_owner(owner)):
             return
 
-        if not self.has_member(u):
+        if not (yield self._has_member(u)):
             owner.write(_("%(name)s is not in channel %(chid)d.\n") % {
-                'name': u.name, 'chid': self.id
+                'name': u.name, 'chid': self.id_
                 })
             return
 
         if not owner.is_admin():
-            if db.channel_is_owner(self.id, u.id):
+            if (yield db.channel_is_owner(self.id_, u.id_)):
                 owner.write(_("You cannot kick out a channel owner.\n"))
                 return
             if u.is_admin():
                 owner.write(_("You cannot kick out an admin.\n"))
                 return
         else:
-            if not admin.checker.check_user_operation(owner, u):
+            if not admin.check_user_operation(owner, u):
                 owner.write(A_('You need a higher adminlevel to do that.\n'))
                 return
-            if not u.is_guest and db.channel_is_owner(self.id, u.id):
-                # remove kicked user as owner of the channel, too
-                db.channel_del_owner(self.id, u.id)
 
-        u.remove_channel(self.id)
+        u.remove_channel(self.id_)
         if u.is_online:
             self.online.remove(u)
             u.write_('*** You have been kicked out of channel %(chid)d by %(owner)s. ***\n' %
-                {'owner': owner.name, 'chid': self.id})
+                {'owner': owner.name, 'chid': self.id_})
 
         for p in self.online:
             if p.hears_channels():
                 p.write_('\n%s(%d): *** Kicked out %s. ***\n',
-                    (owner.get_display_name(), self.id, u.name))
+                    (owner.get_display_name(), self.id_, u.name))
 
     def get_display_name(self):
         if self.name is not None:
-            return '''%d "%s"''' % (self.id, self.name)
+            return '''%d "%s"''' % (self.id_, self.name)
         else:
-            return "%d" % self.id
+            return "%d" % self.id_
 
     def get_online(self):
         return [(u.get_display_name() if u.hears_channels() else
@@ -230,39 +237,51 @@ class Channel(object):
 
 """ The channel ID is stored in a 32-bit column in the database. """
 CHANNEL_MAX = 1 << 31
+
+
 class ChannelList(object):
-    all = {}
-    def __init__(self):
-        for ch in db.channel_list():
-            id = ch['channel_id']
-            self.all[id] = Channel(ch)
+    all_ = {}
+    def __init__(self, rows):
+        for ch in rows:
+            id_ = ch['channel_id']
+            self.all_[id_] = Channel(ch)
+        # some admin code assumes channel 0 is loaded
+        assert(0 in self.all_)
 
     def __getitem__(self, key):
-        assert(type(key) == type(1) or type(key) == type(1L))
+        """Look up a channel by number. Raise KeyError if the channel
+        does not exist or is not loaded from the db."""
+        assert(isinstance(key, (int, long)))
         if key < 0 or key > CHANNEL_MAX:
             raise KeyError
-        try:
-            return self.all[key]
-        except KeyError:
-            self.all[key] = self._make_ch(key)
-            return self.all[key]
+        return self.all_[key]
 
-    def _make_ch(self, key):
-        name = None
-        db.channel_new(key, name)
-        return Channel({'channel_id': key, 'name': None, 'descr': None,
-            'topic': None})
+    def __iter__(self):
+        return iter(self.all_.values())
+
+    @defer.inlineCallbacks
+    def get(self, key):
+        """Like __getitem__, but loads the channel from the db when
+        necessary. Returns a deferred which fires with the result."""
+        if key < 0 or key > CHANNEL_MAX:
+            raise KeyError
+        if key not in self.all_:
+            name = None
+            self.all_[key] = Channel({'channel_id': key, 'name': name,
+                'descr': None, 'topic': None})
+            yield db.channel_new(key, name)
+        defer.returnValue(self.all_[key])
 
     def get_default_channels(self):
-        return [1][:]
+        return [1]
 
     def get_default_guest_channels(self):
-        return [4, 53][:]
+        return [4, 53]
 
-chlist = ChannelList()
-#try:
-#    chlist
-#except NameError:
-#    chlist = ChannelList()
+
+@defer.inlineCallbacks
+def init():
+    rows = yield db.get_channel_list()
+    global_.channels = ChannelList(rows)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

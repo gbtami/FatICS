@@ -18,13 +18,16 @@
 #
 
 from .command import ics_command, Command
+from twisted.internet import defer
 
 import global_
 
 # TODO: make these commands accept a username parameter
 
+
 @ics_command('accept', 'n')
 class Accept(Command):
+    @defer.inlineCallbacks
     def run(self, args, conn):
         if args[0] is None:
             if not conn.user.session.offers_received:
@@ -33,7 +36,7 @@ class Accept(Command):
             if len(conn.user.session.offers_received) > 1:
                 conn.write(_('You have more than one pending offer. Use "pending" to see them and "accept n" to choose one.\n'))
                 return
-            conn.user.session.offers_received[0].accept()
+            yield conn.user.session.offers_received[0].accept()
         elif type(args[0]) == int:
             try:
                 o = global_.offers[args[0]]
@@ -42,10 +45,11 @@ class Accept(Command):
             if not o or o not in conn.user.session.offers_received:
                 conn.write(_('There is no offer %d to accept.\n') % args[0])
             else:
-                o.accept()
+                yield o.accept()
         else:
             # TODO: find by user
             pass
+
 
 @ics_command('decline', 'n')
 class Decline(Command):
@@ -69,6 +73,7 @@ class Decline(Command):
                 conn.write(_('There is no offer %d to decline.\n') % args[0])
             else:
                 o.decline()
+
 
 @ics_command('withdraw', 'n')
 class Withdraw(Command):

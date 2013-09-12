@@ -16,17 +16,21 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from twisted.internet import defer
+
 import time
 import traceback
 
 import var
 import timeseal
 import partner
-import channel
+import global_
 
 from game_list import GameList
 
 # user state that is per-session and not saved to persistent storage
+
+
 class Session(object):
     def __init__(self, conn):
         """ Created when a connection is made. """
@@ -34,7 +38,7 @@ class Session(object):
         self.use_timeseal = False
         self.use_zipseal = False
         self.check_for_timeseal = True
-        self.ivars = var.varlist.get_default_ivars()
+        self.ivars = global_.var_defaults.get_default_ivars()
         self.closed = False
 
     def set_user(self, user):
@@ -63,6 +67,17 @@ class Session(object):
         self.observed = GameList()
         self.partner = None
         self.conn.write(_('**** Starting FICS session as %s ****\n\n') % user.get_display_name())
+        # XXX could use set comprehensions for Python 2.7+
+        self.notifiers_online = set([u for u in
+            (global_.online.find_exact(name) for name in self.user.notifiers)
+            if u])
+        for u in self.notifiers_online:
+            u.session.notified_online.add(self.user)
+        self.notified_online = set([u for u in
+            (global_.online.find_exact(name) for name in self.user.notified)
+            if u])
+        for u in self.notified_online:
+            u.session.notifiers_online.add(self.user)
 
     def get_idle_time(self):
         """ returns seconds """
@@ -74,6 +89,7 @@ class Session(object):
         assert(self.login_time is not None)
         return time.time() - self.login_time
 
+    @defer.inlineCallbacks
     def close(self):
         assert(not self.closed)
         self.closed = True
@@ -94,10 +110,9 @@ class Session(object):
 
         if self.game:
             try:
-                self.game.leave(self.user)
-                assert(self.game is  None)
+                yield self.game.leave(self.user)
             except:
-                print 'exception ending game due to logout'
+                print('exception ending game due to logout')
                 traceback.print_exc()
         del self.offers_received[:]
         del self.offers_sent[:]
@@ -106,6 +121,8 @@ class Session(object):
             u.write_("\nNotification: %s, whom you were idlenotifying, has departed.\n", (self.user.name,))
             u.session.idlenotifying.remove(self.user)
         self.idlenotified_by.clear()
+        for u in self.idlenotifying:
+            u.session.idlenotified_by.remove(self.user)
 
         if self.followed_by:
             for p in self.followed_by.copy():
@@ -135,16 +152,24 @@ class Session(object):
 
         # remove ftells
         if self.ftell:
+            ch0 = global_.channels[0]
             self.ftell.session.ftell_admins.remove(self.user)
-            channel.chlist[0].tell("I am logging out now - conversation forwarding stopped.", self.user)
+            ch0.tell("I am logging out now - conversation forwarding stopped.", self.user)
 
         if self.ftell_admins:
-            ch = channel.chlist[0]
+            ch0 = global_.channels[0]
             for adm in self.ftell_admins:
-                ch.tell(A_("*%s* has logged out - conversation forwarding stopped.") % self.user.name, adm)
+                ch0.tell(A_("*%s* has logged out - conversation forwarding stopped.") % self.user.name, adm)
                 adm.write(A_("%s, whose tells you were forwarding, has logged out.\n") % self.user.name)
                 adm.session.ftell = None
             self.ftell_admins = []
+
+        for u in self.notified_online:
+            u.session.notifiers_online.remove(self.user)
+        for u in self.notifiers_online:
+            u.session.notified_online.remove(self.user)
+        self.notifiers_online = None
+        self.notified_online = None
 
     def set_ivars_from_str(self, s):
         """Parse a %b string sent by Jin to set ivars before logging in."""
@@ -184,5 +209,16 @@ class Session(object):
 
         if for_move:
             self.move_sent_timestamp = t
+
+    def get_timeseal_move_time(self):
+        if self.move_sent_timestamp is None:
+            self.conn.write('timeseal error: your timeseal did not reply to the server ping\n')
+            print('client of %s failed to reply to timeseal ping for move' % self.conn.user.name)
+            self.conn.loseConnection('timeseal error')
+            return
+        elapsed_ms = (self.timeseal_last_timestamp -
+            self.move_sent_timestamp)
+        return elapsed_ms
+
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

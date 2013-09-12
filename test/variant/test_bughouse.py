@@ -119,6 +119,11 @@ class TestBughouseMatch(Test):
         self.expect('GuestIJKL declines the match offer from your partner.', t2)
         self.expect('Your partner declines the match offer from GuestABCD.', t4)
 
+        self.close(t)
+        self.close(t2)
+        self.close(t3)
+        self.close(t4)
+
     def test_match_partner_decline_by_playing(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_guest('GuestEFGH')

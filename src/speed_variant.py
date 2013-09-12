@@ -16,13 +16,15 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from db import db
+import db
+from twisted.internet import defer
 
 speed_ids = {}
 variant_ids = {}
 speed_names = {}
 variant_names = {}
 variant_abbrevs = {}
+
 
 class Speed(object):
     def __init__(self, id_, name, abbrev):
@@ -38,6 +40,7 @@ class Speed(object):
     def __str__(self):
         return self.name
 
+
 class Variant(object):
     def __init__(self, id_, name, abbrev):
         self.id_ = id_
@@ -52,6 +55,7 @@ class Variant(object):
 
     def __str__(self):
         return self.name
+
 
 class SpeedAndVariant(object):
     def __init__(self, speed, variant):
@@ -85,18 +89,22 @@ class SpeedAndVariant(object):
         else:
             return self.variant.name
 
+
 def from_names(speed_name, variant_name):
     return SpeedAndVariant(speed_names[speed_name],
         variant_names[variant_name])
+
 
 def from_ids(speed_id, variant_id):
     return SpeedAndVariant(speed_ids[speed_id],
         variant_ids[variant_id])
 
+
+@defer.inlineCallbacks
 def init():
-    for row in db.get_speeds():
+    for row in (yield db.get_speeds()):
         Speed(row['speed_id'], row['speed_name'], row['speed_abbrev'])
-    for row in db.get_variants():
+    for row in (yield db.get_variants()):
         Variant(row['variant_id'], row['variant_name'], row['variant_abbrev'])
     global standard_chess, blitz_chess, lightning_chess
     global blitz_chess960, blitz_bughouse, blitz_crazyhouse
@@ -106,20 +114,17 @@ def init():
     blitz_chess960 = from_names('blitz', 'chess960')
     blitz_bughouse = from_names('blitz', 'bughouse')
     blitz_crazyhouse = from_names('blitz', 'crazyhouse')
-init()
 
-variant_class = {}
-def _init():
     import variant.chess
     import variant.chess960
     import variant.crazyhouse
     import variant.bughouse
+    import global_
 
-    global variant_class
-    variant_class['chess'] = variant.chess.Chess
-    variant_class['crazyhouse'] = variant.crazyhouse.Crazyhouse
-    variant_class['chess960'] = variant.chess960.Chess960
-    variant_class['bughouse'] = variant.bughouse.Bughouse
-_init()
+    global_.variant_class['chess'] = variant.chess.Chess
+    global_.variant_class['crazyhouse'] = variant.crazyhouse.Crazyhouse
+    global_.variant_class['chess960'] = variant.chess960.Chess960
+    global_.variant_class['bughouse'] = variant.bughouse.Bughouse
+
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

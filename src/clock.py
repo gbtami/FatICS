@@ -16,14 +16,16 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import datetime
+from twisted.internet import defer
+
 import time
 
 import time_format
 
-from game_constants import *
+from game_constants import WHITE, BLACK
 
 clock_names = {}
+
 
 class Clock(object):
     def __init__(self, g, white_time, black_time):
@@ -44,8 +46,9 @@ class Clock(object):
     def _time_to_str(self, secs):
         if secs < 0:
             secs = 0
-        td = datetime.timedelta(seconds=secs)
-        oldstr = str(td)
+        # XXX I'm not sure what this code was supposed to do
+        #td = datetime.timedelta(seconds=secs)
+        #oldstr = str(td)
         # round to the nearest millisecond
         ret = time_format.hms(secs)
         return ret
@@ -61,7 +64,7 @@ class Clock(object):
         else:
             self._black_time += secs
 
-    def got_move(self, side, ply, elapsed=None):
+    def got_move(self, side, ply, elapsed, minmovetime):
         """ Stop the clock, and record the time remaining for the player
         whose clock was ticking.  Returns the time taken for the move.
         If elapsed is supplied, it is used as the time taken instead
@@ -74,6 +77,9 @@ class Clock(object):
         if elapsed is None:
             # no timeseal, so use our own timer
             elapsed = self.real_elapsed
+
+        if minmovetime:
+            elapsed = max(elapsed, 0.1)
 
         if side == WHITE:
             self._white_time -= elapsed
@@ -94,6 +100,7 @@ class Clock(object):
             ret -= time.time() - self.started_time
         return ret
 
+    @defer.inlineCallbacks
     def check_flag(self, game, side):
         """Check the flag of the given side.  Return True if the flag
         call was sucessful."""
@@ -101,21 +108,28 @@ class Clock(object):
         if side == WHITE:
             if self.get_white_time() <= 0:
                 if self.get_black_time() <= 0:
-                    game.result('Both players ran out of time', '1/2-1/2')
+                    yield game.result('Both players ran out of time',
+                        '1/2-1/2')
                 elif not game.variant.pos.black_has_mating_material:
-                    game.result('%s ran out of time and %s lacks mating material' % (game.white.name, game.black.name), '1/2-1/2')
+                    yield game.result('%s ran out of time and %s lacks mating material' %
+                        (game.white.name, game.black.name), '1/2-1/2')
                 else:
-                    game.result('%s forfeits on time' % game.white.name, '0-1')
+                    yield game.result('%s forfeits on time' % game.white.name,
+                        '0-1')
         else:
             # check black's flag
             if self.get_black_time() <= 0:
                 if self.get_white_time() <= 0:
-                    game.result('Both players ran out of time', '1/2-1/2')
+                    yield game.result('Both players ran out of time',
+                        '1/2-1/2')
                 elif not game.variant.pos.white_has_mating_material:
-                    game.result('%s ran out of time and %s lacks mating material' % (game.black.name, game.white.name), '1/2-1/2')
+                    yield game.result('%s ran out of time and %s lacks mating material' %
+                        (game.black.name, game.white.name), '1/2-1/2')
                 else:
-                    game.result('%s forfeits on time' % game.black.name, '1-0')
-        return not game.is_active
+                    yield game.result('%s forfeits on time' %
+                        game.black.name, '1-0')
+        defer.returnValue(not game.is_active)
+
 
 class FischerClock(Clock):
     def add_increment(self, side):
@@ -125,13 +139,15 @@ class FischerClock(Clock):
             self._black_time += self.inc
 clock_names['fischer'] = FischerClock
 
+
 class BronsteinClock(Clock):
     def __init__(self, g, white_time, black_time):
         super(BronsteinClock, self).__init__(g, white_time, black_time)
         self.last_elapsed = None
 
-    def got_move(self, side, ply, elapsed=None):
-        elapsed = super(BronsteinClock, self).got_move(side, ply, elapsed)
+    def got_move(self, side, ply, elapsed, minmovetime):
+        elapsed = super(BronsteinClock, self).got_move(side, ply, elapsed,
+            minmovetime)
         self.last_elapsed = elapsed
         return elapsed
 
@@ -145,13 +161,15 @@ class BronsteinClock(Clock):
             self._black_time += inc
 clock_names['bronstein'] = BronsteinClock
 
+
 class HourglassClock(Clock):
     def __init__(self, g, white_time, black_time):
         super(HourglassClock, self).__init__(g, white_time, black_time)
         assert(not g.inc)
 
-    def got_move(self, side, ply, elapsed=None):
-        elapsed = super(HourglassClock, self).got_move(side, ply, elapsed)
+    def got_move(self, side, ply, elapsed, minmovetime):
+        elapsed = super(HourglassClock, self).got_move(side, ply, elapsed,
+            minmovetime)
 
         # add the time to the opp of the player who moved
         if side == WHITE:
@@ -165,14 +183,16 @@ class HourglassClock(Clock):
         pass
 clock_names['hourglass'] = HourglassClock
 
+
 class OvertimeClock(Clock):
     def __init__(self, g, white_time, black_time):
         super(OvertimeClock, self).__init__(g, white_time, black_time)
         self.overtime_move_num = g.overtime_move_num
         self.overtime_bonus = 60.0 * g.overtime_bonus
 
-    def got_move(self, side, ply, elapsed=None):
-        elapsed = super(OvertimeClock, self).got_move(side, ply, elapsed)
+    def got_move(self, side, ply, elapsed, minmovetime):
+        elapsed = super(OvertimeClock, self).got_move(side, ply, elapsed,
+            minmovetime)
 
         # check whether the time control has been reached
         if side == WHITE:
@@ -192,14 +212,15 @@ class OvertimeClock(Clock):
             self._black_time += self.inc
 clock_names['overtime'] = OvertimeClock
 
+
 class UntimedClock(Clock):
     def __init__(self, g=None, white_time=None, black_time=None):
         self.is_ticking = False
         self._white_time = 0
         self._black_time = 0
 
-    def got_move(self, side, ply, elapsed=None):
-        pass
+    def got_move(self, side, ply, elapsed, minmovetime):
+        return 0.0
 
     def as_str(self):
         return ('0:00.000', '0:00.000')
