@@ -49,6 +49,7 @@ class ExaminedGame(Game):
         self.when_started = datetime.datetime.utcnow()
 
         if hist_game is None:
+            # TODO: examining variants
             self.speed_variant = speed_variant.from_names('untimed', 'chess')
             self.variant = global_.variant_class[self.speed_variant.variant.name](self)
             self.moves = []
@@ -64,12 +65,17 @@ class ExaminedGame(Game):
             self.speed_variant = speed_variant.from_names('untimed',
                 variant_name)
             self.variant = global_.variant_class[self.speed_variant.variant.name](self)
+            # idn will be set by caller for chess960
             self.moves = hist_game['movetext'].split(' ')
             self.white_name = hist_game['white_name']
             self.black_name = hist_game['black_name']
             self.result_code = hist_game['result']
             self.result_reason = hist_game['result_reason']
 
+    @defer.inlineCallbacks
+    def finish_init(self, user):
+        if self.variant.name == 'chess960':
+            yield self.variant.set_idn(self.idn)
         for uf in user.session.followed_by:
             if not uf.session.pfollow:
                 uf.write_('\n%s, whom you are following, has started examining a game.\n', user)

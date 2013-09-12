@@ -23,6 +23,8 @@ http://www.dwheeler.com/essays/Fischer_Random_Chess.html
 
 import re
 import random
+
+from twisted.internet import defer
 from array import array
 
 import db
@@ -1312,9 +1314,13 @@ class Position(object):
 class Chess960(BaseVariant):
     def __init__(self, game):
         self.game = game
-        self.idn = game.idn
-        self.pos = Position(db.fen_from_idn(self.idn))
         self.name = 'chess960'
+
+    @defer.inlineCallbacks
+    def set_idn(self, idn):
+        self.idn = idn
+        fen = yield db.fen_from_idn(self.idn)
+        self.pos = Position(fen)
 
     def parse_move(self, s, conn):
         """Try to parse a move.  If it looks like a move but

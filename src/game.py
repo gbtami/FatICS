@@ -513,6 +513,8 @@ class PlayedGame(Game):
             self.black.write_nowrap(self.gameinfo_str)
 
         self.variant = global_.variant_class[self.speed_variant.variant.name](self)
+        if self.variant.name == 'chess960':
+            yield self.variant.set_idn(self.idn)
         # play the stored moves for an adjourned game
         if chal.adjourned:
             moves = chal.adjourned['movetext'].split(' ')

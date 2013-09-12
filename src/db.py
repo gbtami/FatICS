@@ -16,7 +16,7 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from MySQLdb import connect, cursors, IntegrityError, OperationalError
+from MySQLdb import cursors, IntegrityError
 import config
 
 from twisted.internet import defer
@@ -35,45 +35,21 @@ class UpdateError(Exception):
     pass
 
 # pacify pyflakes
-db = None
 adb = None
 
 if 1:
     def init():
-        global db
-        db = connect(host=config.db_host, db=config.db_db,
-            read_default_file="~/.my.cnf")
-        db.autocommit(True) # XXX necessary to coexist with adbapi
-        cursor = db.cursor()
-        cursor = query(cursor, """SET time_zone='+00:00'""")
-        db.set_character_set('utf8')
-        cursor.close()
-
         def openfun(adbconn):
             cursor = adbconn.cursor()
             cursor.execute("""SET time_zone='+00:00'""")
             cursor.execute("""SET charset utf8""")
+            cursor.execute("""SET wait_timeout=604800""") # 1 week
             cursor.close()
         global adb
         adb = adbapi.ConnectionPool("MySQLdb",
             host=config.db_host, db=config.db_db,
             read_default_file="~/.my.cnf", cursorclass=cursors.DictCursor,
             cp_reconnect=True, cp_min=1, cp_max=3, cp_openfun=openfun)
-
-    def query(cursor, *args):
-        try:
-            cursor.execute(*args)
-            return cursor
-        except (AttributeError, OperationalError):
-            # the connection may have timed out, so try again
-            cursor.close()
-            db.close()
-            adb.close()
-            init()
-            # the new cursor needs to be the same type as the old one
-            cursor = db.cursor(cursor.__class__)
-            cursor.execute(*args)
-            return cursor
 
     def user_get_async(name):
         d = adb.runQuery("""SELECT
@@ -750,6 +726,7 @@ if 1:
             AND is_adjourned=1""", (user_id,))
 
     def delete_adjourned(game_id):
+        """Delete an adjourned game."""
         def do_del(txn):
             txn.execute("""DELETE FROM game WHERE game_id=%s
                 AND is_adjourned=1""",
@@ -1106,29 +1083,29 @@ if 1:
         yield _renumber_messages(to_user_id)
         defer.returnValue(ret)
 
-    # chess960
+    @defer.inlineCallbacks
     def fen_from_idn(idn):
+        """Get the FEN representing a chess960 position, given an idn."""
         assert(0 <= idn <= 959)
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT fen FROM chess960_pos
+        rows = yield adb.runQuery("""SELECT fen FROM chess960_pos
             WHERE idn=%s""", (idn,))
-        row = cursor.fetchone()
-        assert(row)
-        cursor.close()
-        return row[0]
+        fen = rows[0]['fen']
+        defer.returnValue(fen)
 
+    @defer.inlineCallbacks
     def idn_from_fen(fen):
-        cursor = db.cursor()
-        cursor = query(cursor, """SELECT idn FROM chess960_pos
+        """Get the idn representing a chess960 position, given a FEN."""
+        rows = yield adb.runQuery("""SELECT idn FROM chess960_pos
             WHERE fen=%s""", (fen,))
-        row = cursor.fetchone()
-        cursor.close()
+        row = rows[0]
         if row:
-            return row[0]
+            defer.returnValue(row['idn'])
         else:
-            return None
+            defer.returnValue(None)
 
     def game_add_idn(game_id, idn):
+        """Save the idn representing the starting position of a specified
+        chess960 game."""
         return adb.runOperation("""INSERT INTO game_idn VALUES(%s,%s)""",
             (game_id, idn))
 

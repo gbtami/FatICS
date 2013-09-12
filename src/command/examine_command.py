@@ -42,7 +42,8 @@ class Examine(Command):
 
         if args[0] is None:
             conn.write(_("Starting a game in examine (scratch) mode.\n"))
-            examine.ExaminedGame(conn.user)
+            e = examine.ExaminedGame(conn.user)
+            yield e.finish_init(conn.user)
             return
 
         if args[0] == 'b':
@@ -62,7 +63,8 @@ class Examine(Command):
             # history game
             h = u.get_history_game(num, conn)
             if h:
-                examine.ExaminedGame(conn.user, h)
+                e = examine.ExaminedGame(conn.user, h)
+                yield e.finish_init(conn.user)
             return
         except ValueError:
             m = re.match(r'%(\d\d?)', args[1])
