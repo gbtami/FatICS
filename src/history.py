@@ -101,10 +101,9 @@ class History(object):
         if game.idn is not None:
             yield db.game_add_idn(game_id, game.idn)
 
-        flags = '%s%s' % (game.speed_variant.speed.abbrev,
-            game.speed_variant.variant.abbrev)
-
-        flags += 'r' if game.rated else 'u'
+        flags = '%s%s%s' % (game.speed_variant.speed.abbrev,
+            game.speed_variant.variant.abbrev,
+            'r' if game.rated else 'u')
 
         if result_code == '1-0':
             white_result_char = '+'

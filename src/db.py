@@ -364,7 +364,9 @@ if 1:
             txn.execute("""DELETE FROM note WHERE user_id=%s""", (uid,))
             txn.execute("""DELETE FROM channel_user WHERE user_id=%s""",
                 (uid,))
-            txn.execute("""DELETE FROM history WHERE user_id=%s""", (uid,))
+            txn.execute("""DELETE FROM history WHERE game_id IN
+                (SELECT game_id FROM game WHERE %s IN
+                    (white_user_id, black_user_id))""", (uid,))
             txn.execute("""DELETE FROM rating WHERE user_id=%s""", (uid,))
             txn.execute("""DELETE FROM message WHERE to_user_id=%s""", (uid,))
             txn.execute("""DELETE FROM game WHERE %s IN
@@ -738,13 +740,18 @@ if 1:
     def user_get_history(user_id):
         """Get recent game history for the given user.  In the future
         this function could be extended to allow looking farther back."""
-        return adb.runQuery("""SELECT game_id, num, result_char,
-                user_rating,
-                color_char, opp_name, opp_rating, h.eco, flags, h.time,
-                h.inc, h.result_reason, h.when_ended, movetext, idn
-            FROM history AS h LEFT JOIN game USING(game_id)
+        return adb.runQuery("""SELECT h.game_id AS game_id,
+                white_user_id, black_user_id, white.user_name AS white_name,
+                black.user_name AS black_name, white_rating, black_rating,
+                num, eco, game.time AS time, game.inc AS inc, result_reason,
+                when_ended, movetext, idn, result, speed_id, variant_id,
+                is_rated, guest_opp_name
+            FROM history AS h
+                LEFT JOIN game USING(game_id)
+                LEFT JOIN user AS white ON(game.white_user_id = white.user_id)
+                LEFT JOIN user AS black ON(game.black_user_id = black.user_id)
                 LEFT JOIN game_idn USING (game_id)
-            WHERE user_id=%s
+            WHERE h.user_id=%s
             ORDER BY when_ended ASC
             LIMIT 10""", (user_id,))
 
@@ -754,7 +761,7 @@ if 1:
         entry.update({'user_id': user_id})
         def do(txn):
             txn.execute("""DELETE FROM history WHERE user_id=%s AND num=%s""", (user_id, entry['num']))
-            txn.execute("""INSERT INTO history SET user_id=%(user_id)s,game_id=%(game_id)s, num=%(num)s, result_char=%(result_char)s, user_rating=%(user_rating)s, color_char=%(color_char)s, opp_name=%(opp_name)s, opp_rating=%(opp_rating)s, eco=%(eco)s, flags=%(flags)s, time=%(time)s, inc=%(inc)s, result_reason=%(result_reason)s, when_ended=%(when_ended)s""", entry)
+            txn.execute("""INSERT INTO history SET user_id=%(user_id)s,game_id=%(game_id)s, num=%(num)s, guest_opp_name=%(guest_opp_name)s""", entry)
         return adb.runInteraction(do)
 
     def user_del_history(user_id):

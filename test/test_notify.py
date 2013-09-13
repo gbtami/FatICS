@@ -280,6 +280,7 @@ class TestZnotify(Test):
         self.expect('Present company on your notify list:\r\n   testtwo\r\nThe following players have you on their notify list:\r\n   testthree', t)
 
         t.write('-notify testplayer\n')
+        self.close(t)
         self.close(t2)
         self.close(t3)
 

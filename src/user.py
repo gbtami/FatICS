@@ -31,6 +31,7 @@ import global_
 import server
 import db
 import config
+import find_user
 
 from twisted.internet import defer, threads
 
@@ -39,7 +40,6 @@ class BaseUser(object):
     def __init__(self):
         self.is_online = False
         self.notes = {}
-        self._history = None
         #self._titles = None
         self._title_str = None
 
@@ -272,7 +272,7 @@ class BaseUser(object):
     def save_history(self, game_id, result_char, user_rating, color_char,
             opp_name, opp_rating, eco, flags, initial_time, inc,
             result_reason, when_ended, movetext, idn):
-        """Save history for user.  Return a deferred."""
+        """Save history a for user.  Return a Deferred."""
         assert(self._history is not None)
         if len(self._history) == 0:
             num = 0
@@ -502,9 +502,47 @@ class RegUser(BaseUser):
 
     @defer.inlineCallbacks
     def load_history(self):
+        try:
+            defer.returnValue(self._history)
+        except AttributeError:
+            pass
+
         histrows = yield db.user_get_history(self.id_)
-        self._history = list(histrows)
-        #self._history = [e for e in (yield db.user_get_history(self.id_))]
+        histrows = list(histrows)
+        for row in histrows:
+            if row['white_user_id'] == self.id_:
+                row['color_char'] = 'W'
+                row['user_rating'] = row['white_rating']
+                row['opp_rating'] = row['black_rating']
+                row['opp_name'] = row['black_name']
+                if row['result'] == '1-0':
+                    row['result_char'] = '+'
+                elif row['result'] == '0-1':
+                    row['result_char'] = '-'
+                elif row['result'] == '1/2-1/2':
+                    row['result_char'] = '='
+                else:
+                    row['result_char'] = '*'  # XXX
+            else:
+                assert(row['black_user_id'] == self.id_)
+                row['color_char'] = 'B'
+                row['user_rating'] = row['black_rating']
+                row['opp_rating'] = row['white_rating']
+                row['opp_name'] = row['white_name']
+                if row['result'] == '1-0':
+                    row['result_char'] = '-'
+                elif row['result'] == '0-1':
+                    row['result_char'] = '+'
+                elif row['result'] == '1/2-1/2':
+                    row['result_char'] = '='
+                else:
+                    row['result_char'] = '*'  # XXX
+            if row['opp_name'] is None:
+                row['opp_name'] = row['guest_opp_name']
+            sv = speed_variant.from_ids(row['speed_id'], row['variant_id'])
+            row['flags'] = '%s%s%s' % (sv.speed.abbrev, sv.variant.abbrev,
+                'r' if row['is_rated'] else 'u')
+        self._history = histrows
 
     @defer.inlineCallbacks
     def log_off(self):
@@ -646,8 +684,6 @@ class RegUser(BaseUser):
             yield db.user_del_noplay(self.id_, user.id_)
 
     def get_history(self):
-        #if self._history is None:
-            #self._history = [e for e in (yield db.user_get_history(self.id_))]
         assert(self._history is not None)
         return self._history
 
@@ -675,6 +711,11 @@ class RegUser(BaseUser):
         entry = yield BaseUser.save_history(self, game_id, result_char,
             user_rating, color_char, opp_name, opp_rating, eco, flags,
             initial_time, inc, result_reason, when_ended, movetext, idn)
+        # XXX hack
+        if find_user.online_exact(opp_name).is_guest:
+            entry['guest_opp_name'] = entry['opp_name']
+        else:
+            entry['guest_opp_name'] = None
         yield db.user_add_history(entry, self.id_)
 
     def clear_history(self):

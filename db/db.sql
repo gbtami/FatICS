@@ -167,29 +167,16 @@ CREATE TABLE `user_title` (
   UNIQUE INDEX(`user_id`,`title_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
--- TODO: eliminate history and use game for everything
 -- history
+-- each registered player has a history game history, numbered 0 to 99
 DROP TABLE IF EXISTS `history`;
 CREATE TABLE `history` (
-  `history_id` int(8) NOT NULL AUTO_INCREMENT,
-  `num` tinyint(2) NOT NULL,
-  `result_char` enum('+', '-', '=') NOT NULL,
   `user_id` int(8) NOT NULL,
-  `user_rating` char(4) NOT NULL,
-  `color_char` ENUM('W', 'B') NOT NULL,
-  `opp_name` varchar(17) NOT NULL,
-  `opp_rating` char(4) NOT NULL,
-  `eco` char(5) NOT NULL,
-  `flags` char(3) NOT NULL COMMENT 'string describing variant, speed, ratedness, etc.',
-  `time` smallint(4) COMMENT 'initial time',
-  `inc` smallint(4) COMMENT 'increment',
-  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta', 'Rep',
-     'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB', '50') NOT NULL,
-  `when_ended` TIMESTAMP NOT NULL,
-  `game_id` int(8) NOT NULL COMMENT 'corresponding game entry that has the moves',
+  `num` tinyint(2) NOT NULL COMMENT 'history numbe,r 0-99',
+  `game_id` int(8) NOT NULL,
+  `guest_opp_name` VARCHAR(17) COMMENT 'opponent name if a guest',
   INDEX(`user_id`),
-  UNIQUE INDEX(`user_id`, `num`),
-  PRIMARY KEY (`history_id`)
+  UNIQUE INDEX(`user_id`, `num`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- IP address filter for guests
