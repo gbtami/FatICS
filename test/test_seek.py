@@ -559,7 +559,7 @@ class TestSeekinfo(Test):
         t3.write('seek 15+5 white r m f\n')
         m = self.expect_re(r'Your seek has been posted with index (\d+).', t3)
         n2 = int(m.group(1))
-        self.expect('<s> %d w=admin ti=04 rt=0  t=15 i=5 r=r tp=chess c=W rr=0-9999 a=f f=t' % n2, t)
+        self.expect('<s> %d w=admin ti=04 rt=0  t=15 i=5 r=r tp=standard c=W rr=0-9999 a=f f=t' % n2, t)
 
         # seekremove
         t2.write('unseek %d\n' % n1)

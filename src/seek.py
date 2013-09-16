@@ -237,7 +237,7 @@ class Seek(MatchStringParser):
         seekinfo_str = '<s> %d w=%s ti=%02d rt=%d%s t=%d i=%d r=%s tp=%s c=%s rr=%d-%d a=%s f=%s\n' % (
             self.num, self.a.name, _seekinfo_titles(self.a), int(self.rating),
             ' ', self.tags['time'], self.tags['inc'], rated_char,
-            self.speed_variant.variant.name, color_char, 0, 9999, auto_char,
+            self.speed_variant.legacy_str(), color_char, 0, 9999, auto_char,
             formula_char)
 
         count = 0
