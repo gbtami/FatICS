@@ -23,9 +23,18 @@ from twisted.internet import defer
 import random
 
 from pgn import Pgn
-import db
 
-db.init()
+def idn_from_fen(db, fen):
+    cursor = db.cursor()
+    cursor.execute("""SELECT idn FROM chess960_pos
+        WHERE fen=%s""", (fen,))
+    row = cursor.fetchone()
+    cursor.close()
+    if row:
+        return row[0]
+    else:
+        return None
+
 
 class TestChess960(Test):
     def test_bad_idn(self):
@@ -163,7 +172,6 @@ class TestChess960(Test):
 
 
 class TestPgn(Test):
-    @defer.inlineCallbacks
     def test_pgn(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_guest('GuestEFGH')
@@ -171,16 +179,18 @@ class TestPgn(Test):
         t.write('set style 12\n')
         t2.write('set style 12\n')
 
+        db = db_init()
+        assert(db)
         f = open('../data/chess960.pgn', 'r')
 
         pgn = Pgn(f)
         for g in pgn:
-            print 'game %s' % g
-            assert(g.tags['FEN'])
-            idn = yield db.idn_from_fen(g.tags['FEN'])
+            print('game %s' % g)
+            self.assert_(g.tags['FEN'])
+            idn = idn_from_fen(db, g.tags['FEN'])
             if idn is None:
-                print('could not get idn for fen %s' % g.tags['FEN'])
-                assert(False)
+                raise self.failureException('could not get idn for FEN %s'
+                    % g.tags['FEN'])
             t.write('match GuestEFGH white 5 0 chess960 idn=%d\n' % idn)
             self.expect('Issuing:', t)
             self.expect('Challenge:', t2)
@@ -191,10 +201,10 @@ class TestPgn(Test):
             wtm = True
             for mv in g.moves:
                 if wtm:
-                    #print 'sending %s to white' % mv.text
+                    #print('sending %s to white' % mv.text)
                     t.write('%s%s\n' % (mv.text, mv.decorator))
                 else:
-                    #print 'sending %s to black' % mv.text
+                    #print('sending %s to black' % mv.text)
                     t2.write('%s%s\n' % (mv.text, mv.decorator))
                 self.expect('<12> ', t)
                 self.expect('<12> ', t2)
@@ -235,8 +245,11 @@ class TestPgn(Test):
                 t2.write('abort\n')
                 # don't depend on the abort message, in case the PGN
                 # omits the comment explaining why the game was drawn
-                #self.expect('Game aborted', t)
-                #self.expect('Game aborted', t2)
+                #try:
+                #    self.expect('Game aborted', t)
+                #    self.expect('Game aborted', t2)
+                #except self.failureException:
+                #    pass
 
         self.close(t)
         self.close(t2)

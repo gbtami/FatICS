@@ -467,6 +467,9 @@ class PlayedGame(Game):
         self.is_active = True
 
         self.players = set([self.white, self.black])
+        # XXX hack; the clock_id should be set in the same place
+        # clock_name is
+        self.clock_id = yield db.get_clock_id(self.clock_name)
         super(PlayedGame, self).__init__()
 
         #self.flip = False
@@ -620,7 +623,7 @@ class PlayedGame(Game):
             'time': adj['time'],
             'inc': adj['inc']
         }
-        self.clock_name = adj['clock']
+        self.clock_name = adj['clock_name']
         self.clock = clock.clock_names[self.clock_name](self,
             adj['white_clock'], adj['black_clock'])
         self.idn = adj['idn'] # for chess960
@@ -998,7 +1001,8 @@ class PlayedGame(Game):
             'speed_id': self.speed_variant.speed.id_,
             'speed_name': self.speed_variant.speed.name,
             'variant_name': self.speed_variant.variant.name,
-            'clock': self.clock_name,
+            'clock_id': self.clock_id,
+            'clock_name': self.clock_name,
             'idn': self.idn,
             'is_rated': self.rated,
             'when_started': self.when_started,

@@ -84,7 +84,6 @@ class BaseUser(object):
 
     def write(self, s):
         """ Write a string to the user. """
-        assert(self.is_online)
         if self == global_.curuser:
             if s[0] == '\n':
                 # XXX HACK
@@ -123,7 +122,9 @@ class BaseUser(object):
         return global_.langs[self.vars_['lang']].gettext(s) % args
 
     def write_prompt(self, s=None):
-        assert(self.is_online)
+        if not self.is_online:
+            print("warning: tried to write to offline user %s" % self)
+            return
         if s:
             self.session.conn.write(s)
         # XXX maybe we shouldn't check this for every line,
@@ -272,7 +273,7 @@ class BaseUser(object):
     def save_history(self, game_id, result_char, user_rating, color_char,
             opp_name, opp_rating, eco, flags, initial_time, inc,
             result_reason, when_ended, movetext, idn):
-        """Save history a for user.  Return a Deferred."""
+        """Save history for a user.  Return a Deferred."""
         assert(self._history is not None)
         if len(self._history) == 0:
             num = 0
@@ -454,6 +455,11 @@ class RegUser(BaseUser):
         self.notifiers = set([dbu['user_name']
             for dbu in (yield db.user_get_notifiers(self.id_))])
 
+        # load ratings before officially coming online, because e.g.
+        # the "who" command reads ratings of online players
+        yield self._load_ratings()
+        yield self.load_history()
+
         yield BaseUser.log_on(self, conn)
 
         assert(self.session.notified_online is not None)
@@ -496,9 +502,6 @@ class RegUser(BaseUser):
         assert(self.censor is not None)
         for dbu in (yield db.user_get_noplayed(self.id_)):
             self.noplay.add(dbu['user_name'])
-
-        yield self._load_ratings()
-        yield self.load_history()
 
     @defer.inlineCallbacks
     def load_history(self):

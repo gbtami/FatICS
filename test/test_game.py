@@ -613,6 +613,38 @@ class TestDisconnect(Test):
         t2.close()
         self.close(t)
 
+    def test_both_disconnect(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t.write('match guestefgh white 1 0\n')
+        self.expect('Challenge:', t2)
+        t2.write('accept\n')
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+
+        # it doesn't matter in what order the server processes the
+        # disconnects, as long as it doesn't blow a gasket
+        t.write('quit\n')
+        self.expect('Thank you for using', t)
+        t2.write('quit\n')
+        self.expect('Thank you for using', t2)
+
+    def test_both_disconnect_abruptly(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        t.write('match guestefgh white 1 0\n')
+        self.expect('Challenge:', t2)
+        t2.write('accept\n')
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+
+        # just making sure the server doesn't raise an exception
+        t2.close()
+        t.close()
+
+
 class TestMoretime(Test):
     @with_player('TestPlayer')
     def test_moretime(self):

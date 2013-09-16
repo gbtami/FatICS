@@ -72,7 +72,7 @@ class History(object):
             'speed_id': game.speed_variant.speed.id_,
             'speed_name': game.speed_variant.speed.name,
             'variant_name': game.speed_variant.variant.name,
-            'clock': game.clock_name,
+            'clock_id': game.clock_id,
             'idn': game.idn,
             'is_rated': game.rated,
             'when_started': game.when_started,

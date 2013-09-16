@@ -4,4 +4,6 @@ compatibility_port = '5000'
 port = '5001'
 admin_passwd = 'roiShah5' # don't worry, this is just an example ;)
 LOCAL_IP = '127.0.0.1' # the address the tests will connect from
-
+db_host = "localhost"
+db_db = "chess"
+# database password should be set in ~/.my.cnf

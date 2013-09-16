@@ -112,6 +112,7 @@ class Session(object):
             try:
                 yield self.game.leave(self.user)
             except:
+                raise
                 print('exception ending game due to logout')
                 traceback.print_exc()
         del self.offers_received[:]
@@ -215,7 +216,7 @@ class Session(object):
             self.conn.write('timeseal error: your timeseal did not reply to the server ping\n')
             print('client of %s failed to reply to timeseal ping for move' % self.conn.user.name)
             self.conn.loseConnection('timeseal error')
-            return
+            raise timeseal.TimesealError
         elapsed_ms = (self.timeseal_last_timestamp -
             self.move_sent_timestamp)
         return elapsed_ms

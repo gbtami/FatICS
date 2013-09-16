@@ -25,6 +25,8 @@ import string
 
 from twisted.trial import unittest
 
+import MySQLdb
+
 sys.path.append('src/')
 
 from local_config import *
@@ -243,5 +245,18 @@ def with_player(pname, ptitles=[]):
         new_f.__dict__.update(f.__dict__)
         return new_f
     return wrap
+
+# database for tests
+def db_init():
+    db = MySQLdb.connect(host=db_host, db=db_db,
+        read_default_file="~/.my.cnf")
+    #db.autocommit(True) # XXX necessary to coexist with adbapi
+    cursor = db.cursor()
+    cursor.execute("""SET time_zone='+00:00'""")
+    db.set_character_set('utf8')
+    cursor.close()
+    assert(db)
+    return db
+
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

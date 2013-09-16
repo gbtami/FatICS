@@ -28,6 +28,10 @@ ZIPSEAL_PING = '[G]\x00'
 TIMESEAL_PONG = '\x02\x39' # also known as "\x029" or "9"
 
 
+class TimesealError(Exception):
+    pass
+
+
 class Timeseal(object):
     _timeseal_pat = re.compile(r'''^(\d+): (.*)\n$''')
     _zipseal_pat = re.compile(r'''^([0-9a-f]+): (.*)\n$''')

@@ -696,7 +696,7 @@ if 1:
                 black_material=%(black_material)s,
                 when_started=%(when_started)s,
                 when_ended=%(when_ended)s,
-                clock=%(clock)s,
+                clock_id=%(clock_id)s,
                 result=%(result)s,
                 result_reason=%(result_reason)s,
                 draw_offered=%(draw_offered)s,
@@ -707,10 +707,19 @@ if 1:
             return txn.lastrowid
         return adb.runInteraction(do, g)
 
+    @defer.inlineCallbacks
+    def get_clock_id(clock_name):
+        """Get the ID of a clock type, given the name."""
+        rows = yield adb.runQuery("""SELECT clock_id FROM clock
+            WHERE clock_name=%s""", (clock_name,))
+        row = rows[0]
+        defer.returnValue(row['clock_id'])
+
     def get_adjourned(user_id):
         """ Look up adjourned games by the given user."""
         return adb.runQuery("""SELECT game_id,white_user_id,black_user_id,
-                white_clock,black_clock,eco,speed_name,speed_abbrev,variant_name,variant_abbrev,clock,
+                white_clock,black_clock,eco,speed_name,speed_abbrev,
+                variant_name,variant_abbrev,clock.clock_name AS clock_name,
                 game.time AS time,game.inc AS inc,is_rated,
                 adjourn_reason,ply_count,movetext,white_material,black_material,
                 when_started,when_ended,idn,overtime_move_num,
@@ -724,6 +733,7 @@ if 1:
                 LEFT JOIN variant USING(variant_id)
                 LEFT JOIN speed USING(speed_id)
                 LEFT JOIN game_idn USING(game_id)
+                LEFT JOIN clock USING(clock_id)
             WHERE %s IN (white_user_id, black_user_id)
             AND is_adjourned=1""", (user_id,))
 
@@ -1099,7 +1109,7 @@ if 1:
         fen = rows[0]['fen']
         defer.returnValue(fen)
 
-    @defer.inlineCallbacks
+    '''@defer.inlineCallbacks
     def idn_from_fen(fen):
         """Get the idn representing a chess960 position, given a FEN."""
         rows = yield adb.runQuery("""SELECT idn FROM chess960_pos
@@ -1108,7 +1118,7 @@ if 1:
         if row:
             defer.returnValue(row['idn'])
         else:
-            defer.returnValue(None)
+            defer.returnValue(None)'''
 
     def game_add_idn(game_id, idn):
         """Save the idn representing the starting position of a specified

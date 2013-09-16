@@ -326,7 +326,7 @@ class Challenge(Offer, MatchStringParser):
             self.rated = tags['is_rated']
             self.speed_name = tags['speed_name']
             self.variant_name = tags['variant_name']
-            self.clock_name = tags['clock']
+            self.clock_name = tags['clock_name']
             self.time = tags['time']
             self.inc = tags['inc']
             self.idn = tags['idn']

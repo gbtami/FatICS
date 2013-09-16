@@ -401,6 +401,9 @@ class TestDraw(Test):
 
         self.expect('You cannot withdraw a draw offer', t)
 
+        t.write('abo\n')
+        self.expect('aborted', t2)
+
         self.close(t)
         self.close(t2)
 

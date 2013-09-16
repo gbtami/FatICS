@@ -201,8 +201,7 @@ CREATE TABLE `game` (
   `eco` char(5) NOT NULL,
   `speed_id` TINYINT NOT NULL,
   `variant_id` TINYINT NOT NULL,
-  `clock` ENUM('fischer', 'bronstein', 'hourglass', 'overtime', 'untimed')
-    DEFAULT 'fischer',
+  `clock_id` int(4) NOT NULL,
   -- `private` BOOLEAN NOT NULL DEFAULT 0,
   `time` int(3) COMMENT 'initial time',
   `inc` int(3) COMMENT 'increment',
@@ -235,6 +234,14 @@ CREATE TABLE `game` (
   INDEX(`black_user_id`),
   INDEX(`when_ended`),
   PRIMARY KEY (`game_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+DROP TABLE IF EXISTS `clock`;
+CREATE TABLE `clock` (
+  `clock_id` int(8) NOT NULL AUTO_INCREMENT,
+  `clock_name` varchar(16) NOT NULL,
+  PRIMARY KEY (`clock_id`),
+  KEY(`clock_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- ECO codes
@@ -477,7 +484,14 @@ INSERT INTO `server_message` VALUES (NULL,'login',"If you are not a registered p
 INSERT INTO `server_message` VALUES (NULL,'logout',"♙♙♙ Thank you for using FatICS. ♟♟♟\n");
 INSERT INTO `server_message` VALUES (NULL,'full',"Sorry, the server has reached its limit for players logged on at once.\nPlease come back later.\n");
 INSERT INTO `server_message` VALUES (NULL,'full_unreg',"Sorry, the server has reached its limit for guests logged on at once.\nPlease log on using a registered account or come back later.\n");
+UNLOCK TABLES;
 
+LOCK TABLES `clock` WRITE;
+INSERT INTO `clock` VALUES(NULL, 'fischer');
+INSERT INTO `clock` VALUES(NULL, 'bronstein');
+INSERT INTO `clock` VALUES(NULL, 'hourglass');
+INSERT INTO `clock` VALUES(NULL, 'overtime');  # traditional FIDE-style
+INSERT INTO `clock` VALUES(NULL, 'untimed');
 UNLOCK TABLES;
 
 SOURCE db/chess960.sql

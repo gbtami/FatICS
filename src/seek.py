@@ -112,7 +112,7 @@ class Seek(MatchStringParser):
             'is_rated': self.rated,
             'speed_name': self.speed_name,
             'variant_name': self.variant_name,
-            'clock': self.clock_name,
+            'clock_name': self.clock_name,
             'time': self.time,
             'inc': self.inc,
             'idn': self.idn,

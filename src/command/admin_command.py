@@ -201,7 +201,7 @@ class Asetpasswd(Command):
             else:
                 u.set_passwd(passwd)
                 conn.write('Password of %s changed to %s.\n' % (u.name, '*' * len(passwd)))
-                log_admin(adminuser, "changes password of %s" % u.name)
+                log_admin(adminuser, "changed password of %s" % u.name)
                 if u.is_online:
                     u.write_('\n%s has changed your password.\n', (adminuser.name,))
 
