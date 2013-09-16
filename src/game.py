@@ -877,7 +877,7 @@ class PlayedGame(Game):
 
         self.clock.stop()
         if result_code != '*':
-            yield history.history.save_game(self, msg, result_code)
+            yield history.save_game(self, msg, result_code)
             if self.rated:
                 if result_code == '1-0':
                     (white_score, black_score) = (1.0, 0.0)
