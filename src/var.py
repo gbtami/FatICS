@@ -376,6 +376,7 @@ def init_vars():
     #BoolVar("echo", True, N_("You will not hear communications echoed.\n"), N_("You will now not hear communications echoed.\n")).persist().add_as_var()
     BoolVar("examine", False, N_("You will now enter examine mode after a game.\n"), N_("You will now not enter examine mode after a game.\n")).persist().add_as_var()
     BoolVar("mailmess", False, N_("Your messages will be mailed to you.\n"), N_("Your messages will not be mailed to you.\n")).persist().add_as_var()
+    BoolVar("messreply", False, N_("Players can now respond to your messages by email.\n"), N_("Players cannot respond to your messages by email.\n")).persist().add_as_var()
     BoolVar("showownseek", False, N_("You will now see your own seeks.\n"), N_("You will not see your own seeks.\n")).persist().add_as_var()
     BoolVar("pin", False, N_("You will now hear logins/logouts.\n"), N_("You will not hear logins/logouts.\n")).persist().add_as_var().set_hook(_set_pin_var)
     BoolVar("gin", False, N_("You will now hear game results.\n"), N_("You will not hear game results.\n")).persist().add_as_var().set_hook(_set_gin_var)

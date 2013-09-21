@@ -114,6 +114,10 @@ class TestVars(Test):
         self.expect("Your messages will be mailed to you.", t)
         t.write("set mailmess 0\n")
         self.expect("Your messages will not be mailed to you.", t)
+        t.write("set messreply 1\n")
+        self.expect("Players can now respond to your messages by email.", t)
+        t.write("set messreply 0\n")
+        self.expect("Players cannot respond to your messages by email.", t)
 
         t.write("set open 0\n")
         self.expect("no longer receiving match requests", t)

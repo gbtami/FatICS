@@ -20,7 +20,6 @@
 import subprocess
 
 SENDMAIL = "/usr/sbin/sendmail"
-FROM = "FatICS <noreply@fatics.org>"
 
 
 class EmailError(Exception):
@@ -30,8 +29,12 @@ class EmailError(Exception):
 
 def send_mail(fr, to, body):
     subject = "FatICS message from %s (Don't reply by email)" % fr.name
+    if fr.vars['messreply']:
+        fr_str = "%s <%s>" % (fr.name, fr.email)
+    else:
+        fr_str = "FatICS <noreply@fatics.org>"
 
-    message = """From: %s\nTo: %s <%s>\nSubject: %s\n\n%s""" % (FROM,
+    message = """From: %s\nTo: %s <%s>\nSubject: %s\n\n%s""" % (fr_str,
         to.name, to.email, subject, body)
 
     p = subprocess.Popen([SENDMAIL, '-t', '-i'], stdin=subprocess.PIPE)

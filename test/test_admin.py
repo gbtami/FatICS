@@ -994,12 +994,23 @@ class ShutdownTest(Test):
         self.expect_EOF(t)
 
 class FtellTest(Test):
+    @with_player('TestAdmin')
     def test_ftell(self):
         t = self.connect_as_admin()
         t2 = self.connect_as_guest('GuestABCD')
         t3 = self.connect_as_guest('GuestEFGH')
 
+        t.write('asetadmin testadmin 100\n')
+        self.expect('Admin level of TestAdmin set', t)
+        t4 = self.connect_as('TestAdmin')
+
+        self.set_nowrap(t)
+        self.set_nowrap(t4)
+
         t.write("+ch 0\n")
+        self.expect('[0] added', t)
+        t4.write("+ch 0\n")
+        self.expect('[0] added', t4)
 
         t.write('ftell\n')
         self.expect('You were not forwarding a conversation.', t)
@@ -1012,29 +1023,39 @@ class FtellTest(Test):
 
         t.write('ftell guestabcd\n')
         self.expect('admin(*)(0): I will be forwarding the conversation between *GuestABCD* and myself', t)
+        self.expect('admin(*)(0): I will be forwarding the conversation between *GuestABCD* and myself', t4)
 
         t.write('t guestabcd Hello there.\n')
-        self.expect('Fwd tell: admin told GuestABCD: Hello there.', t)
+        self.expect('Fwd tell: admin told GuestABCD: Hello there.', t4)
+        self.expect_not('Fwd tell:', t)
 
         t2.write('t admin Hello yourself.\n')
-        self.expect('Fwd tell: GuestABCD told admin: Hello yourself.', t)
+        self.expect('Fwd tell: GuestABCD told admin: Hello yourself.', t4)
+        self.expect_not('Fwd tell:', t)
 
         t.write('ftell\n')
         self.expect('Stopping the forwarding of the conversation with GuestABCD.', t)
         self.expect('admin(*)(0): I will no longer be forwarding the conversation between *GuestABCD* and myself.', t)
+        self.expect('admin(*)(0): I will no longer be forwarding the conversation between *GuestABCD* and myself.', t4)
 
         t.write('ftell guestabcd\n')
         self.expect('admin(*)(0): I will be forwarding the conversation between *GuestABCD* and myself', t)
+        self.expect('admin(*)(0): I will be forwarding the conversation between *GuestABCD* and myself', t4)
         t.write('ftell guestefgh\n')
         self.expect('admin(*)(0): I will no longer be forwarding the conversation between *GuestABCD* and myself.', t)
+        self.expect('admin(*)(0): I will no longer be forwarding the conversation between *GuestABCD* and myself.', t4)
         self.expect('admin(*)(0): I will be forwarding the conversation between *GuestEFGH* and myself', t)
+        self.expect('admin(*)(0): I will be forwarding the conversation between *GuestEFGH* and myself', t4)
 
         t.write("-ch 0\n")
         self.expect('[0] removed', t)
+        t4.write("-ch 0\n")
+        self.expect('[0] removed', t4)
 
         self.close(t)
         self.close(t2)
         self.close(t3)
+        self.close(t4)
 
     @with_player('TestAdmin')
     def test_ftell_logout(self):
@@ -1045,6 +1066,9 @@ class FtellTest(Test):
 
         t2 = self.connect_as('TestAdmin')
         t3 = self.connect_as_guest('GuestABCD')
+
+        self.set_nowrap(t)
+        self.set_nowrap(t2)
 
         t2.write('+ch 0\n')
         t2.write('ftell guestabcd\n')

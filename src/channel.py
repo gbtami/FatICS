@@ -44,7 +44,7 @@ class Channel(object):
             self.topic = params['topic']
             self.topic_who_name = params['topic_who_name']
             self.topic_when = params['topic_when']
-        self.online = []
+        self.online = set()
 
     def tell(self, msg, user):
         #if user.is_chmuzzled:
@@ -74,7 +74,7 @@ class Channel(object):
             u.write(msg)
 
     def log_on(self, user):
-        self.online.append(user)
+        self.online.add(user)
         if self.topic:
             if user.last_logout is None or self.topic_when > user.last_logout:
                 self.show_topic(user)
@@ -154,7 +154,7 @@ class Channel(object):
             raise list_.ListError(_('[%s] is already on your channel list.\n') %
                 self.id_)
 
-        self.online.append(user)
+        self.online.add(user)
         yield user.add_channel(self.id_)
 
         # channels above 1024 may be claimed by a user simply

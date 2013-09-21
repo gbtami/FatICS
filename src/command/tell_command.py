@@ -113,7 +113,7 @@ class TellCommand(Command, ToldMixin):
                     (conn.user.get_display_name(), args[1]))
                 self._told(u, conn)
                 if u.session.ftell == conn.user or conn.user.session.ftell == u:
-                    for adm in global_.channels[0].online:
+                    for adm in (global_.channels[0].online - set((conn.user, u))):
                         if adm.hears_channels():
                             adm.write(A_("Fwd tell: %s told %s: %s\n") % (conn.user.name, u.name, args[1]))
 
