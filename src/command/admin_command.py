@@ -199,7 +199,7 @@ class Asetpasswd(Command):
             elif not user.is_legal_passwd(passwd):
                 conn.write('"%s" is not a valid password.\n' % passwd)
             else:
-                u.set_passwd(passwd)
+                yield u.set_passwd(passwd)
                 conn.write('Password of %s changed to %s.\n' % (u.name, '*' * len(passwd)))
                 log_admin(adminuser, "changed password of %s" % u.name)
                 if u.is_online:
