@@ -421,13 +421,13 @@ def init_ivars():
     BoolVar("startpos", False).add_as_ivar(5)
     BoolVar("block", False).add_as_ivar(6)
     BoolVar("gameinfo", False).add_as_ivar(7)
-    BoolVar("xdr", False).add_as_ivar(8) # ignored
+    BoolVar("xdr", False).add_as_ivar(8) # ignored, possibly related to xml
     BoolVar("pendinfo", False).add_as_ivar(9)
     BoolVar("graph", False).add_as_ivar(10)
     BoolVar("seekinfo", False).add_as_ivar(11)
     BoolVar("extascii", False).add_as_ivar(12)
     BoolVar("nohighlight", False).add_as_ivar(13)
-    BoolVar("highlight", False).add_as_ivar(14)
+    BoolVar("vthighlight", False).add_as_ivar(14)
     BoolVar("showserver", False).add_as_ivar(15)
     BoolVar("pin", False).add_as_ivar(16).set_hook(_set_pin_ivar)
     BoolVar("ms", False).add_as_ivar(17)
@@ -449,9 +449,8 @@ def init_ivars():
     BoolVar("obsping", False).add_as_ivar(33) # ignored
     BoolVar("singleboard", False).add_as_ivar(34)
 
-    # These do not seem to have numbers.
+    # This one does not seem to have a number.
     BoolVar("atomic", True).add_as_ivar()
-    BoolVar("vthighlight", False).add_as_ivar()
 
     # The original FICS ivariables command displays "xml=0", but
     # does not allow setting an xml ivariable.
