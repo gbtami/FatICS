@@ -261,4 +261,91 @@ class Draw(Offer):
         if notify:
             self.a.write(_('You cannot withdraw a draw offer.\n'))
 
+
+class Takeback(Offer):
+    def __init__(self, game, user, ply):
+        Offer.__init__(self, 'takeback request')
+
+        self.a = user
+        self.b = game.get_opp(user)
+        self.game = game
+        self.ply = ply
+
+    @defer.inlineCallbacks
+    def finish_init(self, game, user, ply):
+        a_sent = self.a.session.offers_sent
+        b_sent = self.b.session.offers_sent
+        a_received = self.a.session.offers_received
+        b_received = self.b.session.offers_received
+
+        if game.variant.pos.ply == 0:
+            user.write(_('There are no moves in your game.\n'))
+            return
+        if ply > game.variant.pos.ply:
+            user.write_('There are only %d half moves in your game.\n',
+                (game.variant.pos.ply,))
+            return
+        if game.variant.name == 'bughouse':
+            user.write(_('Takeback is not allowed in bughouse.\n'))
+            return
+
+        offers = [o for o in game.pending_offers if o.name == self.name]
+        if len(offers) > 1:
+            raise RuntimeError('more than one takeback offer in game %d'
+                % game.number)
+        if len(offers) > 0:
+            o = offers[0]
+            if o.a == self.a:
+                if o.ply == self.ply:
+                    user.write_('You are already offering to takeback the last %d half move(s).\n',
+                        (o.ply,))
+                    return
+                else:
+                    o.withdraw(notify=False)
+                    user.write(_('Updated takeback request sent.\n'))
+                    self.b.write(_('\nUpdated takeback request received.\n'))
+            else:
+                if o.ply == self.ply:
+                    yield o.accept()
+                    return
+                else:
+                    user.write(_('You disagree on the number of half-moves to take back.\n'))
+                    game.pending_offers.append(self)
+                    user.write(_('Alternate takeback request sent.\n'))
+                    self.b.write_('\n%s proposes a different number (%d) of half-move(s).\n',
+                        (user.name, self.ply))
+                    for p in self.game.observers:
+                        p.write_('\nGame %d: %s proposes a different number (%d) of half-move(s) to take back.\n',
+                                 (game.number, user.name, self.ply))
+
+                    o.decline(notify=False)
+                    self._register()
+                    self.pendinfo('takeback', '%d' % self.ply)
+                    return
+
+        game.pending_offers.append(self)
+        user.write(_('Takeback request sent.\n'))
+        self.b.write_('\n%s would like to take back %d half move(s).\n',
+            (user.name, self.ply))
+        for p in self.game.observers:
+            p.write_('\nGame %d: %s requests to take back %d half move(s).\n',
+                (game.number, user.name, self.ply))
+
+        self._register()
+        self.pendinfo('takeback', '%d' % self.ply)
+
+    @defer.inlineCallbacks
+    def accept(self):
+        Offer.accept(self)
+        self.game.pending_offers.remove(self)
+        yield self.game.takeback(self.ply)
+
+    def decline(self, notify=True):
+        Offer.decline(self, notify)
+        self.game.pending_offers.remove(self)
+
+    def withdraw(self, notify=True):
+        Offer.withdraw(self, notify)
+        self.game.pending_offers.remove(self)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

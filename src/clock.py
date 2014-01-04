@@ -100,6 +100,12 @@ class Clock(object):
             ret -= time.time() - self.started_time
         return ret
 
+    def set_white_time(self, white_time):
+        self._white_time = white_time
+
+    def set_black_time(self, black_time):
+        self._black_time = black_time
+
     @defer.inlineCallbacks
     def check_flag(self, game, side):
         """Check the flag of the given side.  Return True if the flag

@@ -525,6 +525,7 @@ class PlayedGame(Game):
             for san_mv in moves:
                 mv = self.variant.pos.move_from_san(san_mv)
                 mv.time = 0.0 # XXX
+                mv.clock_time = None # XXX
                 self.variant.do_move(mv)
 
         assert(self.white.session.game is None)
@@ -783,6 +784,10 @@ class PlayedGame(Game):
 
         assert(mv == self.variant.pos.get_last_move())
         mv.time = time
+        if self.variant.get_turn() == WHITE:
+            mv.clock_time = self.clock.get_black_time()
+        else:
+            mv.clock_time = self.clock.get_white_time()
 
         super(PlayedGame, self).next_move(mv, conn)
         p = self.get_user_to_move()
@@ -936,6 +941,41 @@ class PlayedGame(Game):
         for p in self.observers:
             p.write_("%(uname)s has added %(secs)d seconds to %(oname)s's clock.\n",
                 {'uname': u.name, 'secs': secs, 'oname': opp.name})
+        self.send_boards()
+
+    def takeback(self, ply):
+        """ Players agree to take back the last "ply" moves,
+        returning the board and clock to their previous states. """
+        if self.variant.pos.ply < ply:
+            raise RuntimeError('attempt to takeback %(takebacks)d moves in game %(game)d (which has only %(moves)d moves)' %
+                {'game': self.number, 'moves': self.variant.pos.ply, 'takebacks': ply})
+        if self.variant.name == 'bughouse':
+            raise RuntimeError('attempt to takeback in bughouse game %d' % self.number)
+
+        # Undo to just after the first taken back move
+        for i in range(ply - 1):
+            self.variant.undo_move()
+
+        self.clock.stop()
+        last_clock = self.variant.pos.get_last_move().clock_time
+        if self.variant.pos.ply == 1:
+            other_clock = self.initial_secs
+        else:
+            other_clock = self.variant.pos.history.get_move(self.variant.pos.ply - 2).clock_time
+        if last_clock is not None and other_clock is not None:
+            if self.variant.pos.wtm:
+                self.clock.set_white_time(other_clock)
+                self.clock.set_black_time(last_clock)
+            else:
+                self.clock.set_white_time(last_clock)
+                self.clock.set_black_time(other_clock)
+
+        # Undo the first taken back move
+        self.variant.undo_move()
+        # If takeback in bughouse is implemented:
+        # if self.variant.pos.ply > 1 or self.variant.name == 'bughouse':
+        if self.variant.pos.ply > 1:
+            self.clock.start(self.variant.get_turn())
         self.send_boards()
 
     def allobservers(self, conn):

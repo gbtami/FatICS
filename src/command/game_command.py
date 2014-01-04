@@ -185,6 +185,22 @@ class Moretime(Command, GameMixin):
                 g.moretime(secs, conn.user)
 
 
+@ics_command('takeback', 'p')
+class Takeback(Command, GameMixin):
+    @defer.inlineCallbacks
+    def run(self, args, conn):
+        g = self._get_played_game(conn)
+        if g:
+            ply = args[0]
+            if ply is None:
+                ply = 1
+            elif ply < 1:
+                conn.write(_("You can't takeback less than 1 move.\n"))
+                return
+            o = offer.Takeback(g, conn.user, ply)
+            yield o.finish_init(g, conn.user, ply)
+
+
 @ics_command('flag', '')
 class Flag(Command):
     @defer.inlineCallbacks
