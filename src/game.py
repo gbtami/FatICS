@@ -845,6 +845,21 @@ class PlayedGame(Game):
                     else:
                         yield self.bug_link.result('%s checkmated'
                             % self.bug_link.black_name, '1-0')
+        elif self.variant.name == 'suicide':
+            if self.variant.pos.is_suicide:
+                if self.variant.get_turn() == WHITE:
+                    yield self.result('%s wins by losing all material' % self.white_name, '1-0')
+                else:
+                    yield self.result('%s wins by losing all material' % self.black_name, '0-1')
+            elif self.variant.pos.is_stalemate:
+                if self.variant.pos.is_stalemate_white:
+                    yield self.result('%s wins by having less material (stalemate)' % self.white_name, '1-0')
+                elif self.variant.pos.is_stalemate_black:
+                    yield self.result('%s wins by having less material (stalemate)' % self.black_name, '0-1')
+                else:
+                    yield self.result('Game drawn by stalemate (equal material)', '1/2-1/2')
+            elif self.variant.pos.is_draw_bishops:
+                yield self.result('Game drawn by stalemate (opposite color bishops)', '1/2-1/2')
         else:
             if self.variant.pos.is_checkmate:
                 if self.variant.get_turn() == WHITE:

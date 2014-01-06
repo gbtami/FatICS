@@ -179,7 +179,7 @@ class Who(Command):
         #lightning = speed_variant.from_names('lightning', 'chess')
         #zh = speed_variant.from_names('blitz', 'crazyhouse')
         #fr = speed_variant.from_names('blitz', 'chess960')
-        #suicide = speed_variant.from_names('blitz', 'chess960')
+        #suicide = speed_variant.from_names('blitz', 'suicide')
         #bughouse = speed_variant.from_names('blitz', 'bughouse')
         if sort_order == 's':
             compare = lambda p: int(p.get_rating(speed_variant.standard_chess))
@@ -195,8 +195,7 @@ class Who(Command):
             # hack: in original fics this means wild, but it now means chess960
             compare = lambda p: int(p.get_rating(speed_variant.blitz_chess960))
         elif sort_order == 'S':
-            # XXX suicide
-            conn.write('TODO: suicide\n')
+            compare = lambda p: int(p.get_rating(speed_variant.blitz_suicide))
             return
         elif sort_order == 'A':
             compare = lambda p: p.name
