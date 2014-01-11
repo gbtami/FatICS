@@ -168,11 +168,11 @@ CREATE TABLE `user_title` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- history
--- each registered player has a history game history, numbered 0 to 99
+-- each registered player has a game history, numbered 0 to 99
 DROP TABLE IF EXISTS `history`;
 CREATE TABLE `history` (
   `user_id` int(8) NOT NULL,
-  `num` tinyint(2) NOT NULL COMMENT 'history numbe,r 0-99',
+  `num` tinyint(2) NOT NULL COMMENT 'history number 0-99',
   `game_id` int(8) NOT NULL,
   `guest_opp_name` VARCHAR(17) COMMENT 'opponent name if a guest',
   INDEX(`user_id`),

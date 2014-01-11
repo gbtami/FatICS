@@ -29,6 +29,12 @@ System requirements
 * (optional) Mercurial, if you want to check out the latest versions
   from Bitbucket
 
+On a Debian-based system, a command like
+
+sudo apt-get install mercurial python-mysqldb python-bcrypt python-tz python-openssl python-netaddr gettext zlib1g-dev
+
+should be sufficient to install the above dependencies.
+
 Installation
 ------------
 
