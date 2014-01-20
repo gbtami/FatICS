@@ -23,7 +23,7 @@ import copy
 import game
 import speed_variant
 import clock
-import parser
+import parser_ as parser
 import formula
 import global_
 

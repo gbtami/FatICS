@@ -18,7 +18,7 @@
 #
 
 from .command import ics_command, Command
-from parser import BadCommandError
+from parser_ import BadCommandError
 
 import time_format
 import speed_variant

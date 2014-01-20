@@ -32,7 +32,7 @@ import global_
 from twisted.internet import defer
 
 from .command import ics_command, Command
-from parser import BadCommandError
+from parser_ import BadCommandError
 
 from game_constants import EXAMINED, PLAYED
 

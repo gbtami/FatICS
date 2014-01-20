@@ -22,7 +22,7 @@ import datetime
 from twisted.internet import reactor, defer
 
 import user
-import parser
+import parser_
 import global_
 import admin
 import speed_variant
@@ -35,7 +35,7 @@ import logger
 
 from reload import reload
 from .command import Command, ics_command
-from parser import BadCommandError
+from parser_ import BadCommandError
 
 
 def log_admin(admin, action):
@@ -338,7 +338,7 @@ class Pose(Command):
                 conn.write(A_('Command issued as %s.\n') % u2.name)
                 log_admin(adminuser, 'issues command as %s: %s' % (u2.name, args[1]))
                 u2.write_('%s has issued the following command on your behalf: %s\n', (adminuser.name, args[1]))
-                parser.parse(args[1], u2.session.conn)
+                parser_.parse(args[1], u2.session.conn)
 
 
 @ics_command('asetv', 'wwS', admin.Level.admin)

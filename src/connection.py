@@ -24,7 +24,7 @@ from twisted.internet import reactor, defer, task, interfaces
 from zope.interface import implements
 
 import telnet
-import parser
+import parser_ as parser
 import global_
 import login
 import utf8
