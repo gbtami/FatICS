@@ -10,11 +10,11 @@ TWISTD="$PYTHON /usr/bin/twistd"
 case "$1" in
   start)
     echo "Starting chessd...."
-    $TWISTD --logfile $LOGFILE --pidfile $PIDFILE -r epoll -oy src/chessd.tac
+    $TWISTD --logfile $LOGFILE --pidfile $PIDFILE -oy src/chessd.tac
     ;;
   run)
     echo "Running chessd in the foreground...."
-    $TWISTD --pidfile $PIDFILE -r epoll -noy src/chessd.tac
+    $TWISTD --pidfile $PIDFILE -noy src/chessd.tac
     ;;
   test)
     echo "Running test suite...."
@@ -52,7 +52,7 @@ case "$1" in
     ;;
   profile)
     echo "Running chessd in profile mode...."
-    $TWISTD --logfile $LOGFILE --profile profile-chessd.data --savestats --profiler cProfile -r epoll -noy src/chessd.tac
+    $TWISTD --logfile $LOGFILE --profile profile-chessd.data --savestats --profiler cProfile -noy src/chessd.tac
     ;;
   stop)
     if [ -f $PIDFILE ]; then

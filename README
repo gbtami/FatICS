@@ -25,14 +25,16 @@ System requirements
 * The python-openssl (pyOpenSSL) module
 * GNU gettext
 * (optional) The pexpect module, for timeseal/zipseal tests
-* (optional) sockjs-twisted, for html5 web clients. http://sockjs.org/
+* (optional) sockjs-twisted (aka txsockjs), for html5 web clients.
+  http://sockjs.org/
 * (optional) Mercurial, if you want to check out the latest versions
   from Bitbucket
 
 On a Debian-based system,
 
-apt-get install mercurial python-mysqldb python-tz python-openssl python-netaddr gettext zlib1g-dev python-dev python-pip
+apt-get install mercurial python-twisted mysql-server python-mysqldb python-tz python-openssl python-netaddr gettext zlib1g-dev python-dev python-pip
 pip install bcrypt
+pip install txsockjs
 
 should be sufficient to install the above dependencies. (The python-bcrypt
 package was removed from Debian, hence the need to install and run pip.)
