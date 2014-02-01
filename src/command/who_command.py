@@ -24,7 +24,7 @@ import time_format
 import speed_variant
 import global_
 
-from game_constants import PLAYED
+from game_constants import PLAYED, EXAMINED
 
 
 @ics_command('showadmins', '')
@@ -222,7 +222,7 @@ class Who(Command):
                     # XXX ~ means simul
                     if u.session.game.gtype == PLAYED:
                         status = '^'
-                    elif u.session.game.gtype == PLAYED:
+                    elif u.session.game.gtype == EXAMINED:
                         status = '#'
                     else:
                         # XXX

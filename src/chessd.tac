@@ -88,8 +88,7 @@ def start_services(x):
         key = open('keys/server.key')
         cert = open('keys/server.pem')
     except IOError:
-        # no ssl
-        pass
+        print('Unable to read server keys; SSL support disabled')
     else:
         cert = ssl.PrivateCertificate.loadPEM(key.read() + cert.read())
         ssl_port = config.ssl_port

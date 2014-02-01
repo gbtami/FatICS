@@ -21,8 +21,10 @@ import re
 
 from twisted.internet import defer
 
+
 class BadCommandError(Exception):
     pass
+
 
 class InternalException(Exception):
     pass

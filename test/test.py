@@ -250,12 +250,12 @@ def with_player(pname, ptitles=[]):
 def db_init():
     db = MySQLdb.connect(host=db_host, db=db_db,
         read_default_file="~/.my.cnf")
+    assert(db)
     #db.autocommit(True) # XXX necessary to coexist with adbapi
     cursor = db.cursor()
     cursor.execute("""SET time_zone='+00:00'""")
     db.set_character_set('utf8')
     cursor.close()
-    assert(db)
     return db
 
 
