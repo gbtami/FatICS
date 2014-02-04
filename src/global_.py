@@ -68,8 +68,9 @@ var_defaults = var.Defaults()
 lists = trie.Trie()
 admin_lists = trie.Trie()
 
-# filters: will be initialized by filter_.init()
+# filters and gaetways: will be initialized by filter_.init()
 filters = None
+gateways = None
 
 # langauages
 langs = lang.get_langs()

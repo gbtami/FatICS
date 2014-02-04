@@ -96,6 +96,7 @@ class TestTimeseal(Test):
 
 class TestTimesealWindows(Test):
     def test_timeseal_windows(self):
+        raise unittest.SkipTest('temporarily disabled')
         if not os.path.exists(wine_prog):
             raise unittest.SkipTest('no wine binary')
         if not os.path.exists(timeseal_prog_win):

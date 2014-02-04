@@ -17,7 +17,6 @@
 #
 
 import time
-import re
 
 from twisted.protocols import basic
 from twisted.internet import reactor, defer, task, interfaces
@@ -53,7 +52,6 @@ class Connection(basic.LineReceiver):
     user = None
     logged_in_again = False
     buffer_output = False
-    ivar_pat = re.compile(r'%b([01]{32})')
     timeout_check = None
     # current defer.Deferred in progress
     d = None
@@ -183,12 +181,8 @@ class Connection(basic.LineReceiver):
                         self.write("unknown zipseal version\n")
                         self.loseConnection('zipseal error')
 
-        m = self.ivar_pat.match(line)
-        if m:
-            self.session.set_ivars_from_str(m.group(1))
-            return
-        name = line.strip()
-        u = yield login.get_user(name, self)
+        u = yield login.got_line(line, self)
+
         if self.state != 'quitting':
             if self.state != 'login':
                 print('expected login state, but got %s' % self.state)

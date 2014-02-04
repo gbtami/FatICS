@@ -21,7 +21,7 @@ from twisted.internet import defer
 import filter_
 import global_
 import find_user
-
+import admin
 import db
 
 """ The list design is intentionally kept simple, at the cost of
@@ -50,8 +50,8 @@ class MyList(object):
         if is_public:
             global_.lists[name.lower()] = self
 
-    def _require_admin(self, user):
-        if not user.is_admin():
+    def _require_admin(self, user, level=None):
+        if not user.is_admin(level):
             raise ListError(_("You don't have permission to do that.\n"))
 
 
@@ -500,6 +500,26 @@ class FilterList(MyList):
         conn.write('%s\n' % ' '.join(filterlist))
 
 
+class GatewayList(MyList):
+    @defer.inlineCallbacks
+    def add(self, item, conn):
+        self._require_admin(conn.user, admin.level.god)
+        yield filter_.add_gateway(item, conn)
+
+    @defer.inlineCallbacks
+    def sub(self, item, conn):
+        self._require_admin(conn.user, admin.level.god)
+        yield filter_.remove_gateway(item, conn)
+
+    def show(self, conn):
+        self._require_admin(conn.user)
+        gwlist = global_.gateways
+        conn.write(ngettext('-- gateway list: %d IP --\n',
+            '-- gateway list: %d IPs --\n', len(gwlist)) % len(gwlist))
+        conn.write('%s\n' % ' '.join(gwlist))
+        return defer.succeed(None)
+
+
 class NotebanList(SystemUserList):
     def __init__(self, name):
         super(NotebanList, self).__init__(name, is_public=False)
@@ -623,6 +643,7 @@ def init_lists():
     NoplayList("noplay")
     BanList("ban")
     FilterList("filter")
+    GatewayList("gateway")
     MuzzleList("muzzle")
     CmuzzleList("cmuzzle")
     NotebanList("noteban")

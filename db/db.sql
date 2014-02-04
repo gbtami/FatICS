@@ -188,6 +188,15 @@ CREATE TABLE `ip_filter` (
   UNIQUE KEY (`filter_pattern`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+-- gateways trusted to set a different IP
+DROP TABLE IF EXISTS `ip_gateway`;
+CREATE TABLE `ip_gateway` (
+  `gateway_id` int(4) NOT NULL AUTO_INCREMENT,
+  `ip` VARCHAR(61) NOT NULL,
+  PRIMARY KEY (`gateway_id`),
+  UNIQUE KEY (`ip`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 -- game
 -- This table could be very large.
 -- TODO: store overtime_move_num and overtime_bonus in a separate table?

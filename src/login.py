@@ -21,16 +21,52 @@ import filter_
 import global_
 import find_user
 import config
+import re
 
 from twisted.internet import defer
+
+ivar_pat = re.compile(r'^%b([01]{32})')
+# TODO: change to however FICS does this
+host_pat = re.compile(r'^%h(\d+\.\d+\.\d+\.\d+)')
+# I'm not sure if any clients use it, but FICS quits on this command
+quit_pat = re.compile(r'^%q')
+
+
+@defer.inlineCallbacks
+def got_line(line, conn):
+    line = line.strip()
+    if line == '':
+        defer.returnValue(None)
+    if line[0] == '%':
+        m = ivar_pat.match(line)
+        if m:
+            conn.session.set_ivars_from_str(m.group(1))
+            defer.returnValue(None)
+
+        m = quit_pat.match(line)
+        if m:
+            conn.loseConnection('client quit')
+            defer.returnValue(None)
+
+        m = host_pat.match(line)
+        if m:
+            if conn.ip in global_.gateways:
+                print('setting IP to %s on behalf of %s' % (m.group(1), conn.ip))
+                conn.ip = m.group(1)
+            else:
+                print('not setting IP for %s because it is not in the gateway list' % conn.ip)
+            defer.returnValue(None)
+
+        defer.returnValue(None)
+
+    u = yield _get_user(line, conn)
+    defer.returnValue(u)
 
 
 # return a user object if one exists; otherwise make a
 # guest user
-
-
 @defer.inlineCallbacks
-def get_user(name, conn):
+def _get_user(name, conn):
     u = None
     # Currently there is no way to set the langauge at the login
     # login prompt, but maybe that could change with a %lang or so.

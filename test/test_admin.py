@@ -540,6 +540,56 @@ class FilterTest(Test):
 
         self.close(t)'''
 
+
+class GatewayTest(Test):
+    def test_gateway(self):
+        t = self.connect_as_admin()
+        t.write('+gateway foobar\n')
+        self.expect('Invalid gateway IP.', t)
+
+        t.write('+gateway 127.0.0.1\n')
+        self.expect('127.0.0.1 added to the gateway list.', t)
+
+        t.write('+gateway 127.0.0.1\n')
+        self.expect('127.0.0.1 is already on the gateway list.', t)
+
+        t.write('-gateway 127.0.0.1\n')
+        self.expect('127.0.0.1 removed from the gateway list.', t)
+
+        t.write('-gateway 127.0.0.1\n')
+        self.expect('127.0.0.1 is not on the gateway list.', t)
+
+        t.write('+gateway 127.0.0.1\n')
+        self.expect('127.0.0.1 added to the gateway list.', t)
+
+        t2 = self.connect()
+        t2.write('%h192.168.0.1\n')
+        t2.write('GuestLocal\n')
+        self.expect('is not a registered name', t2)
+        t2.write('\n')
+        self.expect('fics%', t2)
+
+        t.write('f guestlocal\n')
+        self.expect_re('Host: +192.168.0.1', t)
+
+        self.close(t2)
+
+        t.write('-gateway 127.0.0.1\n')
+        self.expect('127.0.0.1 removed from the gateway list.', t)
+
+        t2 = self.connect()
+        t2.write('%h192.168.0.1\n')
+        t2.write('GuestLocal\n')
+        self.expect('is not a registered name', t2)
+        t2.write('\n')
+        self.expect('fics%', t2)
+
+        t.write('f guestlocal\n')
+        self.expect_re('Host: +127.0.0.1', t)
+
+        self.close(t)
+        self.close(t2)
+
 class MuzzleTest(Test):
     @with_player('TestPlayer')
     def test_muzzle(self):
@@ -600,6 +650,22 @@ class MuzzleTest(Test):
         self.expect('Only registered players can be muzzled.', t)
         self.close(t)
         self.close(t2)
+
+
+class LoginQuitTest(Test):
+    def test_login_invalid_command(self):
+        t = self.connect()
+        self.expect('login: ', t)
+        t.write('%a\n')
+        self.expect('login: ', t)
+        t.close()
+
+    def test_login_quit(self):
+        t = self.connect()
+        self.expect('login: ', t)
+        t.write('%q\n')
+        self.expect_EOF(t)
+
 
 class CmuzzleTest(Test):
     @with_player('TestPlayer')
