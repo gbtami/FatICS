@@ -26,6 +26,11 @@ class Partner(Offer):
     def __init__(self, a, b):
         Offer.__init__(self, 'partnership request')
 
+        # block offers from guests if the recipient does not allow tells
+        # from guests, to reduce spam
+        if a.is_guest and not b.vars_['tell']:
+            a.write(_('''Player "%s" isn't listening to unregistered users' tells.\n''' % b.name))
+            return
         # check for existing offers
         a_sent = a.session.offers_sent
         b_sent = b.session.offers_sent
