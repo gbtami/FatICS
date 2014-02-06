@@ -88,7 +88,7 @@ class Connection(basic.LineReceiver):
             # the string "freechess.org" must appear somewhere in this message;
             # otherwise, Babas will refuse to connect
             self.write('You are connected to the backwards-compatibility port for old FICS clients.\nYou will not be able to use zipseal or international characters.\nThis server is not endorsed by freechess.org.\n\n')
-        self.write("login: ")
+        login.send_login_prompt(self)
 
     def lineLengthExceeded(self, line):
         name = self.user.name if self.user else self.ip
@@ -173,8 +173,6 @@ class Connection(basic.LineReceiver):
                 self.state = 'passwd'
                 # hide password
                 self.transport.will(telnet.ECHO)
-            else:
-                self.write("\nlogin: ")
 
     @defer.inlineCallbacks
     def handleLine_passwd(self, line):

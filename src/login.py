@@ -38,34 +38,36 @@ quit_pat = re.compile(r'^%q')
 def got_line(line, conn):
     # Check for timeseal hello. Note that this can be sent after other commands
     # at the login prompt.
-    if not conn.session.use_timeseal or conn.session.use_zipseal:
-        (t, dec) = timeseal.decode_timeseal(line)
-        if t > 0:
+    (t, dec) = timeseal.decode_timeseal(line)
+    if t > 0:
+        if not conn.session.use_timeseal:
             # sets use_timeseal if appropriate
             if timeseal.check_hello(dec, conn):
                 pass
             else:
-                conn.write("unknown timeseal version\n")
+                conn.write('unknown timeseal version\n')
                 conn.loseConnection('timeseal error')
             return
-        else:
-            (t, dec) = timeseal.decode_zipseal(line)
-            if t > 0:
+        line = dec
+    else:
+        (t, dec) = timeseal.decode_zipseal(line)
+        if t > 0:
+            if not conn.session.use_zipseal:
                 if timeseal.check_hello_zipseal(dec, conn):
                     if conn.transport.compatibility:
                         conn.loseConnection('Sorry, you cannot use zipseal with the compatibility port.')
                 else:
-                    conn.write("unknown zipseal version\n")
+                    conn.write('unknown zipseal version\n')
                     conn.loseConnection('zipseal error')
                 return
+            line = dec
 
     line = line.strip()
-    if line == '':
-        defer.returnValue(None)
-    if line[0] == '%':
+    if line and line[0] == '%':
         m = ivar_pat.match(line)
         if m:
             conn.session.set_ivars_from_str(m.group(1))
+            send_login_prompt(conn)
             defer.returnValue(None)
 
         m = quit_pat.match(line)
@@ -80,12 +82,19 @@ def got_line(line, conn):
                 conn.ip = m.group(1)
             else:
                 print('not setting IP for %s because it is not in the gateway list' % conn.ip)
+            send_login_prompt(conn)
             defer.returnValue(None)
 
+        send_login_prompt(conn)
         defer.returnValue(None)
 
     u = yield _get_user(line, conn)
+    send_login_prompt(conn)
     defer.returnValue(u)
+
+
+def send_login_prompt(conn):
+    conn.write("\nlogin: ")
 
 
 # return a user object if one exists; otherwise make a

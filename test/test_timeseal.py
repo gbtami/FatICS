@@ -34,6 +34,7 @@ class TestTimeseal(Test):
             raise unittest.SkipTest('no timeseal binary')
         t = self.connect_as_guest('GuestABCD')
 
+
         try:
             import pexpect
         except ImportError:
@@ -41,7 +42,12 @@ class TestTimeseal(Test):
 
         process = pexpect.spawn(timeseal_prog, [host, str(compatibility_port)])
 
-        process.expect_exact('login:')
+        process.expect_exact('login: ')
+
+        process.send('%b00000000000000000000000000000000000\n')
+        process.expect_exact('Ivars set.')
+        process.expect_exact('login: ')
+
         process.send('admin\n')
         process.send('%s\n' % admin_passwd)
 
