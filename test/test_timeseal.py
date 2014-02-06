@@ -34,7 +34,6 @@ class TestTimeseal(Test):
             raise unittest.SkipTest('no timeseal binary')
         t = self.connect_as_guest('GuestABCD')
 
-
         try:
             import pexpect
         except ImportError:

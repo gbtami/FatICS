@@ -68,12 +68,12 @@ def got_line(line, conn):
         if m:
             conn.session.set_ivars_from_str(m.group(1))
             send_login_prompt(conn)
-            defer.returnValue(None)
+            return
 
         m = quit_pat.match(line)
         if m:
             conn.loseConnection('client quit')
-            defer.returnValue(None)
+            return
 
         m = host_pat.match(line)
         if m:
@@ -83,13 +83,14 @@ def got_line(line, conn):
             else:
                 print('not setting IP for %s because it is not in the gateway list' % conn.ip)
             send_login_prompt(conn)
-            defer.returnValue(None)
+            return
 
         send_login_prompt(conn)
-        defer.returnValue(None)
+        return
 
     u = yield _get_user(line, conn)
-    send_login_prompt(conn)
+    if not u:
+        send_login_prompt(conn)
     defer.returnValue(u)
 
 
