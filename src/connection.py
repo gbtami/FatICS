@@ -161,25 +161,6 @@ class Connection(basic.LineReceiver):
         self.timeout_check.cancel()
         self.timeout_check = reactor.callLater(config.login_timeout,
             self.login_timeout)
-        if self.session.check_for_timeseal:
-            self.session.check_for_timeseal = False
-            (t, dec) = timeseal.decode_timeseal(line)
-            if t > 0:
-                if timeseal.check_hello(dec, self):
-                    return
-                else:
-                    self.write("unknown timeseal version\n")
-                    self.loseConnection('timeseal error')
-            else:
-                (t, dec) = timeseal.decode_zipseal(line)
-                if t > 0:
-                    if timeseal.check_hello_zipseal(dec, self):
-                        if self.transport.compatibility:
-                            self.loseConnection('Sorry, you cannot use zipseal with the compatibility port.')
-                        return
-                    else:
-                        self.write("unknown zipseal version\n")
-                        self.loseConnection('zipseal error')
 
         u = yield login.got_line(line, self)
 

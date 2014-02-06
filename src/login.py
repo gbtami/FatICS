@@ -16,12 +16,14 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import re
+
 import user
 import filter_
 import global_
 import find_user
 import config
-import re
+from timeseal import timeseal
 
 from twisted.internet import defer
 
@@ -34,6 +36,29 @@ quit_pat = re.compile(r'^%q')
 
 @defer.inlineCallbacks
 def got_line(line, conn):
+    # Check for timeseal hello. Note that this can be sent after other commands
+    # at the login prompt.
+    if not conn.session.use_timeseal or conn.session.use_zipseal:
+        (t, dec) = timeseal.decode_timeseal(line)
+        if t > 0:
+            # sets use_timeseal if appropriate
+            if timeseal.check_hello(dec, conn):
+                pass
+            else:
+                conn.write("unknown timeseal version\n")
+                conn.loseConnection('timeseal error')
+            return
+        else:
+            (t, dec) = timeseal.decode_zipseal(line)
+            if t > 0:
+                if timeseal.check_hello_zipseal(dec, conn):
+                    if conn.transport.compatibility:
+                        conn.loseConnection('Sorry, you cannot use zipseal with the compatibility port.')
+                else:
+                    conn.write("unknown zipseal version\n")
+                    conn.loseConnection('zipseal error')
+                return
+
     line = line.strip()
     if line == '':
         defer.returnValue(None)

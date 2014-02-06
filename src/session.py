@@ -37,7 +37,6 @@ class Session(object):
         self.conn = conn
         self.use_timeseal = False
         self.use_zipseal = False
-        self.check_for_timeseal = True
         self.ivars = global_.var_defaults.get_default_ivars()
         self.closed = False
 
