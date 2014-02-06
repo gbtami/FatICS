@@ -110,8 +110,7 @@ class ExaminedGame(Game):
         # Trust the stored result, rather than using mates we detected,
         # ourselves, since we can't compute things like resignation and
         # agreed draws.
-        if self.variant.pos.ply >= len(self.moves):
-            assert(self.result_code)
+        if self.result_code and self.variant.pos.ply == len(self.moves):
             self.result(self._result_msg(self.result_reason, self.result_code),
                 self.result_code)
 
@@ -236,6 +235,7 @@ class ExaminedGame(Game):
         yield super(ExaminedGame, self).next_move(mv, conn)
         for p in self.players | self.observers:
             p.write_('Game %d: %s moves: %s\n', (self.number, conn.user.name, mv.to_san()))
+        self.result_code = None
         yield self._check_result()
 
     def leave(self, user):
