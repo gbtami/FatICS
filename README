@@ -72,20 +72,17 @@ user = chess
 password = your_password_here
 # end .my.cnf
 
-Next, you can create the tables FatICS needs using the schema in db/db.sql.
-For example, from the top of the source directory:
-"mysql chess < db/db.sql".
+Next, you need to set up the database. You can do this with the command
+"./chessd firstrun" (warning: this will wipe out any existing FatICS
+database previously installed). The scripts will handle the following tasks:
 
-
-You can import the ECO codes into the database now using
-"./scripts/import-eco.py".  This isn't required to run the server, but
-if you don't, the "eco" command will report all openings as unknown, and
-some tests will fail.
-
+* Creating the necessary database tables
+* Loading ECO codes
+* Setting up the first account (follow the prompts to create
+a user with head admin powers).
 
 If there are no errors, you're ready to try to run the server.
-From the top of the FatICS source tree, you can use one of the
-following commands:
+You can use one of the following commands:
 
   "./chessd run"     -- run in the foreground; log to the console
   "./chessd start"   -- run as a daemon; log to chessd.log
@@ -95,12 +92,5 @@ After the server is started, you can use these commands:
 
   "./chessd test"    -- run the test suite
   "./chessd stop"    -- shut down the server
-
-If all goes according to plan, when you start the server it will be ready
-for you to log in on port 5000 (port 5001 for international characters).
-By default the schema creates one player named "admin" with the password
-"admin"; obviously it's a good idea to log in and change the password
-(using the "password" command) if you are testing on a machine with ports
-open to the Internet.
 
 For information about running the tests, see README.tests

@@ -16,6 +16,15 @@ case "$1" in
     echo "Running chessd in the foreground...."
     $TWISTD --pidfile $PIDFILE -noy src/chessd.tac
     ;;
+  firstrun)
+    $0 stop
+    DB_DB=chess
+    echo "Creating database..."
+    mysql $DB_DB < db/db.sql
+    echo "Loading ECO data..."
+    python ./scripts/import-eco.py
+    python ./scripts/headadmin.py
+    ;;
   test)
     echo "Running test suite...."
     trial -e test/

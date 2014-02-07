@@ -434,14 +434,6 @@ CREATE TABLE `server_message` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- data
--- TOOD: do not use a default password, but rather have the user
--- run a small setup script that prompts for an admin password
--- (and possibly other configuration details)
-LOCK TABLES `user` WRITE;
--- admin account with password 'admin'
-INSERT INTO `user` SET user_id=1,user_name='admin',user_passwd='$2a$12$vUOlVpT6HhRBH3hCNrPW8.bqUwEZ/cRzLOOT142vmNYYxhq5bO4Sy',user_real_name='Admin Account',user_email='admin@fatics.org',user_admin_level=10000;
-UNLOCK TABLES;
-
 LOCK TABLES `channel` WRITE;
 INSERT INTO `channel` VALUES (0,'admin','Admins only',NULL,NULL,NULL);
 INSERT INTO `channel` VALUES (1,'help','Help for new (and not-so-new) users. :-)','This is the help channel.  You can get help by asking a question here; use "tell 1 My question is...".',1,NULL);
