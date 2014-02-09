@@ -52,7 +52,7 @@ while True:
     break
 
 while True:
-    passwd = getpass.getpass('Head admin password: ')
+    passwd = getpass.getpass('Password: ')
     if len(passwd) < 4:
         print("Error: invalid password\n")
         continue

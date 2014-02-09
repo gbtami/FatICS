@@ -212,4 +212,19 @@ class TestStyle12(Test):
         self.close(t)
         self.close(t2)
 
+    def test_flip(self):
+        t = self.connect_as_guest('GuestWXYZ')
+        self.set_style_12(t)
+
+        t.write('e\n')
+        self.expect_re(r'\<12\> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 \d+ GuestWXYZ GuestWXYZ 2 0 0 39 39 0 0 1 none \(0:00\) none 0 0 0', t)
+
+        t.write('set flip\n')
+        self.expect('Flip on.', t)
+        t.write('ref\n')
+        self.expect_re(r'\<12\> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 \d+ GuestWXYZ GuestWXYZ 2 0 0 39 39 0 0 1 none \(0:00\) none 1 0 0', t)
+
+
+        self.close(t)
+
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

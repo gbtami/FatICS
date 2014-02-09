@@ -163,6 +163,8 @@ class BaseVariant(object):
             clock_is_ticking = int(self.game.clock.is_ticking)
         else:
             assert(False)
+        if user.vars_['flip']:
+            flip = 0 if flip else 1
         full_moves = self.pos.ply // 2 + 1
         last_mv = self.pos.get_last_move()
         if last_mv is None:
