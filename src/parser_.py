@@ -84,6 +84,9 @@ def _do_parse(s, conn):
             d = conn.session.game.execute_move(mv, conn)
             d.addCallback(lambda x: block_codes.BLKCMD_GAME_MOVE)
             return d
+        elif mv == False:
+            # illegal move or got a move when not our turn
+            return defer.succeed(block_codes.BLKCMD_GAME_MOVE)
 
     if expand_aliases:
         try:

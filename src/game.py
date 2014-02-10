@@ -370,14 +370,17 @@ class Game(object):
             if self.gtype == PLAYED and (
                     self.get_user_side(conn.user) != self.variant.get_turn()):
                 conn.write(_('It is not your move.\n'))
+                return False
             elif not legal:
                 conn.write(_('Illegal move (%s).\n') % s)
                 # Re-send the board in case of an illegal move.
                 # Eboard depends on this if legality checking is off.
                 self.send_board(conn.user, True)
-        if parsed and legal:
-            return mv
+                return False
+            else:
+                return mv
         else:
+            # not a valid move
             return None
 
     @defer.inlineCallbacks
