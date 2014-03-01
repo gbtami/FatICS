@@ -30,9 +30,16 @@ from game_constants import EXAMINED, PLAYED
 @ics_command('observe', 'i')
 class Observe(Command):
     def run(self, args, conn):
-        if args[0] in ['/l', '/b', '/s', '/S', '/w', '/z', '/B', '/L', '/x']:
-            conn.write('TODO: observe flag\n')
+        if args[0] in ['*', '/l', '/b', '/s', '/S', '/w', '/z', '/B', '/L', '/x']:
+            if args[0] == '*':
+                args[0] = '/b'
+            g = game.find_best_by_char_type(args[0][1], conn.user)
+            if g:
+                g.observe(conn.user)
+            else:
+                conn.write(_('No suitable star games are in progress.\n'))
             return
+
         g = game.from_name_or_number(args[0], conn)
         if g:
             if g in conn.user.session.observed:

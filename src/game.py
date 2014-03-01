@@ -65,6 +65,19 @@ def from_name_or_number(arg, conn):
     return g
 
 
+def find_best_by_char_type(char, u):
+    """ find the highest-rated human game for observation by a user
+    with the given one-character abbreviation """
+    # TODO: maybe use a heap for efficiently finding the best games
+    games = [g for g in global_.games.values() if g.gtype == PLAYED and g.speed_variant.abbrev == char and u not in g.observers and not g.white.has_title('computer') and not g.black.has_title('computer')]
+
+    if not games:
+        return None
+    games.sort(key=lambda g: int(g.white_rating) + int(g.black_rating),
+        reverse=True)
+    return games[0]
+
+
 class Game(object):
     def __init__(self):
         """ Common setup for examined and played games.  Assumes
