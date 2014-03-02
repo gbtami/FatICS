@@ -476,6 +476,7 @@ INSERT INTO `variant` VALUES (NULL,'chess','n');
 INSERT INTO `variant` VALUES (NULL,'crazyhouse','z');
 INSERT INTO `variant` VALUES (NULL,'chess960','9');
 INSERT INTO `variant` VALUES (NULL,'bughouse','B');
+INSERT INTO `variant` VALUES (NULL,'suicide','S');
 UNLOCK TABLES;
 
 LOCK TABLES `server_message` WRITE;

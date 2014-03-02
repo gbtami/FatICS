@@ -16,19 +16,12 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""This implements routines for normal chess.  (I avoid the term
-standard since that is used to describe the game speed on FICS.)
-Maybe normal chess technically not a variant, but organizationally
-I didn't want to privilege it over variants, so it is here."""
-
 import re
 import copy
 import random
 from array import array
 
 from game_constants import (WHITE, BLACK, valid_sq, rank, file_)
-from game_constants import (A1, C1, D1, E1, F1, G1, H1,
-    A8, C8, D8, E8, F8, G8, H8)
 from variant.base_variant import BaseVariant, IllegalMoveError
 """
 0x88 board representation; pieces are represented as ASCII,
@@ -57,27 +50,16 @@ def dir(fr, to):
 
 sliding_pieces = frozenset(['b', 'r', 'q', 'B', 'R', 'Q'])
 
+# Use suicide piece values rather than those for normal chess:
 piece_material = {
     '-': 0,
     'p': 1,
-    'n': 3,
-    'b': 3,
-    'r': 5,
-    'q': 9,
-    'k': 0
+    'n': 1,
+    'b': 1,
+    'r': 1,
+    'q': 1,
+    'k': 1
 }
-
-
-def to_castle_flags(w_oo, w_ooo, b_oo, b_ooo):
-    return (w_oo << 3) + (w_ooo << 2) + (b_oo << 1) + b_ooo
-
-castle_mask = array('i', [0xf for i in range(0x80)])
-castle_mask[A8] = to_castle_flags(True, True, True, False)
-castle_mask[E8] = to_castle_flags(True, True, False, False)
-castle_mask[H8] = to_castle_flags(True, True, False, True)
-castle_mask[A1] = to_castle_flags(True, False, True, True)
-castle_mask[E1] = to_castle_flags(False, False, True, True)
-castle_mask[H1] = to_castle_flags(False, True, True, True)
 
 
 def str_to_sq(s):
@@ -111,7 +93,6 @@ class Zobrist(object):
         self.side_hash = random.getrandbits(64)
         self._piece = self._rand_list(0x10 * 0x80)
         self._ep = self._rand_list(8)
-        self._castle = self._rand_list(0x10)
         random.seed()
 
     def piece_hash(self, sq, pc):
@@ -122,10 +103,6 @@ class Zobrist(object):
     def ep_hash(self, ep):
         return self._ep[file_(ep)]
 
-    def castle_hash(self, flags):
-        assert(flags & ~0xf == 0)
-        return self._castle[flags]
-
     def _rand_list(self, len):
         return [random.getrandbits(64) for i in xrange(0, len)]
 
@@ -133,15 +110,12 @@ zobrist = Zobrist()
 
 
 class Move(object):
-    def __init__(self, pos, fr, to, prom=None, is_oo=False,
-            is_ooo=False, is_ep=False, new_ep=None):
+    def __init__(self, pos, fr, to, prom=None, is_ep=False, new_ep=None):
         self.pos = pos
         self.fr = fr
         self.to = to
         self.pc = self.pos.board[self.fr]
         self.prom = prom
-        self.is_oo = is_oo
-        self.is_ooo = is_ooo
         self.capture = pos.board[to]
         self.is_capture = self.capture != '-'
         self.is_ep = is_ep
@@ -166,7 +140,7 @@ class Move(object):
 
     def check_pseudo_legal(self):
         """Tests if a move is pseudo-legal, that is, legal ignoring the
-        fact that the king cannot be left in check. Also sets en passant
+        fact that a capture must be made if possible. Also sets en passant
         flags for this move. This is used for long algebraic moves,
         but not san, which does these checks implicitly."""
 
@@ -175,9 +149,6 @@ class Move(object):
 
         if self.is_capture and piece_is_white(self.capture) == self.pos.wtm:
             raise IllegalMoveError('cannot capture own piece')
-
-        if self.is_oo or self.is_ooo:
-            return
 
         diff = self.to - self.fr
         if self.pc == 'p':
@@ -227,55 +198,22 @@ class Move(object):
                     raise IllegalMoveError('piece cannot make that move')
 
     def check_legal(self):
-        """Test whether a move leaves the king in check, or if
-        castling if blocked or otherwise unavailable.  These
-        tests are grouped together because they are common
-        to all move formats (except the SAN parser, which does not
-        handle castling and checks legality implicitly)."""
-        if self.is_oo:
-            if (self.pos.in_check
-                    or not self.pos.check_castle_flags(self.pos.wtm, True)
-                    or self.pos.board[self.fr + 1] != '-'
-                    or self.pos.under_attack(self.fr + 1, not self.pos.wtm)
-                    or self.pos.under_attack(self.to, not self.pos.wtm)):
-                raise IllegalMoveError('illegal castling')
-            return
-
-        if self.is_ooo:
-            if (self.pos.in_check
-                    or not self.pos.check_castle_flags(self.pos.wtm, False)
-                    or self.pos.board[self.fr - 1] != '-'
-                    or self.pos.under_attack(self.fr - 1, not self.pos.wtm)
-                    or self.pos.under_attack(self.to, not self.pos.wtm)):
-                raise IllegalMoveError('illegal castling')
-            return
-
-        self.pos.make_move(self)
-        try:
-            if self.pos.under_attack(self.pos.king_pos[not self.pos.wtm],
-                    self.pos.wtm):
-                raise IllegalMoveError('leaves king in check')
-        finally:
-            self.pos.undo_move(self)
+        """Test whether a move ignores a possible capture.
+        This test is common to all move formats."""
+        if not self.is_capture and not self.is_ep:
+            for (sq, pc) in self.pos:
+                if (pc != '-' and
+                    (self.pos.wtm != piece_is_white(pc)) and
+                    self.pos.under_attack(sq, self.pos.wtm)):
+                        raise IllegalMoveError('must capture')
 
     def to_san(self):
         if self._san is None:
             self._san = self._to_san()
         return self._san
 
-    def add_san_decorator(self):
-        assert(self._san is not None)
-        if self.pos.is_checkmate:
-            self._san += '#'
-        elif self.pos.in_check:
-            self._san += '+'
-
     def _to_san(self):
-        if self.is_oo:
-            san = 'O-O'
-        elif self.is_ooo:
-            san = 'O-O-O'
-        elif self.pc in ['P', 'p']:
+        if self.pc in ['P', 'p']:
             san = ''
             if self.is_capture or self.is_ep:
                 san += 'abcdefgh'[file_(self.fr)] + 'x'
@@ -309,18 +247,12 @@ class Move(object):
 
     def _to_verbose_alg(self):
         """convert to the verbose notation used in style12"""
-        if self.is_oo:
-            # why fics, why?
-            ret = 'o-o'
-        elif self.is_ooo:
-            ret = 'o-o-o'
-        else:
-            ret = self.pc.upper() + '/'
-            ret += sq_to_str(self.fr)
-            ret += '-'
-            ret += sq_to_str(self.to)
-            if self.prom:
-                ret += '=' + self.prom.upper()
+        ret = self.pc.upper() + '/'
+        ret += sq_to_str(self.fr)
+        ret += '-'
+        ret += sq_to_str(self.to)
+        if self.prom:
+            ret += '=' + self.prom.upper()
         return ret
 
     def to_smith(self):
@@ -332,11 +264,7 @@ class Move(object):
             ret.append(self.capture.lower())
         if self.prom:
             ret.append(self.prom.upper())
-        if self.is_oo:
-            ret.append('c')
-        elif self.is_ooo:
-            ret.append('C')
-        elif self.is_ep:
+        if self.is_ep:
             ret.append('E')
         return ''.join(ret)
 
@@ -380,18 +308,19 @@ class PositionHistory(object):
 class Position(object):
     def __init__(self, fen):
         self.board = array('c', 0x80 * ['-'])
-        self.castle_flags = 0
-        self.king_pos = [None, None]
         self.history = PositionHistory()
         self.set_pos(fen)
+        self.is_draw_nomaterial = False # never happens in suicide
+        self.white_has_mating_material = True
+        self.black_has_mating_material = True
 
-    set_pos_re = re.compile(r'''^([1-8rnbqkpRNBQKP/]+) ([wb]) ([kqKQ]+|-) ([a-h][36]|-) (\d+) (\d+)$''')
-    def set_pos(self, fen, detect_check=True):
+    set_pos_re = re.compile(r'''^([1-8rnbqkpRNBQKP/]+) ([wb]) (-) ([a-h][36]|-) (\d+) (\d+)$''')
+    def set_pos(self, fen):
         """Set the position from Forsyth-Fdwards notation.  The format
         is intentionally interpreted strictly; better to give the user an
         error than take in bad data."""
         try:
-            # rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+            # rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1
             m = self.set_pos_re.match(fen)
             if not m:
                 raise BadFenError('does not look like FEN')
@@ -414,17 +343,7 @@ class Position(object):
                         self.hash ^= zobrist.piece_hash(sq, c)
                         self.material[piece_is_white(c)] += \
                             piece_material[c.lower()]
-                        if c == 'k':
-                            if self.king_pos[0] is not None:
-                                # multiple kings
-                                raise BadFenError()
-                            self.king_pos[0] = sq
-                        elif c == 'K':
-                            if self.king_pos[1] is not None:
-                                # multiple kings
-                                raise BadFenError()
-                            self.king_pos[1] = sq
-                        elif c.lower() == 'p':
+                        if c.lower() == 'p':
                             if rank(sq) in [0, 7]:
                                 # pawn on 1st or 8th rank
                                 raise BadFenError()
@@ -433,46 +352,9 @@ class Position(object):
                     # wrong row length
                     raise BadFenError()
 
-            if None in self.king_pos:
-                # missing king
-                raise BadFenError()
-
             self.wtm = side == 'w'
             if self.wtm:
                 self.hash ^= zobrist.side_hash
-
-            if castle_flags == '-':
-                self.castle_flags = 0
-            else:
-                (w_oo, w_ooo, b_oo, b_ooo) = (False, False, False, False)
-                for c in castle_flags:
-                    if c == 'K':
-                        if self.board[E1] != 'K' or self.board[H1] != 'R':
-                            raise BadFenError()
-                        if w_oo:
-                            raise BadFenError()
-                        w_oo = True
-                    elif c == 'Q':
-                        if self.board[E1] != 'K' or self.board[A1] != 'R':
-                            raise BadFenError()
-                        if w_ooo:
-                            raise BadFenError()
-                        w_ooo = True
-                    elif c == 'k':
-                        if self.board[E8] != 'k' or self.board[H8] != 'r':
-                            raise BadFenError()
-                        if b_oo:
-                            raise BadFenError()
-                        b_oo = True
-                    elif c == 'q':
-                        if self.board[E8] != 'k' or self.board[A8] != 'r':
-                            raise BadFenError()
-                        if b_ooo:
-                            raise BadFenError()
-                        b_ooo = True
-                self.castle_flags = to_castle_flags(w_oo, w_ooo,
-                    b_oo, b_ooo)
-            self.hash ^= zobrist.castle_hash(self.castle_flags)
 
             self.fifty_count = int(fifty_count, 10)
             self.ply = 2 * (int(full_moves, 10) - 1) + int(not self.wtm)
@@ -491,21 +373,9 @@ class Position(object):
                 if rank(self.ep) not in (2, 5):
                     raise BadFenError('bad en passant square')
                 self.hash ^= zobrist.ep_hash(self.ep)
-                # legality checking needs a value for in_check
-                self.in_check = None
-                if not self._is_legal_ep(self.ep):
-                    # undo the en passant square
-                    self.ep = None
-                    self.hash ^= zobrist.ep_hash(self.ep)
 
             #assert(self.hash == self._compute_hash())
             self.history.set_hash(self.ply, self.hash)
-
-            if detect_check:
-                self.detect_check()
-                if self.is_checkmate or self.is_stalemate \
-                        or self.is_draw_nomaterial:
-                    raise BadFenError('got a terminal position')
 
         except AssertionError:
             raise
@@ -527,8 +397,6 @@ class Position(object):
 
         mv.undo = Undo()
         mv.undo.ep = self.ep
-        mv.undo.in_check = self.in_check
-        mv.undo.castle_flags = self.castle_flags
         mv.undo.fifty_count = self.fifty_count
         mv.undo.material = self.material[:]
         mv.undo.hash = self.hash
@@ -548,11 +416,6 @@ class Position(object):
                 zobrist.piece_hash(mv.to, mv.prom)
             self.material[self.wtm] += piece_material[mv.prom.lower()] \
                 - piece_material['p']
-
-        if mv.pc == 'k':
-            self.king_pos[0] = mv.to
-        elif mv.pc == 'K':
-            self.king_pos[1] = mv.to
 
         if mv.pc in ['p', 'P'] or mv.is_capture:
             self.fifty_count = 0
@@ -574,74 +437,18 @@ class Position(object):
                 assert(self.board[mv.to + 0x10] == 'P')
                 self.hash ^= zobrist.piece_hash(mv.to + 0x10, 'P')
                 self.board[mv.to + 0x10] = '-'
-        elif mv.is_oo:
-            # move the rook
-            if self.wtm:
-                assert(self.board[H1] == 'R')
-                self.board[F1] = 'R'
-                self.board[H1] = '-'
-                self.hash ^= zobrist.piece_hash(F1, 'R') ^ \
-                    zobrist.piece_hash(H1, 'R')
-            else:
-                assert(self.board[H8] == 'r')
-                self.board[F8] = 'r'
-                self.board[H8] = '-'
-                self.hash ^= zobrist.piece_hash(F8, 'r') ^ \
-                    zobrist.piece_hash(H8, 'r')
-        elif mv.is_ooo:
-            # move the rook
-            if self.wtm:
-                assert(self.board[A1] == 'R')
-                self.board[D1] = 'R'
-                self.board[A1] = '-'
-                self.hash ^= zobrist.piece_hash(D1, 'R') ^ \
-                    zobrist.piece_hash(A1, 'R')
-            else:
-                assert(self.board[A8] == 'r')
-                self.board[D8] = 'r'
-                self.board[A8] = '-'
-                self.hash ^= zobrist.piece_hash(A8, 'r') ^ \
-                    zobrist.piece_hash(D8, 'r')
 
-        self.castle_flags &= castle_mask[mv.fr] & castle_mask[mv.to]
-        if self.castle_flags != mv.undo.castle_flags:
-            self.hash ^= zobrist.castle_hash(self.castle_flags) ^ \
-                zobrist.castle_hash(mv.undo.castle_flags)
         self.wtm = not self.wtm
         self.hash ^= zobrist.side_hash
         #self._check_material()
 
-        if mv.new_ep and self._is_legal_ep(mv.new_ep):
+        if mv.new_ep:
             self.ep = mv.new_ep
             self.hash ^= zobrist.ep_hash(self.ep)
 
         self.history.set_move(self.ply - 1, mv)
         #assert(self.hash == self._compute_hash())
         self.history.set_hash(self.ply, self.hash)
-
-    def _is_legal_ep(self, ep):
-        # According to Geurt Gijssen's "An Arbiter's Notebook" #110,
-        # if an en passant capture that is otherwise legal is not
-        # permitted because it would leave the king in check,
-        # then for the puposes of claiming a draw by repetition, the
-        # position is identical to one where there is no such en
-        # passant capture.  So we have to test the legality of
-        # en passant captures.
-        if self.wtm:
-            if (valid_sq(ep - 0x11) and self.board[ep - 0x11] == 'P' and
-                    Move(self, ep - 0x11, ep, is_ep=True).is_legal()):
-                return True
-            elif (valid_sq(ep - 0xf) and self.board[ep - 0xf] == 'P' and
-                    Move(self, ep - 0xf, ep, is_ep=True).is_legal()):
-                return True
-        else:
-            if (valid_sq(ep + 0xf) and self.board[ep + 0xf] == 'p' and
-                    Move(self, ep + 0xf, ep, is_ep=True).is_legal()):
-                return True
-            elif (valid_sq(ep + 0x11) and self.board[ep + 0x11] == 'p' and
-                    Move(self, ep + 0x11, ep, is_ep=True).is_legal()):
-                return True
-        return False
 
     def _compute_hash(self):
         hash = 0
@@ -652,7 +459,6 @@ class Position(object):
                 hash ^= zobrist.piece_hash(sq, pc)
         if self.ep:
             hash ^= zobrist.ep_hash(self.ep)
-        hash ^= zobrist.castle_hash(self.castle_flags)
         return hash
 
     def undo_move(self, mv):
@@ -662,16 +468,9 @@ class Position(object):
         self.ep = mv.undo.ep
         self.board[mv.to] = mv.capture
         self.board[mv.fr] = mv.pc
-        self.in_check = mv.undo.in_check
-        self.castle_flags = mv.undo.castle_flags
         self.fifty_count = mv.undo.fifty_count
         self.material = mv.undo.material
         self.hash = mv.undo.hash
-
-        if mv.pc == 'k':
-            self.king_pos[0] = mv.fr
-        elif mv.pc == 'K':
-            self.king_pos[1] = mv.fr
 
         if mv.is_ep:
             if self.wtm:
@@ -680,24 +479,6 @@ class Position(object):
             else:
                 assert(self.board[mv.to + 0x10] == '-')
                 self.board[mv.to + 0x10] = 'P'
-        elif mv.is_oo:
-            if self.wtm:
-                assert(self.board[F1] == 'R')
-                self.board[H1] = 'R'
-                self.board[F1] = '-'
-            else:
-                assert(self.board[F8] == 'r')
-                self.board[H8] = 'r'
-                self.board[F8] = '-'
-        elif mv.is_ooo:
-            if self.wtm:
-                assert(self.board[D1] == 'R')
-                self.board[A1] = 'R'
-                self.board[D1] = '-'
-            else:
-                assert(self.board[D8] == 'r')
-                self.board[A8] = 'r'
-                self.board[D8] = '-'
         #self._check_material()
         #assert(self.hash == self._compute_hash())
 
@@ -709,29 +490,47 @@ class Position(object):
             for (sq, pc) in self if pc != '-' and piece_is_white(pc)]))
 
     def detect_check(self):
-        """detect whether the player to move is in check, checkmated,
-        or stalemated"""
-        self.in_check = self.under_attack(self.king_pos[self.wtm],
-            not self.wtm)
+        """detect whether the player to move is out of material
+        (has committed suicide) or stalemated, or if the game
+        is drawn by opposite color bishops"""
+        self.is_suicide = not any(pc != '-' and
+            (piece_is_white(pc) if self.wtm else not piece_is_white(pc))
+            for (sq, pc) in self)
 
-        any_legal = self._any_legal_moves()
-        self.is_checkmate = self.in_check and not any_legal
-        self.is_stalemate = not self.in_check and not any_legal
+        self.is_stalemate = not self._any_legal_moves()
+        if self.is_stalemate:
+            white_material = sum(piece_material[pc.lower()]
+                for (sq, pc) in self if pc != '-' and piece_is_white(pc))
+            black_material = sum(piece_material[pc.lower()]
+                for (sq, pc) in self if pc != '-' and not piece_is_white(pc))
+            self.is_stalemate_white = white_material < black_material
+            self.is_stalemate_black = white_material > black_material
 
-        self._check_mating_material()
-        self.is_draw_nomaterial = (not self.white_has_mating_material and
-            not self.black_has_mating_material)
+        self.is_draw_bishops = False
+        for (sq, pc) in self:
+            if pc == 'B':
+                if (rank(sq) ^ file_(sq)) & 1 != 0:
+                    break
+            elif pc == 'b':
+                if (rank(sq) ^ file_(sq)) & 1 == 0:
+                    break
+            elif pc != '-':
+                break
+        else:
+            self.is_draw_bishops = True
+            return
 
-    def _check_mating_material(self):
-        self.white_has_mating_material = self.material[1] > 3
-        self.black_has_mating_material = self.material[0] > 3
-        if (not self.white_has_mating_material or
-                not self.black_has_mating_material):
-            for (sq, pc) in self:
-                if pc == 'P':
-                    self.white_has_mating_material = True
-                elif pc == 'p':
-                    self.black_has_mating_material = True
+        for (sq, pc) in self:
+            if pc == 'B':
+                if (rank(sq) ^ file_(sq)) & 1 == 0:
+                    break
+            elif pc == 'b':
+                if (rank(sq) ^ file_(sq)) & 1 != 0:
+                    break
+            elif pc != '-':
+                break
+        else:
+            self.is_draw_bishops = True
 
     def get_last_move(self):
         return self.history.get_move(self.ply - 1)
@@ -739,14 +538,8 @@ class Position(object):
     def _any_legal_moves(self):
         if self.ep:
             return True
-        ksq = self.king_pos[self.wtm]
-        if self._any_pc_moves(ksq, self.board[ksq]):
-            return True
-        # it's slow to iterate over every square in the board, but it's
-        # only necessary if the king has no legal moves
         for (sq, pc) in self:
-            #if pc != '-' and piece_is_white(pc) == self.wtm:
-            if pc not in ['-', 'K', 'k'] and piece_is_white(pc) == self.wtm:
+            if pc != '-' and piece_is_white(pc) == self.wtm:
                 if self._any_pc_moves(sq, pc):
                     return True
         return False
@@ -760,45 +553,25 @@ class Position(object):
     def _any_pc_moves(self, sq, pc):
         if pc == 'P':
             if self.board[sq + 0x10] == '-':
-                if Move(self, sq, sq + 0x10).is_legal():
-                    return True
-                if rank(sq) == 1 and self.board[sq + 0x20] == '-' and Move(
-                        self, sq, sq + 0x20).is_legal():
-                    return True
-            if self._pawn_cap_at(sq + 0xf) and Move(
-                    self, sq, sq + 0xf,
-                    is_ep=sq + 0xf == self.ep).is_legal():
                 return True
-            if self._pawn_cap_at(sq + 0x11) and Move(
-                    self, sq, sq + 0x11,
-                    is_ep=sq + 0x11 == self.ep).is_legal():
+            if self._pawn_cap_at(sq + 0xf):
+                return True
+            if self._pawn_cap_at(sq + 0x11):
                 return True
         elif pc == 'p':
             if self.board[sq - 0x10] == '-':
-                if Move(self, sq, sq - 0x10).is_legal():
-                    return True
-                if rank(sq) == 6 and self.board[sq - 0x20] == '-' and Move(
-                        self, sq, sq - 0x20).is_legal():
-                    return True
-            if self._pawn_cap_at(sq - 0xf) and Move(
-                    self, sq, sq - 0xf,
-                    is_ep=sq - 0xf == self.ep).is_legal():
                 return True
-            if self._pawn_cap_at(sq - 0x11) and Move(
-                    self, sq, sq - 0x11,
-                    is_ep=sq - 0x11 == self.ep).is_legal():
+            if self._pawn_cap_at(sq - 0xf):
+                return True
+            if self._pawn_cap_at(sq - 0x11):
                 return True
         else:
             for d in piece_moves[pc.lower()]:
                 cur_sq = sq + d
-                # we don't need to check castling because if castling
-                # is legal, some other king move must be also
                 while valid_sq(cur_sq):
                     topc = self.board[cur_sq]
                     if topc == '-' or piece_is_white(topc) != self.wtm:
-                        mv = Move(self, sq, cur_sq)
-                        if mv.is_legal():
-                            return True
+                        return True
                     if not pc in sliding_pieces or self.board[cur_sq] != '-':
                         break
                     cur_sq += d
@@ -873,16 +646,6 @@ class Position(object):
         prom = m.group(3)
         if prom is None:
             mv = Move(self, fr, to)
-            if mv.pc == 'K' and fr == E1:
-                if to == G1:
-                    mv.is_oo = True
-                elif to == C1:
-                    mv.is_ooo = True
-            elif mv.pc == 'k' and fr == E8:
-                if to == G8:
-                    mv.is_oo = True
-                elif to == C8:
-                    mv.is_ooo = True
         else:
             if self.wtm:
                 mv = Move(self, fr, to, prom=prom.upper())
@@ -1029,35 +792,13 @@ class Position(object):
 
             mv = Move(self, froms[0], to)
 
-
-        # Legality checking is implicitly done above, so we don't need
-        # to check it here.
-        '''if mv:
-            try:
+        if mv:
+            # Unlike regular chess, moves that look legal to the SAN
+            # parser may be illegal due to failing to capture a piece.
+            '''try:
                 mv.check_pseudo_legal()
             except IllegalMoveError:
-                raise RuntimeError('san inconsistency')
-            mv.check_legal()'''
-
-        return mv
-
-    def move_from_castle(self, s):
-        mv = None
-        s = self.decorator_re.sub('', s)
-        if not mv and s in ['O-O', 'OO', 'o-o']:
-            if self.wtm:
-                mv = Move(self, E1, G1, is_oo=True)
-            else:
-                mv = Move(self, E8, G8, is_oo=True)
-
-        if not mv and s in ['O-O-O', 'OOO', 'o-o-o']:
-            if self.wtm:
-                mv = Move(self, E1, C1, is_ooo=True)
-            else:
-                mv = Move(self, E8, C8, is_ooo=True)
-
-        if mv:
-            mv.check_pseudo_legal()
+                raise RuntimeError('san inconsistency')'''
             mv.check_legal()
 
         return mv
@@ -1081,10 +822,6 @@ class Position(object):
         return ret
 
     def is_draw_fifty(self):
-        # If we checkmate comes on the move that causes the fifty-move
-        # counter to reach 100, the game is not a draw.  That shouldn't
-        # be a problem because if a player is checkmated, he or she
-        # won't have a chance to offer a draw and trigger this check.
         return self.fifty_count >= 100
 
     def is_draw_repetition(self, side):
@@ -1166,17 +903,7 @@ class Position(object):
 
         stm_str = 'w' if self.wtm else 'b'
 
-        castling = ''
-        if self.check_castle_flags(True, True):
-            castling += 'K'
-        if self.check_castle_flags(True, False):
-            castling += 'Q'
-        if self.check_castle_flags(False, True):
-            castling += 'k'
-        if self.check_castle_flags(False, False):
-            castling += 'q'
-        if castling == '':
-            castling = '-'
+        castling = '-'
 
         # we follow X-FEN rather than FEN: only print an en passant
         # square if there is a legal en passant capture
@@ -1190,15 +917,15 @@ class Position(object):
         return "%s %s %s %s %d %d" % (pos_str, stm_str, castling, ep_str, self.fifty_count, full_moves)
 
     def check_castle_flags(self, wtm, is_oo):
-        return bool(self.castle_flags & (1 << (2 * int(wtm) + int(is_oo))))
+        return False
 
 
-class Chess(BaseVariant):
-    """normal chess"""
+class Suicide(BaseVariant):
+    """suicide chess"""
     def __init__(self, game):
         self.game = game
         self.pos = copy.deepcopy(initial_pos)
-        self.name = 'chess'
+        self.name = 'suicide'
 
     def parse_move(self, s, conn):
         """Try to parse a move.  If it looks like a move but
@@ -1209,9 +936,6 @@ class Chess(BaseVariant):
         mv = None
 
         try:
-            # castling
-            mv = self.pos.move_from_castle(s)
-
             # san
             # this needs to come before long algebraic, because in a few rare
             # cases a move can be ambiguous. One example was "B5f4" (a legal
@@ -1235,7 +959,6 @@ class Chess(BaseVariant):
         mv.to_san()
         self.pos.make_move(mv)
         self.pos.detect_check()
-        mv.add_san_decorator()
 
     def undo_move(self):
         self.pos.undo_move(self.pos.get_last_move())
@@ -1278,6 +1001,6 @@ def init_direction_table():
                     cur_sq += d
 init_direction_table()
 
-initial_pos = Position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1')
+initial_pos = Position('rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1')
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent
