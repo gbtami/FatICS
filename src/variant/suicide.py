@@ -203,9 +203,9 @@ class Move(object):
         if not self.is_capture and not self.is_ep:
             for (sq, pc) in self.pos:
                 if (pc != '-' and
-                    (self.pos.wtm != piece_is_white(pc)) and
-                    self.pos.under_attack(sq, self.pos.wtm)):
-                        raise IllegalMoveError('must capture')
+                        (self.pos.wtm != piece_is_white(pc)) and
+                        self.pos.under_attack(sq, self.pos.wtm)):
+                    raise IllegalMoveError('must capture')
 
     def to_san(self):
         if self._san is None:
@@ -635,7 +635,7 @@ class Position(object):
 
         return False
 
-    lalg_re = re.compile(r'([a-h][1-8])-?([a-h][1-8])(?:=([NBRQ]))?$', re.I)
+    lalg_re = re.compile(r'([a-h][1-8])-?([a-h][1-8])(?:=([KNBRQ]))?$', re.I)
     def move_from_lalg(self, s):
         m = self.lalg_re.match(s)
         if not m:
@@ -658,9 +658,9 @@ class Position(object):
 
         return mv
 
-    san_pawn_push_re = re.compile(r'^([a-h][1-8])(?:=([NBRQ]))?$')
-    san_pawn_capture_re = re.compile(r'^([a-h])x([a-h][1-8])(?:=([NBRQ]))?$')
-    san_piece_re = re.compile(r'([NBRQK])([a-h])?([1-8])?(x)?([a-h][1-8])$')
+    san_pawn_push_re = re.compile(r'^([a-h][1-8])(?:=([KNBRQ]))?$')
+    san_pawn_capture_re = re.compile(r'^([a-h])x([a-h][1-8])(?:=([KNBRQ]))?$')
+    san_piece_re = re.compile(r'([KNBRQK])([a-h])?([1-8])?(x)?([a-h][1-8])$')
     decorator_re = re.compile(r'[\+#\?\!]+$')
     def move_from_san(self, s):
         s = self.decorator_re.sub('', s)

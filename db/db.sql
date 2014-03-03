@@ -228,8 +228,9 @@ CREATE TABLE `game` (
 
   -- for completed games only
   `result` ENUM('1-0', '0-1', '1/2-1/2', '*') DEFAULT NULL,
-  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta', 'Rep',
-     'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB', '50') DEFAULT NULL,
+  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta',
+     'StB', 'Rep', 'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB',
+     '50') DEFAULT NULL,
 
   -- for adjourned games only
   `white_clock` float DEFAULT NULL,

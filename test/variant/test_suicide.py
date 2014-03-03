@@ -65,7 +65,7 @@ class TestPgn(Test):
 
         pgn = Pgn(f)
         for g in pgn:
-            print 'game %s' % g
+            print('game %s' % g)
             t.write('match GuestEFGH white 5 0 suicide\n')
             self.expect('Issuing:', t)
             self.expect('Challenge:', t2)
@@ -95,14 +95,14 @@ class TestPgn(Test):
                 self.expect('wins by losing all material} 0-1', t2)
             elif g.is_stalemate:
                 if g.result == '1-0':
-                    self.expect('wins having less material (stalemate)} 1-0', t)
-                    self.expect('wins having less material (stalemate)} 1-0', t2)
+                    self.expect('wins by having less material (stalemate)} 1-0', t)
+                    self.expect('wins by having less material (stalemate)} 1-0', t2)
                 elif g.result == '0-1':
-                    self.expect('wins having less material (stalemate)} 0-1', t)
-                    self.expect('wins having less material (stalemate)} 0-1', t2)
+                    self.expect('wins by having less material (stalemate)} 0-1', t)
+                    self.expect('wins by having less material (stalemate)} 0-1', t2)
                 else:
-                    self.expect_re('drawn by stalemate \((opposite colored bishops|equal material)\)} 1/2-1/2', t)
-                    self.expect_re('drawn by stalemate \((opposite colored bishops|equal material)\)} 1/2-1/2', t2)
+                    self.expect_re('drawn by stalemate \((opposite color bishops|equal material)\)} 1/2-1/2', t)
+                    self.expect_re('drawn by stalemate \((opposite color bishops|equal material)\)} 1/2-1/2', t2)
             elif g.result == '1/2-1/2' and g.is_repetition:
                 if wtm:
                     t.write('draw\n')

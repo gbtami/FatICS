@@ -1029,7 +1029,6 @@ class Position(object):
 
             mv = Move(self, froms[0], to)
 
-
         # Legality checking is implicitly done above, so we don't need
         # to check it here.
         '''if mv:
