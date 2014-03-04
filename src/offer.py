@@ -273,20 +273,17 @@ class Takeback(Offer):
 
     @defer.inlineCallbacks
     def finish_init(self, game, user, ply):
-        a_sent = self.a.session.offers_sent
-        b_sent = self.b.session.offers_sent
-        a_received = self.a.session.offers_received
-        b_received = self.b.session.offers_received
-
+        if game.variant.name == 'bughouse':
+            user.write(_('Takeback is not allowed in bughouse.\n'))
+            return
         if game.variant.pos.ply == 0:
             user.write(_('There are no moves in your game.\n'))
             return
         if ply > game.variant.pos.ply:
-            user.write_('There are only %d half moves in your game.\n',
-                (game.variant.pos.ply,))
-            return
-        if game.variant.name == 'bughouse':
-            user.write(_('Takeback is not allowed in bughouse.\n'))
+            # yes, original FICS will print "There are only 1 half moves
+            # in your game."
+            user.write(ngettext("There is only %d half-move in your game.\n",
+                "There are only %d half-moves in your game.\n", game.variant.pos.ply) % game.variant.pos.ply)
             return
 
         offers = [o for o in game.pending_offers if o.name == self.name]
@@ -297,7 +294,7 @@ class Takeback(Offer):
             o = offers[0]
             if o.a == self.a:
                 if o.ply == self.ply:
-                    user.write_('You are already offering to takeback the last %d half move(s).\n',
+                    user.write_('You are already offering to takeback the last %d half-move(s).\n',
                         (o.ply,))
                     return
                 else:
@@ -325,10 +322,10 @@ class Takeback(Offer):
 
         game.pending_offers.append(self)
         user.write(_('Takeback request sent.\n'))
-        self.b.write_('\n%s would like to take back %d half move(s).\n',
+        self.b.write_('\n%s would like to take back %d half-move(s).\n',
             (user.name, self.ply))
         for p in self.game.observers:
-            p.write_('\nGame %d: %s requests to take back %d half move(s).\n',
+            p.write_('\nGame %d: %s requests to take back %d half-move(s).\n',
                 (game.number, user.name, self.ply))
 
         self._register()

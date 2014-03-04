@@ -341,3 +341,22 @@ Rg8 97. Qb2 Rh8 98. Qb1 Rg8 { Game drawn by the 50 move rule } 1/2-1/2
 
 1. e3 e6 2. Ba6 Nxa6 3. b4 Bxb4 4. Qg4 Bxd2 5. Qxg7 Bxe3 6. fxe3 Qg5 7. Qxg5 Nh6 8. Qxh6 Rf8 9. Qxe6 fxe6 10. Kf2 Rxf2 11. h4 Rxc2 12. a4 Rxc1 13. Nd2 Rxg1 14. Raxg1 e5 15. Ne4 Nc5 16. Nxc5 b5 17. axb5 Ba6 18. bxa6 Kf7 19. Nxd7 c6 20. Nxe5 Ke7 21. Nxc6 Rc8 22. Nxa7 Rc6 23. Nxc6 h5 24. Nxe7 {Black wins by having less material (stalemate)} 0-1
 
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[FICSGamesDBGameNo "350002510"]
+[White "carlosIL"]
+[Black "CatNail"]
+[WhiteElo "1887"]
+[BlackElo "2009"]
+[BlackIsComp "Yes"]
+[TimeControl "180+0"]
+[Date "2013.12.31"]
+[Time "17:16:00"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[Variant "suicide"]
+[PlyCount "64"]
+[Result "1/2-1/2"]
+
+1. g3 b6 2. b3 c6 3. Nc3 f5 4. Nd5 cxd5 5. e4 fxe4 6. Ba6 Bxa6 7. Nf3 exf3 8. Qxf3 Be2 9. Qxe2 Nc6 10. Qxe7 Ncxe7 11. b4 Qc7 12. c4 Qxc4 13. d3 Qxc1 14. Rxc1 Nc6 15. Rxc6 Bxb4 16. Rxb6 Bxe1 17. Rxe1 axb6 18. Rxe8 Rxe8 19. h3 Nf6 20. g4 Nxg4 21. hxg4 Re3 22. fxe3 d4 23. exd4 d5 24. g5 g6 25. a4 b5 26. axb5 Rc8 27. b6 Rf8 28. b7 Rf1 29. b8=R h5 30. gxh6 Ra1 31. Ra8 Rxa8 32. h7 Rh8 {Game drawn by stalemate (equal material)} 1/2-1/2
+

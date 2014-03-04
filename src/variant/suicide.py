@@ -121,6 +121,7 @@ class Move(object):
         self.is_ep = is_ep
         self.new_ep = new_ep
         self.time = None
+        self.clock_time = None
         self._san = None
         self._verbose_alg = None
         self.lag = 0

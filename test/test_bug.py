@@ -618,11 +618,14 @@ class TestBughouseSay(Test):
         self.expect('Your bughouse partner was challenged: GuestABCD (++++) GuestIJKL (++++) unrated blitz bughouse 3 0', t4)
         self.expect('Your game will be: GuestEFGH (++++) GuestMNOP (++++) unrated blitz bughouse 3 0', t4)
 
-        t3.write('match guestabcd bughouse 3+0\n') # intercept
+        t3.write('match guestabcd bughouse 3+0\n')  # intercept
         self.expect('Creating:', t)
         self.expect('Creating:', t2)
         self.expect('Creating:', t3)
         self.expect('Creating:', t4)
+
+        t.write('takeback\n')
+        self.expect('Takeback is not allowed in bughouse.', t)
 
         t.write('say abc def\n')
         # the order of "(told...)" message is not defined
