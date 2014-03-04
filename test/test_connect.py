@@ -66,6 +66,7 @@ class LoginTest(Test):
         # anonymous guest login start
         t.write('guest\n')
         self.expect('Press return to enter', t)
+        self.expect_not('login:', t)
 
         # anonymous guest login complete
         t.write('\n')

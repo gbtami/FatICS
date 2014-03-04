@@ -107,24 +107,27 @@ def init():
     for row in (yield db.get_variants()):
         Variant(row['variant_id'], row['variant_name'], row['variant_abbrev'])
     global standard_chess, blitz_chess, lightning_chess
-    global blitz_chess960, blitz_bughouse, blitz_crazyhouse
+    global blitz_chess960, blitz_bughouse, blitz_crazyhouse, blitz_suicide
     standard_chess = from_names('standard', 'chess')
     blitz_chess = from_names('blitz', 'chess')
     lightning_chess = from_names('lightning', 'chess')
     blitz_chess960 = from_names('blitz', 'chess960')
     blitz_bughouse = from_names('blitz', 'bughouse')
     blitz_crazyhouse = from_names('blitz', 'crazyhouse')
+    blitz_suicide = from_names('blitz', 'suicide')
 
     import variant.chess
     import variant.chess960
     import variant.crazyhouse
     import variant.bughouse
+    import variant.suicide
     import global_
 
     global_.variant_class['chess'] = variant.chess.Chess
     global_.variant_class['crazyhouse'] = variant.crazyhouse.Crazyhouse
     global_.variant_class['chess960'] = variant.chess960.Chess960
     global_.variant_class['bughouse'] = variant.bughouse.Bughouse
+    global_.variant_class['suicide'] = variant.suicide.Suicide
 
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -25,7 +25,7 @@ import speed_variant
 import global_
 import find_user
 
-from parser import BadCommandError
+from parser_ import BadCommandError
 from game_constants import PLAYED
 from twisted.internet import defer
 

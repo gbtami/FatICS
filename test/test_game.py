@@ -23,6 +23,9 @@ class TestGame(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
         t2.write('accept\n')
@@ -34,6 +37,8 @@ class TestGame(Test):
 
         t2.write('e7e5\n')
         self.expect('not your move', t2)
+        # should not re-send the board in this case
+        self.expect_not('<12> ', t2)
 
         t2.write('e2e5\n')
         self.expect('not your move', t2)
@@ -41,6 +46,7 @@ class TestGame(Test):
         # plain illegal move
         t.write('e2e5\n')
         self.expect('Illegal move (e2e5).', t)
+        self.expect_not('ommand not found', t)
 
         t.write('e7e5\n')
         self.expect('Illegal move (e7e5).', t)
@@ -90,8 +96,8 @@ class TestGame(Test):
     def _assert_game_is_legal(self, moves, result=None):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Issuing:', t)
@@ -172,10 +178,8 @@ class TestGame(Test):
         t = self.connect_as_guest()
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
-        self.expect('Style 12 set.', t)
-        t2.write('set style 12\n')
-        self.expect('Style 12 set.', t2)
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
@@ -212,8 +216,9 @@ class TestGame(Test):
     def test_san_check(self):
         t = self.connect_as_guest()
         t2 = self.connect_as_admin()
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
@@ -255,8 +260,8 @@ class TestGame(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Issuing:', t)
@@ -291,8 +296,8 @@ class TestGame(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Issuing:', t)
@@ -331,8 +336,8 @@ class TestGame(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 1 0\n')
         self.expect('Issuing:', t)
@@ -436,8 +441,8 @@ class TestRefresh(Test):
     def test_refresh(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('match admin white 7 9\n')
         self.expect('Challenge:', t2)
@@ -453,7 +458,7 @@ class TestRefresh(Test):
         self.expect_not('<12> ', t2)
 
         t3 = self.connect_as_guest('GuestDEFG')
-        t3.write('set style 12\n')
+        self.set_style_12(t3)
         t3.write('re\n')
         self.expect('You are not playing, examining, or observing', t3)
         t3.write('re 999\n')
@@ -480,10 +485,10 @@ class TestMoves(Test):
     def test_moves_played(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
-        t.write('set style 12\n')
         t.write('iset ms 1\n')
-        t2.write('set style 12\n')
         t2.write('iset ms 1\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t2.write('moves\n')
         self.expect('You are not playing, examining, or observing a game', t2)
@@ -517,7 +522,7 @@ class TestMoves(Test):
         self.expect('''Move  GuestABCD               admin\r\n----  ---------------------   ---------------------\r\n  1.  e4      (0:00.000)      c5      (0:00.000)\r\n      {Still in progress} *''', t2)
 
         t3 = self.connect_as_guest()
-        t3.write('set style 12\n')
+        self.set_style_12(t3)
         t3.write('iset ms 1\n')
         t3.write('moves 1\n')
         self.expect('''Move  GuestABCD               admin\r\n----  ---------------------   ---------------------\r\n  1.  e4      (0:00.000)      c5      (0:00.000)\r\n      {Still in progress} *''', t3)
@@ -652,9 +657,9 @@ class TestMoretime(Test):
         t2 = self.connect_as('testplayer')
         t3 = self.connect_as_guest()
 
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
-        t3.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
+        self.set_style_12(t3)
 
         t.write('match testp white 6+10\n')
         self.expect('Challenge:', t2)

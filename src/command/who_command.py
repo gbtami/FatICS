@@ -18,13 +18,13 @@
 #
 
 from .command import ics_command, Command
-from parser import BadCommandError
+from parser_ import BadCommandError
 
 import time_format
 import speed_variant
 import global_
 
-from game_constants import PLAYED
+from game_constants import PLAYED, EXAMINED
 
 
 @ics_command('showadmins', '')
@@ -179,7 +179,7 @@ class Who(Command):
         #lightning = speed_variant.from_names('lightning', 'chess')
         #zh = speed_variant.from_names('blitz', 'crazyhouse')
         #fr = speed_variant.from_names('blitz', 'chess960')
-        #suicide = speed_variant.from_names('blitz', 'chess960')
+        #suicide = speed_variant.from_names('blitz', 'suicide')
         #bughouse = speed_variant.from_names('blitz', 'bughouse')
         if sort_order == 's':
             compare = lambda p: int(p.get_rating(speed_variant.standard_chess))
@@ -195,8 +195,7 @@ class Who(Command):
             # hack: in original fics this means wild, but it now means chess960
             compare = lambda p: int(p.get_rating(speed_variant.blitz_chess960))
         elif sort_order == 'S':
-            # XXX suicide
-            conn.write('TODO: suicide\n')
+            compare = lambda p: int(p.get_rating(speed_variant.blitz_suicide))
             return
         elif sort_order == 'A':
             compare = lambda p: p.name
@@ -222,7 +221,7 @@ class Who(Command):
                     # XXX ~ means simul
                     if u.session.game.gtype == PLAYED:
                         status = '^'
-                    elif u.session.game.gtype == PLAYED:
+                    elif u.session.game.gtype == EXAMINED:
                         status = '#'
                     else:
                         # XXX

@@ -59,11 +59,24 @@ class TestExamine(Test):
         self.expect('<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestPQLQ GuestPQLQ 2 0 0 39 39 0 0 1 P/e2-e4 (0:00) e4 0 0 0', t)
         self.expect('GuestPQLQ moves: e4', t)
 
+        t.write('e2e4\n')
+        self.expect('Illegal move (e2e4).', t)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestPQLQ GuestPQLQ 2 0 0 39 39 0 0 1 P/e2-e4 (0:00) e4 0 0 0', t)
+        #self.expect('Illegal move: (e2e4).\r\n\r\n<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestPQLQ GuestPQLQ 2 0 0 39 39 0 0 1 P/e2-e4 (0:00) e4 0 0 0', t)
+        self.expect_not('ommand not found', t)
+
         t.write('forward\n')
         self.expect("You're at the end of the game.", t)
 
         t.write('backward\n')
         self.expect('GuestPQLQ backs up 1 move.', t)
+
+        t.write('forward\n')
+        self.expect('GuestPQLQ goes forward 1 move.', t)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- ----P--- -------- PPPP-PPP RNBQKBNR B -1 1 1 1 1 0 1 GuestPQLQ GuestPQLQ 2 0 0 39 39 0 0 1 P/e2-e4 (0:00) e4 0 0 0', t)
+
+        t.write('forward\n')
+        self.expect("You're at the end of the game.", t)
 
         self.close(t)
 

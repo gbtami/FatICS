@@ -30,7 +30,8 @@ comment_re = re.compile(r'''\{(.*?)\}''', re.S)
 nag_re = re.compile(r'''\$(\d+)''')
 result_re = re.compile(r'''(1-0|0-1|1/2-1/2|\*)''')
 checkmate_re = re.compile(r'''\s+checkmated\s*$''')
-stalemate_re = re.compile(r'''\s+drawn\s+by\s+stalemate\s*$''')
+stalemate_re = re.compile(r'''stalemate''')
+suicide_re = re.compile(r'''\wins\sby\slosing\sall\smaterial\s*$''')
 repetition_re = re.compile(r'''\s+drawn\s+by\s+repetition\s*$''')
 fifty_re = re.compile(r'''\s+drawn\s+by\s+the\s+50\s+move\s+rule\s*$''')
 nomaterial_re = re.compile(r'''[nN]either\s+player\s+has\s+mating\s+material\s*$''')
@@ -116,6 +117,7 @@ class PgnGame(object):
         self.movetext = movetext
         self.is_checkmate = False
         self.is_stalemate = False
+        self.is_suicide = False
         self.is_repetition = False
         self.is_fifty = False
         self.is_draw_nomaterial = False
@@ -167,6 +169,8 @@ class PgnGame(object):
                     self.is_checkmate = True
                 elif stalemate_re.search(m.group(1)):
                     self.is_stalemate = True
+                elif suicide_re.search(m.group(1)):
+                    self.is_suicide = True
                 elif repetition_re.search(m.group(1)):
                     self.is_repetition = True
                 elif fifty_re.search(m.group(1)):

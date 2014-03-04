@@ -1,0 +1,343 @@
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.12.31"]
+[Round "?"]
+[White "Rai"]
+[Black "CrossCzech"]
+[Result "0-1"]
+[WhiteElo "2113"]
+[BlackElo "2204"]
+[TimeControl "60+0"]
+[Time "16:42:00"]
+[PlyCount "60"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "330001618"]
+[WhiteClock "0:01:00.000"]
+[BlackClock "0:01:00.000"]
+
+1. g3 b6 2. b3 c5 3. b4 cxb4 4. Ba3 bxa3 5. Nxa3 a5 6. Nb1 a4 7. c3 Nc6 8.
+Qxa4 Rxa4 9. Na3 Rxa3 10. Rb1 Rxc3 11. Rxb6 Qxb6 12. dxc3 Qxf2+ 13. Kxf2
+Nd4 14. cxd4 e5 15. dxe5 Bd6 16. exd6 Ne7 17. dxe7 Kxe7 18. a4 d6 19. g4
+Bxg4 20. a5 Bxe2 21. Bxe2 g5 22. Bf1 g4 23. Bh3 gxh3 24. Nxh3 Kd7 25. Kf3
+d5 26. Nf2 d4 27. Nd1 d3 28. h4 d2 29. h5 Rd8 30. a6 f5 { White forfeits on
+time } 0-1
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.12.31"]
+[Round "?"]
+[White "stayalive"]
+[Black "Ibahn"]
+[Result "1-0"]
+[WhiteElo "2775"]
+[BlackElo "2132"]
+[TimeControl "180+0"]
+[Time "15:38:00"]
+[PlyCount "27"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "320295522"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[WhiteIsComp "Yes"]
+
+1. e3 c5 2. Qh5 Qa5 3. Qxh7 Rxh7 4. Ba6 Nxa6 5. a3 Qxd2+ 6. Bxd2 Rxh2 7.
+Rxh2 Rb8 8. Bc3 e5 9. Bxe5 Nb4 10. axb4 cxb4 11. Bxg7 Bxg7 12. Rxa7 Bxb2
+13. Rxb7 Rxb7 14. c4 { Black resigns } 1-0
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.12.31"]
+[Round "?"]
+[White "Ibahn"]
+[Black "stayalive"]
+[Result "0-1"]
+[WhiteElo "2132"]
+[BlackElo "2775"]
+[TimeControl "180+0"]
+[Time "15:36:00"]
+[PlyCount "34"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "320295438"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[BlackIsComp "Yes"]
+
+1. Nh3 g5 2. Nxg5 Bg7 3. Nxh7 Bxb2 4. Bxb2 Rxh7 5. Bd4 Rxh2 6. Bxa7 Rxa7 7.
+Rxh2 Rxa2 8. Rxa2 Nh6 9. Rxh6 b6 10. Rxb6 cxb6 11. Ra5 bxa5 12. e3 Ba6 13.
+Bxa6 Nxa6 14. Qh5 a4 15. Qxf7+ Kxf7 16. g4 Nc7 17. f3 a3 { White resigns }
+0-1
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.12.31"]
+[Round "?"]
+[White "CatNail"]
+[Black "AlilBLKmagic"]
+[Result "1-0"]
+[WhiteElo "2011"]
+[BlackElo "1720"]
+[TimeControl "180+0"]
+[Time "13:13:00"]
+[PlyCount "15"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "320289416"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[WhiteIsComp "Yes"]
+
+1. h3 d5 2. c4 dxc4 3. e4 Bxh3 4. Bxc4 Bxg2 5. Rxh7 Rxh7 6. Bxf7+ Kxf7 7.
+Nf3 Bxf3 8. Qxf3+ { Black forfeits on time } 1-0
+
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.10.26"]
+[Round "?"]
+[White "CatNail"]
+[Black "pawnik"]
+[Result "1-0"]
+[WhiteElo "1976"]
+[BlackElo "2067"]
+[TimeControl "180+0"]
+[Time "16:15:00"]
+[PlyCount "62"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "316639926"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[WhiteIsComp "Yes"]
+
+1. g4 b6 2. g5 g6 3. Nf3 Bh6 4. gxh6 Nxh6 5. b4 a5 6. bxa5 bxa5 7. Nd4 e6
+8. Nxe6 fxe6 9. e3 Ng4 10. Qxg4 Qf6 11. Qxe6+ Qxe6 12. a3 Qxe3+ 13. fxe3
+Ba6 14. Bxa6 Nxa6 15. c3 a4 16. Kf1 Nb4 17. cxb4 Ra5 18. bxa5 c5 19. e4 d5
+20. exd5 Kd8 21. a6 Kc7 22. d6+ Kxd6 23. Kf2 Kc7 24. d4 cxd4 25. Nc3 dxc3
+26. Bb2 cxb2 27. Rhg1 bxa1=B 28. Rxg6 hxg6 29. a7 Rxh2+ 30. a8=B Rxf2 31.
+Bb7 Kxb7 { White wins by having less material (stalemate) } 1-0
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.12.11"]
+[Round "?"]
+[White "tone"]
+[Black "stayalive"]
+[Result "1/2-1/2"]
+[WhiteElo "2271"]
+[BlackElo "2740"]
+[TimeControl "180+0"]
+[Time "10:22:00"]
+[PlyCount "70"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "319147263"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[BlackIsComp "Yes"]
+
+1. e3 b5 2. Bxb5 Ba6 3. Bxa6 Nxa6 4. a4 e6 5. h4 Qxh4 6. Rxh4 Ba3 7. Nxa3
+h5 8. Rxh5 Rxh5 9. Qxh5 Kd8 10. Qxf7 d5 11. Qxc7+ Nxc7 12. e4 dxe4 13. c4
+e3 14. dxe3 Ne7 15. Nb5 Nxb5 16. cxb5 Kc7 17. Bd2 Rc8 18. b6+ axb6 19. Ba5
+bxa5 20. Ne2 Kc6 21. b4 axb4 22. Ra3 bxa3 23. Kd2 Rh8 24. Ng1 Rb8 25. Ne2
+Rh8 26. Ng1 Rb8 27. Ne2 a2 28. a5 Rh8 29. Ng1 Re8 30. a6 Rc8 31. Ne2 Rh8
+32. Ng1 Re8 33. Ne2 Rh8 34. Ng1 Re8 35. Ne2 Rh8 { Game drawn by repetition
+} 1/2-1/2
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.11.15"]
+[Round "?"]
+[White "Rai"]
+[Black "stayalive"]
+[Result "1/2-1/2"]
+[WhiteElo "2287"]
+[BlackElo "2809"]
+[TimeControl "180+0"]
+[Time "15:25:00"]
+[PlyCount "76"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "317740663"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[BlackIsComp "Yes"]
+
+1. e3 b6 2. Ba6 Nxa6 3. b4 Nxb4 4. Qh5 Nxa2 5. Qxh7 Rxh7 6. Rxa2 Rxh2 7.
+Rxh2 Ba6 8. Rxa6 c5 9. Rxa7 Rxa7 10. Rh6 gxh6 11. Na3 Rxa3 12. Bxa3 c4 13.
+Bxe7 Bxe7 14. d3 cxd3 15. cxd3 Kf8 16. d4 Kg7 17. d5 b5 18. d6 Bxd6 19. f4
+Bxf4 20. exf4 Qg5 21. fxg5 hxg5 22. Ne2 g4 23. Ng1 d5 24. Nf3 gxf3 25. gxf3
+Ne7 26. f4 f5 27. Kf2 Nc6 28. Kg2 Kf8 29. Kf2 Ke7 30. Kg2 Kd6 31. Kf2 Na5
+32. Ke2 Nb7 33. Kf2 Nc5 34. Ke1 Kc6 35. Kf2 Kd6 36. Ke1 Kc6 37. Kf2 Kd6 38.
+Ke1 Kc6 { Game drawn by repetition } 1/2-1/2
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.08.17"]
+[Round "?"]
+[White "stayalive"]
+[Black "Rai"]
+[Result "1/2-1/2"]
+[WhiteElo "2674"]
+[BlackElo "2265"]
+[TimeControl "180+0"]
+[Time "05:20:00"]
+[PlyCount "36"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "312806005"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[WhiteIsComp "Yes"]
+
+1. e3 c5 2. b4 cxb4 3. Ba6 Nxa6 4. Na3 bxa3 5. Bxa3 e6 6. Bxf8 Kxf8 7. Qh5
+b6 8. Qxh7 Rxh7 9. h4 Rxh4 10. Rxh4 Qxh4 11. c4 Qxf2+ 12. Kxf2 Ne7 13. c5
+bxc5 14. Ne2 Nb8 15. Rh1 Kg8 16. Ra1 Kf8 17. Rh1 Kg8 18. Ra1 Kf8 { Game
+drawn by repetition } 1/2-1/2
+
+[Event "FICS unrated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.06.27"]
+[Round "?"]
+[White "pyzzz"]
+[Black "CatNail"]
+[Result "0-1"]
+[WhiteElo "1897"]
+[BlackElo "1990"]
+[TimeControl "180+0"]
+[Time "06:57:00"]
+[PlyCount "63"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "310035746"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[BlackIsComp "Yes"]
+
+1. e3 b5 2. Bxb5 g5 3. Bxd7+ Nxd7 4. Qg4 Ngf6 5. Qxd7+ Nxd7 6. Ne2 c6 7. b3
+g4 8. g3 h6 9. Rg1 Nf6 10. h3 Qxd2+ 11. Kxd2 gxh3 12. Rg2 hxg2 13. Nec3
+Ne4+ 14. Nxe4 c5 15. Nxc5 Bb7 16. Nxb7 h5 17. g4 hxg4 18. Nd6+ exd6 19. Na3
+g3 20. fxg3 Rc8 21. Kd3 Rxc2 22. Kxc2 f6 23. Kd1 Be7 24. b4 Kf7 25. Rb1 a5
+26. bxa5 Rb8 27. Rxb8 Bd8 28. Rxd8 Kg7 29. Rxd6 Kh6 30. Rxf6+ g1=N 31. Rxh6
+Nh3 32. Rxh3 { Black wins by losing all material } 0-1
+
+[Event "FICS rated suicide game"]
+[Site "FICS, San Jose, California USA"]
+[Date "2007.12.12"]
+[Time "20:25"]
+[Round "-"]
+[White "pweil"]
+[Black "SimonArlott"]
+[TimeControl "600+0"]
+[Mode "ICS"]
+[Result "1-0"]
+
+1. e3 e5 2. Bb5 Qh4 3. Bxd7 Qxf2 4. Bxe8 Qxe3 5. Bxf7 Qxe1 6. Bxg8 Qxd1 7. Bxh7
+Qxc1 8. h4 Qxb1 9. Rxb1 Rxh7 10. Nh3 Bxh3 11. gxh3 Rxh4 12. Rhd1 Rxh3 13. Rh1
+Rxh1 14. Rxh1 Ba3 15. bxa3 e4 16. Rh6 gxh6 17. d3 exd3 18. cxd3 a5 19. a4 b5
+20. axb5 Nc6 21. bxc6 Rb8 22. a4 Rb5 23. axb5 a4 24. b6 cxb6 25. d4 a3 26. c7
+a2 27. c8=R a1=R 28. Ra8 Rxa8 29. d5 Ra7 30. d6 Rc7 31. dxc7 h5 32. c8=R h4 33.
+Rc5 bxc5
+{White wins by losing all material} 1-0
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[Date "2012.02.20"]
+[Round "?"]
+[White "DDD"]
+[Black "MauLo"]
+[Result "1/2-1/2"]
+[WhiteElo "1871"]
+[BlackElo "1707"]
+[TimeControl "60+0"]
+[Time "20:19:00"]
+[PlyCount "196"]
+[Variant "suicide"]
+[FICSGamesDBGameNo "302952984"]
+[WhiteClock "0:01:00.000"]
+[BlackClock "0:01:00.000"]
+[WhiteIsComp "Yes"]
+
+1. c3 f6 2. a3 c6 3. Ra2 g6 4. Ra1 Bg7 5. f3 e6 6. Ra2 Ne7 7. g3 d6 8. Bg2
+Kf7 9. b3 Re8 10. h3 Kg8 11. Rh2 b6 12. Bb2 a6 13. Ra1 h6 14. e3 Bb7 15.
+Ke2 Nd7 16. Kf1 Kh7 17. Kf2 Kg8 18. Ke2 Kh7 19. Ra2 Kg8 20. Kd3 Kh7 21. Bh1
+Kg8 22. Ne2 Kh7 23. Bg2 Kg8 24. Kc2 Kh7 25. Kc1 Kg8 26. Bh1 Kh7 27. Kc2 Kg8
+28. Qe1 Kh7 29. Qf2 Kg8 30. Ng1 Kh7 31. Bg2 Rf8 32. Qe1 Kg8 33. Qc1 Kh7 34.
+Ra1 Kg8 35. Qe1 Kh7 36. d3 Kg8 37. Kd1 Kh7 38. Qd2 Kg8 39. Kc1 Kh7 40. Kc2
+Kg8 41. Kd1 Rf7 42. Kc1 Kh7 43. Ne2 Kg8 44. Bh1 Kh7 45. Ra2 Qc7 46. Ba1 Rc8
+47. Kd1 Rb8 48. Qb2 Rc8 49. Rf2 Rb8 50. Bg2 Rc8 51. Nd2 Rb8 52. Nf1 Rc8 53.
+Qd2 Rb8 54. Bb2 Rc8 55. Qc1 Rb8 56. Ba1 Rc8 57. Rd2 Rb8 58. Qb2 Qd8 59. Ke1
+Qe8 60. Qb1 Qf8 61. Qc1 Qg8 62. Qd1 Qh8 63. Rc2 Qg8 64. Ng1 Qf8 65. Rc1 Qe8
+66. Bh1 Qc8 67. Qe2 Qd8 68. Kd2 Qe8 69. Bb2 Qf8 70. Kd1 Qg8 71. Qe1 Qh8 72.
+Ke2 Qg8 73. Qd2 Qf8 74. Bg2 Qe8 75. Qd1 Qd8 76. Rb1 Qc8 77. Qe1 Qc7 78. Qd1
+Rc8 79. Kd2 Rd8 80. Ke2 Re8 81. Nh2 Ref8 82. Bh1 Rg8 83. Qe1 Rh8 84. Qd2
+Rg8 85. Ba1 Rgf8 86. Re1 Re8 87. Qc2 Rd8 88. Rg2 Rc8 89. Qb2 Rb8 90. Qb1
+Ra8 91. Kf2 Rb8 92. Nf1 Rc8 93. Re2 Rd8 94. Qc2 Re8 95. Qb2 Ref8 96. Qd2
+Rg8 97. Qb2 Rh8 98. Qb1 Rg8 { Game drawn by the 50 move rule } 1/2-1/2
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[FICSGamesDBGameNo "348057996"]
+[White "CatNail"]
+[Black "marcstender"]
+[WhiteElo "1956"]
+[BlackElo "1867"]
+[WhiteIsComp "Yes"]
+[TimeControl "180+0"]
+[Date "2013.12.28"]
+[Time "01:24:00"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[Variant "suicide"]
+[PlyCount "55"]
+[Result "1/2-1/2"]
+
+1. a4 b5 2. axb5 Na6 3. bxa6 Bxa6 4. Rxa6 Rc8 5. Rxa7 h6 6. Rxc7 Rxc7 7. c3 Rxc3 8. Nxc3 d5 9. Nxd5 Qxd5 10. d3 Qxg2 11. Bxh6 Rxh6 12. Bxg2 Rxh2 13. Rxh2 Nh6 14. Rxh6 gxh6 15. f3 f5 16. b3 Kf7 17. e4 fxe4 18. dxe4 Kg6 19. Qd6 exd6 20. e5 dxe5 21. b4 Bxb4 22. Nh3 Bxe1 23. Ng5 hxg5 24. f4 exf4 25. Bf3 Kh5 26. Bxh5 g4 27. Bxg4 f3 28. Bxf3 {Game drawn by stalemate (opposite color bishops)} 1/2-1/2
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[FICSGamesDBGameNo "348037932"]
+[White "CrossCzech"]
+[Black "Chussi"]
+[WhiteElo "2008"]
+[BlackElo "1896"]
+[TimeControl "180+2"]
+[Date "2013.12.27"]
+[Time "13:56:00"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[Variant "suicide"]
+[PlyCount "56"]
+[Result "1/2-1/2"]
+
+1. e3 b5 2. Bxb5 e6 3. Bxd7 Kxd7 4. b4 Bxb4 5. c3 Bxc3 6. Nxc3 g5 7. Nd5 exd5 8. e4 dxe4 9. Qa4 e3 10. dxe3 Qf6 11. Qxd7 Qxa1 12. Qxf7 Qxc1 13. Qxg8 Qxe1 14. Qxh7 Qxf2 15. Qxc7 Rxh2 16. Rxh2 Qxa2 17. Qxa7 Qxg2 18. Qxa8 Qxh2 19. Qxb8 Qxb8 20. Nh3 Bxh3 21. e4 Qb1 22. e5 g4 23. e6 g3 24. e7 Bg4 25. e8=B Bd7 26. Bxd7 Qf5 27. Bxf5 g2 28. Bd3 g1=B {Game drawn by stalemate (opposite color bishops)} 1/2-1/2
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[FICSGamesDBGameNo "348036435"]
+[White "CrossCzech"]
+[Black "Chussi"]
+[WhiteElo "2016"]
+[BlackElo "1888"]
+[TimeControl "180+2"]
+[Date "2013.12.27"]
+[Time "13:22:00"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[Variant "suicide"]
+[PlyCount "121"]
+[Result "1/2-1/2"]
+
+1. Nh3 e6 2. Ng5 Qxg5 3. b4 Bxb4 4. g4 Bxd2 5. Bxd2 Qxg4 6. Bh6 Nxh6 7. Qxd7 Kxd7 8. Bh3 Qxe2 9. Kxe2 Ng4 10. Bxg4 Na6 11. Bxe6 fxe6 12. Nc3 b5 13. Nxb5 Ke7 14. Nxa7 Rxa7 15. c4 c5 16. Kd3 Kd6 17. f4 Rb7 18. Kc2 Rb5 19. cxb5 Bd7 20. bxa6 Kc7 21. f5 exf5 22. a7 Kd8 23. a8=K f4 24. Kd2 Bh3 25. Ke2 Bf1 26. Kxf1 Ke8 27. Kg1 Kf8 28. Kf1 Kg8 29. Re1 h6 30. a4 Rh7 31. a5 Kf7 32. a6 Kg6 33. Kb7 Kf5 34. Re3 fxe3 35. Kf2 exf2 36. Rg1 fxg1=R 37. h4 c4 38. h5 c3 39. a7 Rg4 40. Kc7 c2 41. a8=K Re4 42. Ka7 Kg6 43. hxg6 Re8 44. gxh7 Rg8 45. hxg8=B h5 46. Kab6 h4 47. Kc5 c1=K 48. Bd5 h3 49. K7d6 h2 50. Bh1 g5 51. Ke5 g4 52. Bf3 gxf3 53. Kc4 f2 54. Ke4 h1=R 55. Kf4 Rh8 56. Kd4 Kb1 57. Kd3 Ka2 58. Kd2 Kb3 59. Ke1 fxe1=K 60. Kg4 Rh5 61. Kxh5 {Game drawn by mutual agreement} 1/2-1/2
+
+[Event "FICS rated suicide game"]
+[Site "FICS freechess.org"]
+[FICSGamesDBGameNo "348035924"]
+[White "Chussi"]
+[Black "CrossCzech"]
+[WhiteElo "1893"]
+[BlackElo "2011"]
+[TimeControl "180+2"]
+[Date "2013.12.27"]
+[Time "13:19:00"]
+[WhiteClock "0:03:00.000"]
+[BlackClock "0:03:00.000"]
+[Variant "suicide"]
+[PlyCount "47"]
+[Result "0-1"]
+
+1. e3 e6 2. Ba6 Nxa6 3. b4 Bxb4 4. Qg4 Bxd2 5. Qxg7 Bxe3 6. fxe3 Qg5 7. Qxg5 Nh6 8. Qxh6 Rf8 9. Qxe6 fxe6 10. Kf2 Rxf2 11. h4 Rxc2 12. a4 Rxc1 13. Nd2 Rxg1 14. Raxg1 e5 15. Ne4 Nc5 16. Nxc5 b5 17. axb5 Ba6 18. bxa6 Kf7 19. Nxd7 c6 20. Nxe5 Ke7 21. Nxc6 Rc8 22. Nxa7 Rc6 23. Nxc6 h5 24. Nxe7 {Black wins by having less material (stalemate)} 0-1
+

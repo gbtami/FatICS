@@ -24,14 +24,20 @@ import os
 import sys
 from twisted.application import service, internet
 from twisted.internet.protocol import ServerFactory
-from twisted.internet import task, reactor, ssl
+from twisted.internet import task, ssl
 from twisted.python import log
+
+# import the epoll reactor here instead of using the -r
+# option to twistd to avoid the problem in twisted bug #3785
+from twisted.internet import epollreactor
+epollreactor.install()
+from twisted.internet import reactor
 
 SockJSFactory = None
 try:
     from txsockjs.factory import SockJSFactory
 except ImportError:
-    pass
+    print('Note: SockJS support not loaded')
 
 sys.path.insert(0, 'src/')
 
@@ -82,8 +88,7 @@ def start_services(x):
         key = open('keys/server.key')
         cert = open('keys/server.pem')
     except IOError:
-        # no ssl
-        pass
+        print('Unable to read server keys; SSL support disabled')
     else:
         cert = ssl.PrivateCertificate.loadPEM(key.read() + cert.read())
         ssl_port = config.ssl_port

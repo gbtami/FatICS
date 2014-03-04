@@ -17,14 +17,13 @@
 #
 
 import time
-import re
 
 from twisted.protocols import basic
 from twisted.internet import reactor, defer, task, interfaces
 from zope.interface import implements
 
 import telnet
-import parser
+import parser_ as parser
 import global_
 import login
 import utf8
@@ -53,7 +52,6 @@ class Connection(basic.LineReceiver):
     user = None
     logged_in_again = False
     buffer_output = False
-    ivar_pat = re.compile(r'%b([01]{32})')
     timeout_check = None
     # current defer.Deferred in progress
     d = None
@@ -90,7 +88,7 @@ class Connection(basic.LineReceiver):
             # the string "freechess.org" must appear somewhere in this message;
             # otherwise, Babas will refuse to connect
             self.write('You are connected to the backwards-compatibility port for old FICS clients.\nYou will not be able to use zipseal or international characters.\nThis server is not endorsed by freechess.org.\n\n')
-        self.write("login: ")
+        login.send_login_prompt(self)
 
     def lineLengthExceeded(self, line):
         name = self.user.name if self.user else self.ip
@@ -163,32 +161,9 @@ class Connection(basic.LineReceiver):
         self.timeout_check.cancel()
         self.timeout_check = reactor.callLater(config.login_timeout,
             self.login_timeout)
-        if self.session.check_for_timeseal:
-            self.session.check_for_timeseal = False
-            (t, dec) = timeseal.decode_timeseal(line)
-            if t > 0:
-                if timeseal.check_hello(dec, self):
-                    return
-                else:
-                    self.write("unknown timeseal version\n")
-                    self.loseConnection('timeseal error')
-            else:
-                (t, dec) = timeseal.decode_zipseal(line)
-                if t > 0:
-                    if timeseal.check_hello_zipseal(dec, self):
-                        if self.transport.compatibility:
-                            self.loseConnection('Sorry, you cannot use zipseal with the compatibility port.')
-                        return
-                    else:
-                        self.write("unknown zipseal version\n")
-                        self.loseConnection('zipseal error')
 
-        m = self.ivar_pat.match(line)
-        if m:
-            self.session.set_ivars_from_str(m.group(1))
-            return
-        name = line.strip()
-        u = yield login.get_user(name, self)
+        u = yield login.got_line(line, self)
+
         if self.state != 'quitting':
             if self.state != 'login':
                 print('expected login state, but got %s' % self.state)
@@ -198,8 +173,6 @@ class Connection(basic.LineReceiver):
                 self.state = 'passwd'
                 # hide password
                 self.transport.will(telnet.ECHO)
-            else:
-                self.write("\nlogin: ")
 
     @defer.inlineCallbacks
     def handleLine_passwd(self, line):

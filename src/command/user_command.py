@@ -32,21 +32,25 @@ import global_
 from twisted.internet import defer
 
 from .command import ics_command, Command
-from parser import BadCommandError
+from parser_ import BadCommandError
 
 from game_constants import EXAMINED, PLAYED
 
 
 class LogMixin(object):
     def _display_log(self, log, conn):
+        out = []
         for a in reversed(log):
             if conn.user.is_admin() and not conn.user.vars_['hideinfo']:
                 ip = _(' from %s') % a['log_ip']
             else:
                 ip = ''
             when = conn.user.format_datetime(a['log_when'])
-            conn.write('%s: %-20s %-6s%s\n' %
+            out.append('%s: %-20s %-6s%s' %
                 (when, a['log_who_name'], a['log_which'], ip))
+        if out:
+            out.append('')
+            conn.write('\n'.join(out))
 
 
 @ics_command('finger', 'ooo')

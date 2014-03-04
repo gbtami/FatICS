@@ -198,6 +198,12 @@ class TestPartner(Test):
         self.expect('Declining the partnership request from GuestABCD.', t2)
         self.expect('GuestEFGH declines your partnership request.', t)
 
+        t2.write('set tell 0\n')
+        self.expect('not hear direct tells from unregistered users', t2)
+        t.write('partner guestefgh\n')
+        self.expect('unregistered users', t)
+        self.expect_not('offers', t2)
+
         self.close(t)
         self.close(t2)
 

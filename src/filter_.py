@@ -61,6 +61,31 @@ def check_filter(addr):
 
 
 @defer.inlineCallbacks
+def add_gateway(ip, conn):
+    # make sure it's a valid IP
+    ip = ip.strip()
+    try:
+        IPAddress(ip)
+    except:
+        raise list_.ListError(A_('Invalid gateway IP.\n'))
+    if ip in global_.gateways:
+        raise list_.ListError(_('%s is already on the gateway list.\n') % ip)
+    global_.gateways.add(ip)
+    yield db.add_gateway_ip(ip)
+    conn.write(_('%s added to the gateway list.\n') % ip)
+
+
+@defer.inlineCallbacks
+def remove_gateway(ip, conn):
+    try:
+        global_.gateways.remove(ip)
+    except KeyError:
+        raise list_.ListError(_('%s is not on the gateway list.\n') % ip)
+    yield db.del_gateway_ip(ip)
+    conn.write(_('%s removed from the gateway list.\n') % ip)
+
+
+@defer.inlineCallbacks
 def init():
     # sanity checks
     IPNetwork('127.0.0.1')
@@ -68,5 +93,8 @@ def init():
 
     pats = yield db.get_filtered_ips()
     global_.filters = set([IPNetwork(pat) for pat in pats])
+
+    ips = yield db.get_gateway_ips()
+    global_.gateways = set(ips)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

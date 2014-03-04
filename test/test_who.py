@@ -124,6 +124,10 @@ class TestWho(Test):
 
         try:
             t = self.connect_as_guest('GuestABCD')
+            # to make sure examining works
+            conns[0].write('e\n')
+            self.expect('Starting a game', conns[0])
+
             t.write('who A\n')
 
             # XXX TODO

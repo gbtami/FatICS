@@ -165,6 +165,84 @@ class TestObserve(Test):
         for tt in [t, t2, t3, t4, t5]:
             self.close(tt)
 
+    @with_player('testone')
+    @with_player('testtwo')
+    @with_player('testthree')
+    @with_player('testfour')
+    def test_observe_best(self):
+        t = self.connect_as_admin()
+        t.write('o /z\n')
+        self.expect('No suitable star games are in progress.', t)
+
+
+        t1 = self.connect_as('testone')
+        t2 = self.connect_as('testtwo')
+        t3 = self.connect_as('testthree')
+        t4 = self.connect_as('testfour')
+        t5 = self.connect_as_guest('testfive')
+        t6 = self.connect_as_guest('testsix')
+
+        t.write('asetrating testone blitz chess 1600 200 .005 100 75 35\n')
+        self.expect('Set blitz chess rating for testone.', t)
+        t.write('asetrating testtwo blitz chess 1700 200 .005 100 75 35\n')
+        self.expect('Set blitz chess rating for testtwo.', t)
+        t.write('asetrating testthree blitz chess 1500 200 .005 100 75 35\n')
+        self.expect('Set blitz chess rating for testthree.', t)
+        t.write('asetrating testfour blitz chess 1900 200 .005 100 75 35\n')
+        self.expect('Set blitz chess rating for testfour.', t)
+
+        t1.write('match testtwo 5 0 white\n')
+        self.expect('Challenge: ', t2)
+        t2.write('a\n')
+        self.expect('Creating: ', t1)
+        self.expect('Creating: ', t2)
+
+        t3.write('match testfour 5 0 black\n')
+        self.expect('Challenge: ', t4)
+        t4.write('a\n')
+        self.expect('Creating: ', t3)
+        self.expect('Creating: ', t4)
+
+        t5.write('match testsix 20 5 crazyhouse white\n')
+        self.expect('Challenge: ', t6)
+        t6.write('a\n')
+        self.expect('Creating: ', t5)
+        self.expect('Creating: ', t6)
+
+        t.write('o *\n')
+        self.expect('now observing', t)
+        self.expect('testfour (1900) testthree (1500)', t)
+
+        t.write('o /b\n')
+        self.expect('now observing', t)
+        self.expect('testone (1600) testtwo (1700)', t)
+
+        t.write('o *\n')
+        self.expect('No suitable star games are in progress.', t)
+
+        t.write('obs /z\n')
+        self.expect('testfive (++++) testsix (++++)', t)
+        t.write('obs /z\n')
+        self.expect('No suitable star games are in progress.', t)
+
+        t1.write('abo\n')
+        self.expect('aborted', t2)
+        t3.write('abo\n')
+        self.expect('aborted', t4)
+        t5.write('abo\n')
+        self.expect('aborted', t6)
+
+
+        self.close(t1)
+        self.close(t2)
+        self.close(t3)
+        self.close(t4)
+        self.close(t5)
+        self.close(t6)
+
+        self.close(t)
+
+
 class TestFollow(Test):
     def test_follow_examine(self):
         t = self.connect_as_guest('GuestABCD')

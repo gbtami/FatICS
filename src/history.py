@@ -37,6 +37,14 @@ def save_game(game, msg, result_code):
         result_reason = 'NM'
     elif 'by repetition' in msg:
         result_reason = 'Rep'
+    elif 'losing all material' in msg:
+        result_reason = 'WNM'
+    elif 'having less material' in msg:
+        result_reason = 'WLM'
+    elif 'equal material' in msg:
+        result_reason = 'Sta'
+    elif 'opposite color bishops' in msg:
+        result_reason = 'StB'
     elif 'stalemate' in msg:
         result_reason = 'Sta'
     elif 'resigns' in msg:
@@ -47,7 +55,6 @@ def save_game(game, msg, result_code):
         result_reason = 'PW'
     elif "Partners' game drawn" in msg:
         result_reason = 'PDr'
-    # TODO add suicide PLM and WNM
     elif '50 move rule' in msg:
         result_reason = '50'
     elif 'mate on both boards' in msg:

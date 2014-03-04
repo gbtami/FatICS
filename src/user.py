@@ -206,8 +206,11 @@ class BaseUser(object):
         self.admin_level = level
         return defer.succeed(None)
 
-    def is_admin(self):
-        return self.admin_level >= admin.Level.admin
+    def is_admin(self, level=None):
+        if level is None:
+            return self.admin_level >= admin.Level.admin
+        else:
+            return self.admin_level >= level
 
     def is_newbie(self):
         # 10 hours

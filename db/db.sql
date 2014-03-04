@@ -168,11 +168,11 @@ CREATE TABLE `user_title` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- history
--- each registered player has a history game history, numbered 0 to 99
+-- each registered player has a game history, numbered 0 to 99
 DROP TABLE IF EXISTS `history`;
 CREATE TABLE `history` (
   `user_id` int(8) NOT NULL,
-  `num` tinyint(2) NOT NULL COMMENT 'history numbe,r 0-99',
+  `num` tinyint(2) NOT NULL COMMENT 'history number 0-99',
   `game_id` int(8) NOT NULL,
   `guest_opp_name` VARCHAR(17) COMMENT 'opponent name if a guest',
   INDEX(`user_id`),
@@ -186,6 +186,15 @@ CREATE TABLE `ip_filter` (
   `filter_pattern` VARCHAR(61) NOT NULL,
   PRIMARY KEY (`filter_id`),
   UNIQUE KEY (`filter_pattern`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+-- gateways trusted to set a different IP
+DROP TABLE IF EXISTS `ip_gateway`;
+CREATE TABLE `ip_gateway` (
+  `gateway_id` int(4) NOT NULL AUTO_INCREMENT,
+  `ip` VARCHAR(61) NOT NULL,
+  PRIMARY KEY (`gateway_id`),
+  UNIQUE KEY (`ip`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- game
@@ -219,8 +228,9 @@ CREATE TABLE `game` (
 
   -- for completed games only
   `result` ENUM('1-0', '0-1', '1/2-1/2', '*') DEFAULT NULL,
-  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta', 'Rep',
-     'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB', '50') DEFAULT NULL,
+  `result_reason` ENUM('Adj', 'Agr', 'Dis', 'Fla', 'Mat', 'NM', 'Sta',
+     'StB', 'Rep', 'Res', 'TM', 'PW', 'PDr', 'WLM', 'WNM', 'MBB',
+     '50') DEFAULT NULL,
 
   -- for adjourned games only
   `white_clock` float DEFAULT NULL,
@@ -425,14 +435,6 @@ CREATE TABLE `server_message` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 -- data
--- TOOD: do not use a default password, but rather have the user
--- run a small setup script that prompts for an admin password
--- (and possibly other configuration details)
-LOCK TABLES `user` WRITE;
--- admin account with password 'admin'
-INSERT INTO `user` SET user_id=1,user_name='admin',user_passwd='$2a$12$vUOlVpT6HhRBH3hCNrPW8.bqUwEZ/cRzLOOT142vmNYYxhq5bO4Sy',user_real_name='Admin Account',user_email='admin@fatics.org',user_admin_level=10000;
-UNLOCK TABLES;
-
 LOCK TABLES `channel` WRITE;
 INSERT INTO `channel` VALUES (0,'admin','Admins only',NULL,NULL,NULL);
 INSERT INTO `channel` VALUES (1,'help','Help for new (and not-so-new) users. :-)','This is the help channel.  You can get help by asking a question here; use "tell 1 My question is...".',1,NULL);
@@ -475,6 +477,7 @@ INSERT INTO `variant` VALUES (NULL,'chess','n');
 INSERT INTO `variant` VALUES (NULL,'crazyhouse','z');
 INSERT INTO `variant` VALUES (NULL,'chess960','9');
 INSERT INTO `variant` VALUES (NULL,'bughouse','B');
+INSERT INTO `variant` VALUES (NULL,'suicide','S');
 UNLOCK TABLES;
 
 LOCK TABLES `server_message` WRITE;

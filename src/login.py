@@ -16,21 +16,92 @@
 # along with FatICS.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import re
+
 import user
 import filter_
 import global_
 import find_user
 import config
+from timeseal import timeseal
 
 from twisted.internet import defer
+
+ivar_pat = re.compile(r'^%b([01]{32})')
+# TODO: change to however FICS does this
+host_pat = re.compile(r'^%h(\d+\.\d+\.\d+\.\d+)')
+# I'm not sure if any clients use it, but FICS quits on this command
+quit_pat = re.compile(r'^%q')
+
+
+@defer.inlineCallbacks
+def got_line(line, conn):
+    # Check for timeseal hello. Note that this can be sent after other commands
+    # at the login prompt.
+    (t, dec) = timeseal.decode_timeseal(line)
+    if t > 0:
+        if not conn.session.use_timeseal:
+            # sets use_timeseal if appropriate
+            if timeseal.check_hello(dec, conn):
+                pass
+            else:
+                conn.write('unknown timeseal version\n')
+                conn.loseConnection('timeseal error')
+            return
+        line = dec
+    else:
+        (t, dec) = timeseal.decode_zipseal(line)
+        if t > 0:
+            if not conn.session.use_zipseal:
+                if timeseal.check_hello_zipseal(dec, conn):
+                    if conn.transport.compatibility:
+                        conn.loseConnection('Sorry, you cannot use zipseal with the compatibility port.')
+                else:
+                    conn.write('unknown zipseal version\n')
+                    conn.loseConnection('zipseal error')
+                return
+            line = dec
+
+    line = line.strip()
+    if line and line[0] == '%':
+        m = ivar_pat.match(line)
+        if m:
+            conn.session.set_ivars_from_str(m.group(1))
+            send_login_prompt(conn)
+            return
+
+        m = quit_pat.match(line)
+        if m:
+            conn.loseConnection('client quit')
+            return
+
+        m = host_pat.match(line)
+        if m:
+            if conn.ip in global_.gateways:
+                print('setting IP to %s on behalf of %s' % (m.group(1), conn.ip))
+                conn.ip = m.group(1)
+            else:
+                print('not setting IP for %s because it is not in the gateway list' % conn.ip)
+            send_login_prompt(conn)
+            return
+
+        send_login_prompt(conn)
+        return
+
+    u = yield _get_user(line, conn)
+    if not u:
+        send_login_prompt(conn)
+    defer.returnValue(u)
+
+
+def send_login_prompt(conn):
+    conn.write("\nlogin: ")
 
 
 # return a user object if one exists; otherwise make a
 # guest user
-
-
 @defer.inlineCallbacks
-def get_user(name, conn):
+def _get_user(name, conn):
     u = None
     # Currently there is no way to set the langauge at the login
     # login prompt, but maybe that could change with a %lang or so.

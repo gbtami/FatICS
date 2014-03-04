@@ -23,7 +23,7 @@ import match
 import game
 import find_user
 
-from parser import BadCommandError
+from parser_ import BadCommandError
 from game_constants import opp, EXAMINED
 from .command import Command, ics_command
 from twisted.internet import defer

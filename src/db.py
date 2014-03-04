@@ -412,6 +412,26 @@ if 1:
                 raise DeleteError()
         return adb.runInteraction(do_del)
 
+    # filtered ips
+    @defer.inlineCallbacks
+    def get_gateway_ips():
+        rows = yield adb.runQuery("""SELECT ip FROM ip_gateway LIMIT 1024""")
+        ret = [r['ip'] for r in rows]
+        defer.returnValue(ret)
+
+    @defer.inlineCallbacks
+    def add_gateway_ip(ip):
+        yield adb.runOperation("""INSERT INTO ip_gateway SET ip=%s""",
+            (ip,))
+
+    def del_gateway_ip(ip):
+        def do_del(txn):
+            txn.execute("""DELETE FROM ip_gateway WHERE ip=%s""",
+                (ip,))
+            if txn.rowcount != 1:
+                raise DeleteError()
+        return adb.runInteraction(do_del)
+
     # comments
     @defer.inlineCallbacks
     def add_comment_async(admin_id, user_id, txt):

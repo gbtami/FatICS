@@ -21,7 +21,7 @@ from .command import Command, ics_command
 
 import find_user
 
-from parser import BadCommandError
+from parser_ import BadCommandError
 
 
 @ics_command('summon', 'w')

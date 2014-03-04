@@ -56,7 +56,7 @@ def get_version():
 
 
 def get_copyright_notice():
-    return """Copyright (C) 2010-2013 Wil Mahan
+    return """Copyright (C) 2010-2014 Wil Mahan
 This server is free software licensed under the GNU Affero General Public
 License, version 3 or any later version.  Type "help license" for details.
 The source code for the version of the server you are using is

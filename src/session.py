@@ -37,7 +37,6 @@ class Session(object):
         self.conn = conn
         self.use_timeseal = False
         self.use_zipseal = False
-        self.check_for_timeseal = True
         self.ivars = global_.var_defaults.get_default_ivars()
         self.closed = False
 
@@ -176,7 +175,7 @@ class Session(object):
         """Parse a %b string sent by Jin to set ivars before logging in."""
         for (i, val) in enumerate(s):
             self.ivars[var.ivar_number[i].name] = int(val)
-        self.conn.write("#Ivars set.\n")
+        self.conn.write("\n#Ivars set.\n")
 
     def set_ivar(self, v, val):
         if val is not None:
