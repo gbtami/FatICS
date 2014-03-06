@@ -70,6 +70,13 @@ class TestTakeback(Test):
         self.expect('<12> ', t1)
         self.expect('<12> ', t2)
 
+        t2.write('set notakeback\n')
+        self.expect('You will not allow takebacks.', t2)
+        t1.write('takeback\n')
+        self.expect('Your opponent has requested no takebacks.', t1)
+        t2.write('set notakeback 0\n')
+        self.expect('You will now allow takebacks.', t2)
+
         t1.write('takeback\n')
         self.expect('Takeback request sent.', t1)
         self.expect('GuestOne would like to take back 1 half-move(s).', t2)

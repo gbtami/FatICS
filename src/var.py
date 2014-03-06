@@ -380,6 +380,7 @@ def init_vars():
     BoolVar("showownseek", False, N_("You will now see your own seeks.\n"), N_("You will not see your own seeks.\n")).persist().add_as_var()
     BoolVar("pin", False, N_("You will now hear logins/logouts.\n"), N_("You will not hear logins/logouts.\n")).persist().add_as_var().set_hook(_set_pin_var)
     BoolVar("gin", False, N_("You will now hear game results.\n"), N_("You will not hear game results.\n")).persist().add_as_var().set_hook(_set_gin_var)
+    BoolVar("notakeback", False, N_("You will not allow takebacks.\n"), N_("You will now allow takebacks.\n")).persist().add_as_var()
     # TODO: highlight
 
     # not persistent

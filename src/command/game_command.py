@@ -191,9 +191,9 @@ class Takeback(Command, GameMixin):
     def run(self, args, conn):
         g = self._get_played_game(conn)
         if g:
-            #if g.get_opp(conn.user).vars['notakeback']:
-            #    conn.write('Your opponent has requested no takebacks.\n')
-            #    return
+            if g.get_opp(conn.user).vars_['notakeback']:
+                conn.write(_('Your opponent has requested no takebacks.\n'))
+                return
 
             ply = args[0]
             if ply is None:

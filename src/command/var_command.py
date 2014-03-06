@@ -117,7 +117,7 @@ class Variables(Command):
         conn.write('tourney=?    messreply=?   chanoff=%(chanoff)d       showownseek=%(showownseek)d   tzone=%(disp_tzone)s\n' % u.vars_)
         conn.write('provshow=?                 silence=%(silence)d                       Lang=%(lang)s\n' % u.vars_)
         conn.write('autoflag=%(autoflag)d   unobserve=?   echo=?          examine=%(examine)d\n' % u.vars_)
-        conn.write('minmovetime=%(minmovetime)d              tolerance=?     noescape=%(noescape)d      notakeback=?\n' % u.vars_)
+        conn.write('minmovetime=%(minmovetime)d              tolerance=?     noescape=%(noescape)d      notakeback=%(notakeback)d\n' % u.vars_)
 
         if u.is_online:
             conn.write(_('\nPrompt: %s\n') % u.vars_['prompt'])
