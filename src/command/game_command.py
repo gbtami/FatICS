@@ -221,8 +221,11 @@ class Flag(Command):
 @ics_command('refresh', 'n')
 class Refresh(Command, GameMixin):
     def run(self, args, conn):
+        # XXX Original FICS refreshes all games if no argument is given,
+        # but we refresh only the primary game
         g = self._game_param(args[0], conn)
         if g:
+            g.send_info_str(conn.user)
             g.send_board(conn.user, isolated=True)
 
 

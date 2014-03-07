@@ -440,20 +440,21 @@ class TestResign(Test):
 class TestRefresh(Test):
     def test_refresh(self):
         t = self.connect_as_guest('GuestABCD')
-        t2 = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestEFGH')
         self.set_style_12(t)
         self.set_style_12(t2)
 
-        t.write('match admin white 7 9\n')
+        t.write('match GuestEFGH white 7 9\n')
         self.expect('Challenge:', t2)
         t2.write('accept\n')
         self.expect('Creating: ', t)
         self.expect('Creating: ', t2)
 
-        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD admin 1 7 9 39 39 420 420 1 none (0:00) none 0 0 0', t)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD GuestEFGH 1 7 9 39 39 420 420 1 none (0:00) none 0 0 0', t)
         self.expect('<12> ', t2)
 
         t.write('refresh\n')
+        self.expect('Game 1: GuestABCD (++++) GuestEFGH (++++) unrated blitz 7 9\r\n', t)
         self.expect('<12> ', t)
         self.expect_not('<12> ', t2)
 
@@ -464,18 +465,21 @@ class TestRefresh(Test):
         t3.write('re 999\n')
         self.expect('There is no such game', t3)
         t3.write('re 1\n')
-        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD admin -3 7 9 39 39 420 420 1 none (0:00) none 0 0 0', t3)
+        self.expect('Game 1: GuestABCD (++++) GuestEFGH (++++) unrated blitz 7 9\r\n', t3)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD GuestEFGH -3 7 9 39 39 420 420 1 none (0:00) none 0 0 0', t3)
         t3.write('re nosuchuser\n')
         self.expect('No player named "nosuchuser" is online', t3)
-        t3.write('re admi\n')
-        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD admin -3 7 9 39 39 420 420 1 none (0:00) none 0 0 0', t3)
+        t3.write('re GuestEFG\n')
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD GuestEFGH -3 7 9 39 39 420 420 1 none (0:00) none 0 0 0', t3)
 
         t3.write('o 1\n')
+        self.expect('Game 1: GuestABCD (++++) GuestEFGH (++++) unrated blitz 7 9\r\n', t3)
         self.expect('<12> ', t3)
         t3.write('REF GUESTDEF\n')
         self.expect('GuestDEFG is not playing or examining', t3)
         t3.write('ref\n')
-        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD admin 0 7 9 39 39 420 420 1 none (0:00) none 0 0 0', t3)
+        self.expect('Game 1: GuestABCD (++++) GuestEFGH (++++) unrated blitz 7 9\r\n', t3)
+        self.expect('<12> rnbqkbnr pppppppp -------- -------- -------- -------- PPPPPPPP RNBQKBNR W -1 1 1 1 1 0 1 GuestABCD GuestEFGH 0 7 9 39 39 420 420 1 none (0:00) none 0 0 0', t3)
         self.close(t3)
 
         self.close(t)

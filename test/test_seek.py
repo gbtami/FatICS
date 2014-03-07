@@ -29,6 +29,17 @@ class TestSeek(Test):
 
         self.set_nowrap(t)
 
+        t2.write('set seek 0\n')
+        self.expect('You will not see seek ads.', t2)
+
+        t.write('seek 15 2\n')
+        self.expect_re(r'Your seek has been posted with index (\d+).', t)
+        self.expect_not('GuestABCD', t2)
+        t.write('unseek\n')
+        self.expect('Your seeks have been removed.', t)
+
+        t2.write('set seek\n')
+        self.expect('You will now see seek ads.', t2)
         t.write('seek 3 0\n')
         m = self.expect_re(r'Your seek has been posted with index (\d+).', t)
         n = int(m.group(1))
@@ -395,7 +406,9 @@ class TestPlay(Test):
         t2 = self.connect_as('testplayer')
         t3 = self.connect_as_guest()
 
-        t2.write('set style 12\n')
+        self.set_style_12(t2);
+        t.write('set seek 1\n')
+        self.expect('You will now see seek ads.', t)
 
         t2.write('seek 3 0 white\n')
         m = self.expect_re(r'Your seek has been posted with index (\d+).', t2)
