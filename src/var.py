@@ -261,7 +261,7 @@ class NoteVar(Var):
             return
         yield user.set_note(self, val)
         if val is None:
-            user.write(_('''Note %s unset.\n''') % self.name)
+            user.write(_('''Note %s cleared.\n''') % self.name)
         else:
             user.write((_('''Note %(name)s set: %(val)s\n''') %
                 {'name': self.name, 'val': val}))

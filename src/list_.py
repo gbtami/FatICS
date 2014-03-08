@@ -347,7 +347,7 @@ class BanList(SystemUserList):
             if u.is_banned:
                 raise ListError(_('%s is already on the ban list.\n') % u.name)
             yield u.set_banned(True)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'Banned.')
+            yield db.add_comment(conn.user.id_, u.id_, 'Banned.')
             self._notify_added(conn, u)
             if u.is_online:
                 conn.write(_('Note: %s is online.\n') % u.name)
@@ -362,7 +362,7 @@ class BanList(SystemUserList):
             if not u.is_banned:
                 raise ListError(_('%s is not on the ban list.\n') % u.name)
             yield u.set_banned(False)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'Unbanned.')
+            yield db.add_comment(conn.user.id_, u.id_, 'Unbanned.')
             self._notify_removed(conn, u)
 
     def _get_names(self):
@@ -385,7 +385,7 @@ class MuzzleList(SystemUserList):
             if u.is_muzzled:
                 raise ListError(_('%s is already on the muzzle list.\n') % u.name)
             yield u.set_muzzled(True)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'Muzzled.')
+            yield db.add_comment(conn.user.id_, u.id_, 'Muzzled.')
             self._notify_added(conn, u)
 
     @defer.inlineCallbacks
@@ -398,7 +398,7 @@ class MuzzleList(SystemUserList):
             if not u.is_muzzled:
                 raise ListError(_('%s is not on the muzzle list.\n') % u.name)
             yield u.set_muzzled(False)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'Removed from the muzzle list.')
+            yield db.add_comment(conn.user.id_, u.id_, 'Removed from the muzzle list.')
             self._notify_removed(conn, u)
 
     def _get_names(self):
@@ -421,7 +421,7 @@ class CmuzzleList(SystemUserList):
             if u.is_cmuzzled:
                 raise ListError(_('%s is already on the cmuzzle list.\n') % u.name)
             yield u.set_cmuzzled(True)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'C-muzzled.')
+            yield db.add_comment(conn.user.id_, u.id_, 'C-muzzled.')
             self._notify_added(conn, u)
 
     @defer.inlineCallbacks
@@ -434,7 +434,7 @@ class CmuzzleList(SystemUserList):
             if not u.is_cmuzzled:
                 raise ListError(_('%s is not on the cmuzzle list.\n') % u.name)
             yield u.set_cmuzzled(False)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'Removed from the cmuzzle list.')
+            yield db.add_comment(conn.user.id_, u.id_, 'Removed from the cmuzzle list.')
             self._notify_removed(conn, u)
 
     def _get_names(self):
@@ -456,7 +456,7 @@ class MuteList(SystemUserList):
                 raise ListError(_('%s is already on the mute list.\n') % u.name)
             yield u.set_muted(True)
             if not u.is_guest:
-                yield db.add_comment_async(conn.user.id_, u.id_, 'Muted.')
+                yield db.add_comment(conn.user.id_, u.id_, 'Muted.')
             self._notify_added(conn, u)
 
     @defer.inlineCallbacks
@@ -468,7 +468,7 @@ class MuteList(SystemUserList):
                 raise ListError(_('%s is not on the mute list.\n') % u.name)
             yield u.set_muted(False)
             if not u.is_guest:
-                yield db.add_comment_async(conn.user.id_, u.id_, 'Unmuted.')
+                yield db.add_comment(conn.user.id_, u.id_, 'Unmuted.')
             self._notify_removed(conn, u)
 
     @defer.inlineCallbacks
@@ -536,7 +536,7 @@ class NotebanList(SystemUserList):
             if u.is_notebanned:
                 raise ListError(_('%s is already on the noteban list.\n') % u.name)
             yield u.set_notebanned(True)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'Notebanned.')
+            yield db.add_comment(conn.user.id_, u.id_, 'Notebanned.')
             self._notify_added(conn, u)
 
     @defer.inlineCallbacks
@@ -549,7 +549,7 @@ class NotebanList(SystemUserList):
             if not u.is_notebanned:
                 raise ListError(_('%s is not on the noteban list.\n') % u.name)
             yield u.set_notebanned(False)
-            yield db.add_comment_async(conn.user.id_, u.id_,
+            yield db.add_comment(conn.user.id_, u.id_,
                 'Removed from the noteban list.')
             self._notify_removed(conn, u)
 
@@ -573,7 +573,7 @@ class RatedbanList(SystemUserList):
             if u.is_ratedbanned:
                 raise ListError(_('%s is already on the ratedban list.\n') % u.name)
             yield u.set_ratedbanned(True)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'Ratedbanned.')
+            yield db.add_comment(conn.user.id_, u.id_, 'Ratedbanned.')
             self._notify_added(conn, u)
 
     @defer.inlineCallbacks
@@ -586,7 +586,7 @@ class RatedbanList(SystemUserList):
             if not u.is_ratedbanned:
                 raise ListError(_('%s is not on the ratedban list.\n') % u.name)
             yield u.set_ratedbanned(False)
-            yield db.add_comment_async(conn.user.id_, u.id_, 'Removed from the ratedbanned list.')
+            yield db.add_comment(conn.user.id_, u.id_, 'Removed from the ratedbanned list.')
             self._notify_removed(conn, u)
 
     def _get_names(self):
@@ -608,7 +608,7 @@ class PlaybanList(SystemUserList):
                 raise ListError(_('%s is already on the playban list.\n') % u.name)
             yield u.set_playbanned(True)
             if not u.is_guest:
-                yield db.add_comment_async(conn.user.id_, u.id_, 'Playbanned.')
+                yield db.add_comment(conn.user.id_, u.id_, 'Playbanned.')
             self._notify_added(conn, u)
 
     @defer.inlineCallbacks
@@ -620,7 +620,7 @@ class PlaybanList(SystemUserList):
                 raise ListError(_('%s is not on the playban list.\n') % u.name)
             yield u.set_playbanned(False)
             if not u.is_guest:
-                yield db.add_comment_async(conn.user.id_, u.id_, 'Removed from the playbanned list.')
+                yield db.add_comment(conn.user.id_, u.id_, 'Removed from the playbanned list.')
             self._notify_removed(conn, u)
 
     @defer.inlineCallbacks

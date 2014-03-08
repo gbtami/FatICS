@@ -191,7 +191,7 @@ def parse_args(s, param_str):
                     except ValueError:
                         raise BadCommandError()
                 s = m[1] if len(m) > 1 else None
-        elif c in ['o', 'n', 'p']:
+        elif c in ['o', 'O', 'n', 'p']:
             # optional argument
             if s is None:
                 param = None
@@ -199,7 +199,9 @@ def parse_args(s, param_str):
                 s = s.lstrip()
                 m = re.split(r'\s', s, 1)
                 assert(len(m) > 0)
-                param = m[0].lower()
+                param = m[0]
+                if c == c.lower():
+                    param = param.lower()
                 if len(param) == 0:
                     param = None
                     assert(len(m) == 1)

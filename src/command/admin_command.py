@@ -42,6 +42,21 @@ def log_admin(admin, action):
     logger.log('admin', logger.INFO, admin.name + "(" + admin.session.conn.ip + ") " + action)
 
 
+@defer.inlineCallbacks
+def show_comments(conn, u, reverse=False):
+    log_admin(conn.user, 'lists comments for %s' % u.name)
+    comments = yield db.get_comments(u.id_)
+    if not comments:
+        conn.write(A_('There are no comments for %s.\n') % u.name)
+        return
+    comments = enumerate(comments, start=1)
+    if reverse:
+        comments = reversed(list(comments))
+    conn.write(A_('Comments for %s:\n' % u.name))
+    allcomments = [A_('%d. %s at %s: %s\n') % (i, c['admin_name'], c['when_added'], c['txt']) for (i, c) in comments]
+    conn.write_paged(''.join(allcomments))
+
+
 @ics_command('aclearhistory', 'w', admin.Level.admin)
 class Aclearhistory(Command):
     @defer.inlineCallbacks
@@ -72,7 +87,7 @@ class Addplayer(Command):
             user_id = yield user.add_user(name, email, passwd, real_name)
             # disabled just to speed up testing
             if False:
-                yield db.add_comment_async(conn.user.id_, user_id,
+                yield db.add_comment(conn.user.id_, user_id,
                     'Player added by %s using addplayer.' % conn.user.name)
             conn.write(A_('Added: >%s< >%s< >%s< >%s<\n')
                 % (name, real_name, email, passwd))
@@ -263,7 +278,7 @@ class Asetemail(Command):
                     return
                 old_email = u.email
                 yield u.set_email(email)
-                yield db.add_comment_async(adminuser.id_, u.id_,
+                yield db.add_comment(adminuser.id_, u.id_,
                     'Changed email address from "%s" to "%s".' % (
                         old_email, email))
                 if u.is_online:
@@ -295,7 +310,7 @@ class Asetrealname(Command):
             else:
                 old_real_name = u.real_name
                 yield u.set_real_name(real_name)
-                yield db.add_comment_async(adminuser.id_, u.id_,
+                yield db.add_comment(adminuser.id_, u.id_,
                     'Changed real name from "%s" to "%s".' % (old_real_name, real_name))
                 if u.is_online:
                     u.write_('%(aname)s has changed your real name to "%(real_name)s".\n',
@@ -319,7 +334,7 @@ class Nuke(Command):
                 u.write_('\n\n**** You have been kicked out by %s! ****\n\n', (conn.user.name,))
                 yield u.session.conn.loseConnection('nuked')
                 if not u.is_guest:
-                    yield db.add_comment_async(conn.user.id_, u.id_, 'Nuked.')
+                    yield db.add_comment(conn.user.id_, u.id_, 'Nuked.')
                 conn.write('Nuked: %s\n' % u.name)
                 log_admin(conn.user, 'nukes %s' % u.name)
 
@@ -436,27 +451,27 @@ class Addcomment(Command):
             if u.is_guest:
                 conn.write(A_('Unregistered players cannot have comments.\n'))
             else:
-                yield db.add_comment_async(adminuser.id_, u.id_, args[1])
+                yield db.add_comment(adminuser.id_, u.id_, args[1])
                 conn.write(A_('Comment added for %s.\n') % u.name)
                 log_admin(adminuser, 'adds comment for %s: %s' % (u.name, args[1]))
 
 
-@ics_command('showcomment', 'w', admin.Level.admin)
+@ics_command('showcomment', 'wo', admin.Level.admin)
 class Showcomment(Command):
     @defer.inlineCallbacks
     def run(self, args, conn):
         u = yield find_user.by_prefix_for_user(args[0], conn)
+        reverse = False
+        if args[1]:
+            if args[1] == '/r':
+                reverse = True
+            else:
+                raise BadCommandError
         if u:
             if u.is_guest:
                 conn.write(A_('Unregistered players cannot have comments.\n'))
             else:
-                comments = yield db.get_comments(u.id_)
-                if not comments:
-                    conn.write(A_('There are no comments for %s.\n') % u.name)
-                else:
-                    allcomments = [A_('%s at %s: %s\n') % (c['admin_name'], c['when_added'], c['txt']) for c in comments]
-                    conn.write_paged('\n'.join(allcomments))
-                    log_admin(conn.user, 'lists comments for %s' % u.name)
+                yield show_comments(conn, u, reverse)
 
 
 @ics_command('ftell', 'o', admin.Level.admin)

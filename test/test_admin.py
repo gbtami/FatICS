@@ -123,7 +123,7 @@ class CommandTest(Test):
         self.expect('Nuked: TestPlayer', t)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('admin at .*: Nuked', t)
+        self.expect_re('1. admin at .*: Nuked', t)
 
         self.close(t)
         self.expect_EOF(t2)
@@ -185,7 +185,7 @@ class CommandTest(Test):
         self.expect('admin has changed your email address to "new@example.org".', t2)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('admin at .*: Changed email address from "nobody@example.com" to "new@example.org".', t)
+        self.expect_re('1. admin at .*: Changed email address from "nobody@example.com" to "new@example.org".', t)
 
         t.write('f testplayer\n')
         self.expect_re('Email: +new@example.org', t)
@@ -214,7 +214,7 @@ class CommandTest(Test):
         self.expect('admin has changed your real name to "John Doe".', t2)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('admin at .*: Changed real name from .* to "John Doe".', t)
+        self.expect_re('1. admin at .*: Changed real name from .* to "John Doe".', t)
 
         self.close(t2)
         self.close(t)
@@ -368,8 +368,12 @@ class CommentTest(Test):
         self.expect('Comment added for TestPlayer.', t)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('admin at .*: Comment #2.', t)
-        self.expect_re('admin at .*: This is a test comment.', t)
+        self.expect_re('1. admin at .*: This is a test comment.', t)
+        self.expect_re('2. admin at .*: Comment #2.', t)
+
+        t.write('showcomment testplayer /r\n')
+        self.expect_re('2. admin at .*: Comment #2.', t)
+        self.expect_re('1. admin at .*: This is a test comment.', t)
 
         self.close(t)
 
@@ -414,7 +418,8 @@ class BanTest(Test):
         self.expect('-- ban list: 1 name --\r\nTestPlayer\r\n', t)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('admin at .*: Banned', t)
+        self.expect_re('1. admin at .*: Nuked', t)
+        self.expect_re('2. admin at .*: Banned', t)
 
         t2 = self.connect()
         t2.write('testplayer\n')
@@ -611,7 +616,7 @@ class MuzzleTest(Test):
         self.expect('-- muzzle list: 1 name --\r\nTestPlayer\r\n', t)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('admin at .*: Muzzled', t)
+        self.expect_re('1. admin at .*: Muzzled', t)
 
         t2 = self.connect_as('TestPlayer')
         t2.write('shout test\n')
@@ -686,7 +691,7 @@ class CmuzzleTest(Test):
         self.expect('-- cmuzzle list: 1 name --\r\nTestPlayer\r\n', t)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('admin at .*: C-muzzled', t)
+        self.expect_re('1. admin at .*: C-muzzled', t)
 
         t2 = self.connect_as('TestPlayer')
         t2.write('cshout test\n')
@@ -751,7 +756,7 @@ class MuteTest(Test):
         self.expect('-- mute list: 1 name --\r\nTestPlayer\r\n', t)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('admin at .*: Muted', t)
+        self.expect_re('1. admin at .*: Muted', t)
 
         t2 = self.connect_as('TestPlayer')
         t2.write('t 1 test\n')

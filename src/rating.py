@@ -144,15 +144,20 @@ def update_ratings(game, white_score, black_score):
 
 
 @defer.inlineCallbacks
-def show_ratings(user, conn):
+def show_ratings(user, conn, variants):
+    out = []
     rows = yield db.user_get_ratings_for_finger(user.id_)
+
     if not rows:
-        conn.write(_('%s has not played any rated games.\n\n') % user.name)
+        out.append(_('%s has not played any rated games.\n\n') % user.name)
     else:
-        conn.write(_('speed & variant         rating  RD    Volat.    total  best\n'))
+        out.append(_('speed & variant         rating  RD    Volat.    total  best\n'))
         for row in rows:
+            sv = speed_variant.from_ids(row['speed_id'], row['variant_id'])
+            if variants and sv.variant not in variants:
+                continue
             ent = {}
-            ent['speed_variant'] = str(speed_variant.from_ids(row['speed_id'], row['variant_id']))
+            ent['speed_variant'] = str(sv)
             r = Rating(row['rating'], row['rd'],
                 row['volatility'], row['ltime'], row['win'], row['loss'],
                 row['draw'])
@@ -166,8 +171,9 @@ def show_ratings(user, conn):
             else:
                 ent['best_str'] = '%4d %10s' % (row['best'], row['when_best'])
             ent['total'] = row['total']
-            conn.write('%(speed_variant)-24s %(rating)-6d %(rd)-3.0f %(volatility)9.6f %(total)7d %(best_str)s\n' % ent)
-        conn.write('\n')
+            out.append('%(speed_variant)-24s %(rating)-6d %(rd)-3.0f %(volatility)9.6f %(total)7d %(best_str)s\n' % ent)
+        out.append('\n')
 
+    defer.returnValue(out)
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

@@ -434,18 +434,26 @@ if 1:
 
     # comments
     @defer.inlineCallbacks
-    def add_comment_async(admin_id, user_id, txt):
+    def add_comment(admin_id, user_id, txt):
         yield adb.runOperation("""INSERT INTO user_comment
             SET admin_id=%s,user_id=%s,when_added=NOW(),txt=%s""",
                 (admin_id, user_id, txt))
 
+    @defer.inlineCallbacks
+    def count_comments(user_id):
+        rows = yield adb.runQuery("""SELECT COUNT(*) AS c FROM user_comment
+            WHERE user_id=%s""", (user_id,))
+        defer.returnValue(rows[0]['c'])
+
+    # TODO: we probably shouldn't fetch all comments at once, because
+    # some users have many comments
     @defer.inlineCallbacks
     def get_comments(user_id):
         rows = yield adb.runQuery("""
             SELECT user_name AS admin_name,when_added,txt FROM user_comment
                 LEFT JOIN user ON (user.user_id=user_comment.admin_id)
                 WHERE user_comment.user_id=%s
-                ORDER BY when_added DESC""", (user_id,))
+                ORDER BY when_added ASC""", (user_id,))
         defer.returnValue(rows)
 
     # channels
@@ -634,11 +642,6 @@ if 1:
             if txn.rowcount != 1:
                 raise DeleteError()
         return adb.runInteraction(do_del)
-
-    '''@defer.inlineCallbacks
-    def user_get_censored_async(user_id):
-        rows = yield adb.runQuery("""SELECT user_name FROM user LEFT JOIN censor ON (user.user_id=censor.censored) WHERE censorer=%s""", (user_id,))
-        defer.returnValue(rows)'''
 
     def user_get_censored(user_id):
         return adb.runQuery("""SELECT user_name FROM user LEFT JOIN censor ON (user.user_id=censor.censored) WHERE censorer=%s""",

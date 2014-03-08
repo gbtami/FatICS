@@ -18,6 +18,8 @@
 
 from test import  *
 
+import time
+
 class FingerTest(Test):
     def test_finger(self):
         t = self.connect_as_admin()
@@ -50,6 +52,62 @@ class FingerTest(Test):
 
         t.write('finger ____\n')
         self.expect('not a valid handle', t)
+
+        self.close(t)
+
+    @with_player('TestPlayer')
+    def test_finger_comments(self):
+        t = self.connect_as_admin()
+        t.write('finger testplayer  rc\n')
+
+        self.expect_re(r'Comments:\s+0', t)
+        self.expect('There are no comments for TestPlayer.', t)
+
+        t.write('addc testplayer test comment 1\n')
+        self.expect('Comment added', t)
+        time.sleep(1.1)
+        t.write('addc testplayer test comment 2\n')
+        self.expect('Comment added', t)
+
+
+        t.write('finger testplayer cnr\n')
+        self.expect_re(r'Comments:\s+2', t)
+        self.expect('Comments for TestPlayer:\r\n', t)
+        self.expect_re('1\.[^\n]+ test comment 1\r\n', t)
+        self.expect_re('2\.[^\n]+ test comment 2\r\n', t)
+
+        self.close(t)
+
+        t2 = self.connect_as_guest()
+        t2.write('finger testplayer rc\n')
+        self.expect('Usage:', t2)
+        self.close(t2)
+
+    def test_finger_params(self):
+        t = self.connect_as_admin()
+        t.write('set 1 111\n')
+        self.expect('Note 1 set: 111', t)
+
+        t.write('fi admin r\n')
+        self.expect_not('111', t)
+
+        t.write('fi admin ncr\n')
+        self.expect('111', t)
+        self.expect('There are no comments', t)
+
+        t.write('asetrating admin blitz crazyhouse 2000 200 .005 100 75 35\n')
+        self.expect('Set blitz crazyhouse rating for admin.\r\n', t)
+
+        t.write('finger admin /B r\n')
+        self.expect_not('crazyhouse', t)
+        t.write('finger admin /Bz r\n')
+        self.expect_re('blitz crazyhouse.*2000', t)
+
+        t.write('asetrating admin blitz crazyhouse 0 0 0 0 0 0\n')
+        self.expect('Cleared blitz crazyhouse rating for admin.\r\n', t)
+
+        t.write('set 1\n')
+        self.expect('Note 1 cleared', t)
 
         self.close(t)
 

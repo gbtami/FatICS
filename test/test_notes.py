@@ -60,7 +60,7 @@ class TestNotes(Test):
         self.expect('10: Meg tudom enni az üveget, nem lesz tőle bajom.', t)
 
         t.write('set 10\n')
-        self.expect('Note 10 unset', t)
+        self.expect('Note 10 cleared.', t)
         t.write('fi\n')
         self.expect_not('6:', t)
 
@@ -87,9 +87,9 @@ class TestNotes(Test):
 
         t = self.connect_as_admin()
         t.write('set 2\n')
-        self.expect('Note 2 unset', t)
+        self.expect('Note 2 cleared.', t)
         t.write('set 1\n')
-        self.expect('Note 1 unset', t)
+        self.expect('Note 1 cleared.', t)
 
         t.write('set 8\n')
         self.expect('You do not have that many lines set.', t)
@@ -173,7 +173,7 @@ class TestNotes(Test):
 
         for i in range(10, 0, -1):
             t.write('set %d\n' % i)
-            self.expect('Note %d unset.' % i, t)
+            self.expect('Note %d cleared.' % i, t)
 
         self.close(t)
 

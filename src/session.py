@@ -65,7 +65,7 @@ class Session(object):
         self.seeks = []
         self.observed = GameList()
         self.partner = None
-        self.conn.write(_('**** Starting FICS session as %s ****\n\n') % user.get_display_name())
+        self.conn.write(_('**** Starting FICS session as %s ****\n') % user.get_display_name())
         # XXX could use set comprehensions for Python 2.7+
         self.notifiers_online = set([u for u in
             (global_.online.find_exact(name) for name in self.user.notifiers)
