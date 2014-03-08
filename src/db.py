@@ -453,7 +453,7 @@ if 1:
             SELECT user_name AS admin_name,when_added,txt FROM user_comment
                 LEFT JOIN user ON (user.user_id=user_comment.admin_id)
                 WHERE user_comment.user_id=%s
-                ORDER BY when_added ASC""", (user_id,))
+                ORDER BY when_added ASC, comment_id ASC""", (user_id,))
         defer.returnValue(rows)
 
     # channels

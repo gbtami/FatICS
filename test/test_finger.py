@@ -65,7 +65,6 @@ class FingerTest(Test):
 
         t.write('addc testplayer test comment 1\n')
         self.expect('Comment added', t)
-        time.sleep(1.1)
         t.write('addc testplayer test comment 2\n')
         self.expect('Comment added', t)
 

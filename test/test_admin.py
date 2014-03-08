@@ -418,8 +418,8 @@ class BanTest(Test):
         self.expect('-- ban list: 1 name --\r\nTestPlayer\r\n', t)
 
         t.write('showcomment testplayer\n')
-        self.expect_re('1. admin at .*: Nuked', t)
-        self.expect_re('2. admin at .*: Banned', t)
+        self.expect_re('1. admin at .*: Banned', t)
+        self.expect_re('2. admin at .*: Nuked', t)
 
         t2 = self.connect()
         t2.write('testplayer\n')
