@@ -375,6 +375,10 @@ class TestResults(Test):
         self.set_nowrap(t2)
         self.set_nowrap(t3)
         self.set_nowrap(t4)
+        self.set_style_12(t)
+        self.set_style_12(t2)
+        self.set_style_12(t3)
+        self.set_style_12(t4)
 
         t2.write('set bugopen\n')
         self.expect('You are now open for bughouse.', t2)
@@ -408,6 +412,11 @@ class TestResults(Test):
         self.expect('Creating:', t3)
         self.expect('Creating:', t4)
 
+        t4.write('e4\n')
+        self.expect('P/e2-e4', t2)
+        t2.write('d6\n')
+        self.expect('P/d7-d6', t4)
+
         t2.write('res\n')
         self.expect('GuestEFGH resigns} 1-0', t2)
         self.expect('GuestEFGH resigns} 1-0', t4)
@@ -429,6 +438,10 @@ class TestResults(Test):
         self.set_nowrap(t2)
         self.set_nowrap(t3)
         self.set_nowrap(t4)
+        self.set_style_12(t)
+        self.set_style_12(t2)
+        self.set_style_12(t3)
+        self.set_style_12(t4)
 
         t2.write('set bugopen\n')
         self.expect('You are now open for bughouse.', t2)
@@ -457,6 +470,11 @@ class TestResults(Test):
         self.expect('Creating:', t2)
         self.expect('Creating:', t3)
         self.expect('Creating:', t4)
+
+        t.write('h3\n')
+        self.expect('P/h2-h3', t3)
+        t3.write('h6\n')
+        self.expect('P/h7-h6', t)
 
         t.write('res\n')
         self.expect('GuestABCD resigns} 0-1', t)
@@ -859,6 +877,11 @@ class TestBughouseRules(Test):
         self.expect('<12> ', t3)
         self.expect('<12> ', t4)
 
+        t.write('e4\n')
+        self.expect('P/e2-e4', t3)
+        t3.write('e6\n')
+        self.expect('P/e7-e6', t)
+
         t.write('res\n')
 
         self.expect('GuestABCD resigns} 0-1', t)
@@ -904,6 +927,11 @@ class TestBughouseRules(Test):
         self.expect('<12> ', t2)
         self.expect('<12> ', t3)
         self.expect('<12> ', t4)
+
+        t4.write('e3\n')
+        self.expect('P/e2-e3', t2)
+        t2.write('e5\n')
+        self.expect('P/e7-e5', t4)
 
         t2.write('res\n')
 

@@ -243,8 +243,14 @@ class TestNoescape(Test):
         t2.write('accept\n')
         self.expect('Creating: ', t)
         self.expect('Creating: ', t2)
+        self.expect_re('Game \d+: A disconnection will be considered a forfeit.', t)
         self.expect('<12> ', t)
         self.expect('<12> ', t2)
+
+        # turning off noescape after the game start shouldn't change
+        # anything
+        t.write('set noescape\n')
+        self.expect('You will not request noescape when games start.', t)
 
         moves = ['e4', 'c5', 'Nf3', 'd6', 'd4', 'cxd4', 'Nxd4', 'Nf6',
             'Nc3', 'a6']

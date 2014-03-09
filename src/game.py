@@ -511,13 +511,18 @@ class PlayedGame(Game):
         self.white.write_nowrap(create_str_2)
         self.black.write_nowrap(create_str_2)
 
+        self.minmovetime = ((self.white.vars_['minmovetime'] or
+            self.black.vars_['minmovetime']) and
+            self.speed_variant.variant.name != 'bughouse')
+        self.noescape = (not self.white.is_guest and not self.black.is_guest and
+            self.white.vars_['noescape'] and self.white.vars_['noescape'])
+
         # The order of fields FICS sends differs from the
         # "help iv_gameinfo" documentation; the it= field gives
         # the initial time increment for white, and the i= field
         # does the same for black.  This seems wrong since "it" was
         # supposed to stand for "initial time", but compatibility
         # with FICS is more important than being logical.
-        # not sure about the m and n; maybe they are a version number?
         # TODO: add info about clock style, variant/speed to gameinfo string
         if self.speed_variant.variant.name == 'chess':
             vname = self.speed_variant.speed.name
@@ -525,7 +530,7 @@ class PlayedGame(Game):
             # XXX how do we convey the speed and variant, when the current
             # format only gives one field?
             vname = self.speed_variant.variant.name
-        self.gameinfo_str = '\n<g1> %d p=%d t=%s r=%d u=%d,%d it=%d,%d i=%d,%d pt=0 rt=%s,%s ts=%d,%d m=2 n=0\n' % (self.number, self.private, vname, self.rated, self.white.is_guest, self.black.is_guest, self.initial_secs, self.inc, self.initial_secs, self.inc, self.white_rating.gameinfo_str(), self.black_rating.gameinfo_str(), self.white.has_timeseal(), self.black.has_timeseal())
+        self.gameinfo_str = '\n<g1> %d p=%d t=%s r=%d u=%d,%d it=%d,%d i=%d,%d pt=0 rt=%s,%s ts=%d,%d m=%d n=%d\n' % (self.number, self.private, vname, self.rated, self.white.is_guest, self.black.is_guest, self.initial_secs, self.inc, self.initial_secs, self.inc, self.white_rating.gameinfo_str(), self.black_rating.gameinfo_str(), self.white.has_timeseal(), self.black.has_timeseal(), 2 if self.minmovetime else 0, int(self.noescape))
         if self.white.session.ivars['gameinfo']:
             self.white.write_nowrap(self.gameinfo_str)
         if self.black.session.ivars['gameinfo']:
@@ -597,14 +602,17 @@ class PlayedGame(Game):
 
         # currently we do not send pings at the start of the game
 
+        if self.noescape:
+            for p in self.players | self.observers:
+                p.write_("Game %d: A disconnection will be considered a forfeit.\n", self.number)
+
         # for bughouse, the boards will be sent when the clocks are started
         if self.variant.name != 'bughouse':
             self.send_boards()
-            self.minmovetime = (self.white.vars_['minmovetime'] or
-                self.black.vars_['minmovetime'])
             if not self.minmovetime:
                 for p in self.players | self.observers:
                     p.write_("Game %d: All players agree no minimum move time during the game.\n", self.number)
+
 
     @defer.inlineCallbacks
     def _resume(self, adj, a, b):
@@ -1038,8 +1046,7 @@ class PlayedGame(Game):
         side = self.get_user_side(user)
         opp = self.get_opp(user)
         opp.write_('\nYour opponent, %s, has lost contact or quit.\n', (user.name,))
-        if (user.is_guest or user.has_title('abuser') or
-                (user.vars_['noescape'] and opp.vars_['noescape'])
+        if (user.is_guest or user.has_title('abuser') or self.noescape
                 or not self.variant.can_adjourn):
             res = '0-1' if side == WHITE else '1-0'
             yield self.result('%s forfeits by disconnection' % user.name, res)

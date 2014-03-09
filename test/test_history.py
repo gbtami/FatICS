@@ -100,6 +100,9 @@ class TestHistory(Test):
         t2.write('c4\n')
         self.expect('<12> ', t)
         self.expect('<12> ', t2)
+        t.write('c5\n')
+        self.expect('<12> ', t)
+        self.expect('<12> ', t2)
         t.write('resign\n')
 
         self.expect('admin resigns', t)
@@ -109,13 +112,13 @@ class TestHistory(Test):
 
         t2.write('history admin\n')
         self.expect('History for admin:\r\n                  Opponent      Type         ECO End Date', t2)
-        self.expect(' 0: - ---- B ++++ GuestABCD     [snu 15   0] A10 Res ', t2)
+        self.expect(' 0: - ---- B ++++ GuestABCD     [snu 15   0] A30a Res ', t2)
         self.close(t2)
 
         t = self.connect_as_admin()
         t.write('history\n')
         self.expect('History for admin:\r\n                  Opponent      Type         ECO End Date', t)
-        self.expect(' 0: - ---- B ++++ GuestABCD     [snu 15   0] A10 Res ', t)
+        self.expect(' 0: - ---- B ++++ GuestABCD     [snu 15   0] A30a Res ', t)
 
         t.write('aclearhist admin\n')
         self.expect('History of admin cleared.', t)
@@ -126,11 +129,19 @@ class TestHistory(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_guest('GuestEFGH')
 
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
         t2.write('match GuestABCD 3 1 chess black u\n')
         self.expect('Challenge:', t)
         t.write('a\n')
         self.expect('Creating:', t)
         self.expect('Creating:', t2)
+        t.write('g4\n')
+        self.expect('P/g2-g4', t)
+        t2.write('h5\n')
+        self.expect('P/h7-h5', t2)
+
         t.write('resign\n')
         self.expect('GuestABCD resigns', t)
         self.expect('GuestABCD resigns', t2)
@@ -142,6 +153,16 @@ class TestHistory(Test):
             t.write('a\n')
             self.expect('Creating:', t)
             self.expect('Creating:', t2)
+            if i % 2:
+                t2.write('g4\n')
+                self.expect('P/g2-g4', t2)
+                t.write('h5\n')
+                self.expect('P/h7-h5', t)
+            else:
+                t.write('g4\n')
+                self.expect('P/g2-g4', t)
+                t2.write('h5\n')
+                self.expect('P/h7-h5', t2)
             t.write('resign\n')
             self.expect('GuestABCD resigns', t)
             self.expect('GuestABCD resigns', t2)

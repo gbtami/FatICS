@@ -173,8 +173,8 @@ class SayTest(Test):
         t = self.connect_as('testplayer')
         t2 = self.connect_as_admin()
 
-        t.write('set style 12\n')
-        t2.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
 
         t.write('say hello\n')
         self.expect("I don't know", t)
@@ -193,6 +193,11 @@ class SayTest(Test):
         t2.write('say hi\n')
         self.expect('admin(*)[1] says: hi\r\n', t)
         self.expect('(told testplayer, who is playing)', t2)
+
+        t.write('e4\n')
+        self.expect('P/e2-e4', t2)
+        t2.write('c5\n')
+        self.expect('P/c7-c5', t)
 
         t.write('resign\n')
         self.expect('testplayer resigns', t)

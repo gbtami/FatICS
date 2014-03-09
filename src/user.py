@@ -718,7 +718,8 @@ class RegUser(BaseUser):
             user_rating, color_char, opp_name, opp_rating, eco, flags,
             initial_time, inc, result_reason, when_ended, movetext, idn)
         # XXX hack
-        if find_user.online_exact(opp_name).is_guest:
+        u = find_user.online_exact(opp_name)
+        if u and u.is_guest:
             entry['guest_opp_name'] = entry['opp_name']
         else:
             entry['guest_opp_name'] = None

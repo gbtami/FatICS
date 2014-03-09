@@ -109,7 +109,13 @@ class Resign(Command, GameMixin):
             return
         g = self._get_played_game(conn)
         if g:
-            yield g.resign(conn.user)
+            # TODO: also abort a bughouse game if the partner's game
+            # has fewer than 2 ply
+            if g.variant.pos.ply < 2:
+                d = g.result('Game aborted on move 1 by %s' % conn.user.name, '*')
+                assert(d.called)
+            else:
+                yield g.resign(conn.user)
 
 
 @ics_command('eco', 'oo')

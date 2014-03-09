@@ -403,11 +403,19 @@ class TestResign(Test):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_admin()
 
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
         t.write('match admin white 1 0\n')
         self.expect('Challenge:', t2)
         t2.write('accept\n')
         self.expect('Creating: ', t)
         self.expect('Creating: ', t2)
+
+        t.write('Nf3\n')
+        self.expect('N/g1-f3', t2)
+        t2.write('Nf6\n')
+        self.expect('N/g8-f6', t)
 
         t.write('resign\n')
         self.expect('{Game 1 (GuestABCD vs. admin) GuestABCD resigns} 0-1', t)
@@ -418,22 +426,59 @@ class TestResign(Test):
         self.close(t)
         self.close(t2)
 
-    def test_resign_black(self):
+    def test_resign_abort(self):
         t = self.connect_as_guest('GuestABCD')
-        t2 = self.connect_as_admin()
+        t2 = self.connect_as_guest('GuestEFGH')
 
-        t.write('match admin white 1 0\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
+        t.write('match guestefgh white 5 0\n')
         self.expect('Challenge:', t2)
         t2.write('accept\n')
         self.expect('Creating: ', t)
         self.expect('Creating: ', t2)
 
-        t2.write('resign\n')
-        self.expect('{Game 1 (GuestABCD vs. admin) admin resigns} 1-0', t)
-        self.expect('{Game 1 (GuestABCD vs. admin) admin resigns} 1-0', t2)
+        t.write('resign\n')
+        self.expect('aborted on move 1', t)
+        self.expect('aborted on move 1', t2)
 
-        t2.write('aclearhist admin\n')
-        self.expect('History of admin cleared.', t2)
+        t2.write('match guestabcd white 15 5\n')
+        self.expect('Challenge:', t)
+        t.write('accept\n')
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+        t2.write('e4\n')
+        self.expect('P/e2-e4', t)
+        self.expect('P/e2-e4', t2)
+        t.write('resign\n')
+        self.expect('aborted on move 1', t)
+        self.expect('aborted on move 1', t2)
+
+        self.close(t)
+        self.close(t2)
+
+    def test_resign_black(self):
+        t = self.connect_as_guest('GuestABCD')
+        t2 = self.connect_as_guest('GuestEFGH')
+
+        self.set_style_12(t)
+        self.set_style_12(t2)
+        t.write('match guestefgh 1 0 white\n')
+        self.expect('Challenge:', t2)
+        t2.write('a\n')
+        self.expect('Creating: ', t)
+        self.expect('Creating: ', t2)
+
+        t.write('b4\n')
+        self.expect('P/b2-b4', t2)
+        t2.write('e5\n')
+        self.expect('P/e7-e5', t)
+
+        t2.write('resign\n')
+        self.expect('{Game 1 (GuestABCD vs. GuestEFGH) GuestEFGH resigns} 1-0', t)
+        self.expect('{Game 1 (GuestABCD vs. GuestEFGH) GuestEFGH resigns} 1-0', t2)
+
         self.close(t)
         self.close(t2)
 

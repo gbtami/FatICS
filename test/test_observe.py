@@ -24,7 +24,10 @@ class TestObserve(Test):
         t2 = self.connect_as_guest('GuestEFGH')
         t3 = self.connect_as_guest('GuestIJKL')
 
-        t.write('set style 12\n')
+        self.set_style_12(t)
+        self.set_style_12(t2)
+        self.set_style_12(t3)
+
         t.write('observe\n')
         self.expect('Usage:', t)
         t.write('unobserve\n')
@@ -79,6 +82,9 @@ class TestObserve(Test):
         t.write('ob guestijkl\n')
         self.expect('You are now observing game 1.', t)
         self.expect('<12> ', t)
+
+        t3.write('h5\n')
+        self.expect('P/h7-h5', t3)
 
         t2.write('res\n')
         self.expect('GuestEFGH resigns} 0-1', t)

@@ -469,6 +469,14 @@ class TestRematch(Test):
         self.expect('Creating: ', t)
         self.expect('Creating: ', t2)
 
+        self.set_style_12(t)
+        self.set_style_12(t2)
+
+        t.write('d4\n')
+        self.expect('P/d2-d4', t2)
+        t2.write('d5\n')
+        self.expect('P/d7-d5', t)
+
         t.write('res\n')
         self.expect('admin resigns} 0-1', t)
         self.expect('admin resigns} 0-1', t2)
@@ -478,6 +486,10 @@ class TestRematch(Test):
         t2.write('a\n')
         self.expect('Creating: ', t)
         self.expect('Creating: ', t2)
+        t2.write('d4\n')
+        self.expect('P/d2-d4', t)
+        t.write('Nf6\n')
+        self.expect('N/g8-f6', t2)
         t.write('res\n')
         self.expect('admin resigns} 1-0', t)
         self.expect('admin resigns} 1-0', t2)
@@ -488,8 +500,8 @@ class TestRematch(Test):
         self.expect('Creating: ', t)
         self.expect('Creating: ', t2)
         t.write('res\n')
-        self.expect('admin resigns} 0-1', t)
-        self.expect('admin resigns} 0-1', t2)
+        self.expect('aborted', t)
+        self.expect('aborted', t2)
 
         t.write('aclearhist admin\n')
         self.expect('History of admin cleared.', t)
