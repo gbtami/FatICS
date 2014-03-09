@@ -36,6 +36,11 @@ quit_pat = re.compile(r'^%q')
 
 @defer.inlineCallbacks
 def got_line(line, conn):
+    if line.startswith('GET '):
+        # ignore stupid web bots
+        conn.loseConnection('not HTTP')
+        return
+
     # Check for timeseal hello. Note that this can be sent after other commands
     # at the login prompt.
     (t, dec) = timeseal.decode_timeseal(line)

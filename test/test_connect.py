@@ -31,6 +31,11 @@ class ConnectTest(Test):
         self.expect('login:', t, "login prompt")
         t.close()
 
+    def test_GET(self):
+        t = self.connect()
+        t.write('GET / HTTP/1.0\n')
+        self.expect_EOF(t)
+
     def test_long_line(self):
         t = self.connect()
         self.expect('login:', t)
