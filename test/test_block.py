@@ -18,7 +18,7 @@
 
 from test import *
 
-from block_codes import BLKCMD_FINGER, BLKCMD_ECO
+from block_codes import *
 
 class TestBlock(Test):
     def test_block(self):
@@ -39,6 +39,14 @@ class TestBlock(Test):
 
         t.write('4 eco e e48\n')
         self.expect('%c4%c%s%c  ECO: E48' % (0x15, 0x16, BLKCMD_ECO, 0x16), t)
+        self.expect('\r\n%c' % 0x17, t)
+
+        t.write('5 set style 12\n')
+        self.expect('%c5%c%s%cStyle 12 set.' % (0x15, 0x16, BLKCMD_SET, 0x16), t)
+        self.expect('\r\n%c' % 0x17, t)
+
+        t.write('6 e\n')
+        self.expect('%c6%c%s%cStarting a game in examine (scratch) mode.\r\n\r\n<12>' % (0x15, 0x16, BLKCMD_EXAMINE, 0x16), t)
         self.expect('\r\n%c' % 0x17, t)
 
         t.write('1 iset block 0\n')

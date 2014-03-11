@@ -95,8 +95,7 @@ class BaseUser(object):
 
     def write_nowrap(self, s, prompt=False):
         """ Write a string to the user without word wrapping. """
-        # XXX this does not obey conn.buffer_output
-        self.session.conn.transport.write(s, wrap=False)
+        self.session.conn.write_nowrap(s)
         if prompt:
             self.write_prompt()
 

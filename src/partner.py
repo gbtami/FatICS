@@ -26,6 +26,9 @@ class Partner(Offer):
     def __init__(self, a, b):
         Offer.__init__(self, 'partnership request')
 
+        # FICS informs player A if player B is ratedbanned, but
+        # that arguably leaks information unnecessarily
+
         # block offers from guests if the recipient does not allow tells
         # from guests, to reduce spam
         if a.is_guest and not b.vars_['tell']:

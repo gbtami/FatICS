@@ -327,6 +327,7 @@ class Connection(basic.LineReceiver):
         else:
             self.transport.write(s)
 
+    # TODO: perhaps merge with conn.write
     def write_nowrap(self, s):
         if self.buffer_output:
             self.output_buffer += s
