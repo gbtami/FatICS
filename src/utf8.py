@@ -31,17 +31,23 @@ def check_user_utf8(s):
             unicode(s, 'utf-8')
         except UnicodeDecodeError:
             ret = False
+    else:
     return ret
 
 illegal_char_re = re.compile('''[^\x20-\xfd]''')
+maciejg_re = '&#x([0-9a-f]+);'
+should_encode_re = re.compile(u'([^\x00-\x7e])')
 
+# Maciej format, supported by Raptor and Yafi
+def decode_maciejg(s):
+    #lambda m: (unichr(int(m.group(1), 16)).encode('utf-8') if
+    return re.sub(maciejg_re,
+        lambda m: (unichr(int(m.group(1), 16)) if
+            len(m.group(1)) <= 6 else m.group(0)), s)
 
-def utf8_to_ascii(s):
-    """ Try to gracefully convert UTF-8 to ASCII.  Non-ASCII chars are
-    replaced by '?'. """
-    try:
-        return unicode(s, 'utf-8').encode('ascii', 'replace')
-    except UnicodeDecodeError:
-        return re.sub(illegal_char_re, '?', s)
+def encode_maciejg(s):
+    s = s.decode('utf-8')
+    return re.sub(should_encode_re, lambda m: (u'&#x' +
+        format(ord(m.group(1)), 'x') + u';'), s).encode('utf-8')
 
 # vim: expandtab tabstop=4 softtabstop=4 shiftwidth=4 smarttab autoindent

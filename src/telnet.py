@@ -222,7 +222,7 @@ class TelnetTransport(protocol.Protocol):
 
     def _escape(self, data):
         if self.compatibility:
-            data = utf8.utf8_to_ascii(data)
+            data = utf8.encode_maciejg(data)
             data = data.replace('\n', '\n\r')
         else:
             # According to the telnet protocol, we are supposed

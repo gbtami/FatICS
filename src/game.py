@@ -613,7 +613,6 @@ class PlayedGame(Game):
                 for p in self.players | self.observers:
                     p.write_("Game %d: All players agree no minimum move time during the game.\n", self.number)
 
-
     @defer.inlineCallbacks
     def _resume(self, adj, a, b):
         """ Resume an adjourned game. """

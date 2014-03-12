@@ -233,6 +233,7 @@ class Connection(basic.LineReceiver):
 
     @defer.inlineCallbacks
     def handleLine_prompt(self, line):
+        # XXX does this belong here?
         if line == TIMESEAL_PONG:
             self.session.pong(self.session.timeseal_last_timestamp)
             return
@@ -242,6 +243,11 @@ class Connection(basic.LineReceiver):
                 (self.user.name, line))
             self.write(_("Command ignored: invalid characters.\n"))
             return
+        line = line.decode('utf-8')
+
+        if self.transport.compatibility:
+            # decode special characters in Maciejg format
+            line = utf8.decode_maciejg(line)
 
         global_.langs[self.user.vars_['lang']].install(names=['ngettext'])
         global_.curuser = self.user
