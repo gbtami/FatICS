@@ -31,7 +31,6 @@ def check_user_utf8(s):
             unicode(s, 'utf-8')
         except UnicodeDecodeError:
             ret = False
-    else:
     return ret
 
 illegal_char_re = re.compile('''[^\x20-\xfd]''')
@@ -40,7 +39,6 @@ should_encode_re = re.compile(u'([^\x00-\x7e])')
 
 # Maciej format, supported by Raptor and Yafi
 def decode_maciejg(s):
-    #lambda m: (unichr(int(m.group(1), 16)).encode('utf-8') if
     return re.sub(maciejg_re,
         lambda m: (unichr(int(m.group(1), 16)) if
             len(m.group(1)) <= 6 else m.group(0)), s)
