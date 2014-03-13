@@ -33,7 +33,8 @@ class TestBlock(Test):
         # 0x17 == BLOCK_END
         self.expect('%c0%c519%c%c\r\n' % (0x15, 0x16, 0x16, 0x17), t)
 
-        t.write('3 finger\n')
+        # the code should be correct even for abbreviated commands
+        t.write('3 fi\n')
         self.expect('%c3%c%s%cFinger of ' % (0x15, 0x16, BLKCMD_FINGER, 0x16), t)
         self.expect('\r\n%c' % 0x17, t)
 

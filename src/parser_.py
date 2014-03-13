@@ -129,7 +129,7 @@ def _do_parse(s, conn):
             ret = block_codes.BLKCMD_ERROR_BADCOMMAND
             cmd.usage(conn)
         else:
-            ret = block_codes.__dict__.get("BLKCMD_%s" % word.upper(), block_codes.BLKCMD_SUCCESS)
+            ret = cmd.block_code
     if d:
         def handleErr(fail):
             if fail.check(BadCommandError):
@@ -152,10 +152,7 @@ def parse(s, conn):
         if identifier is not None:
             d = _do_parse(s, conn)
             def finish_block(code):
-                # XXX maybe the user shouldn't ever quit
-                # before the end of the block is sent
-                if conn.user.is_online:
-                    block.end_block(identifier, code, conn)
+                block.end_block(identifier, code, conn)
             d.addCallback(finish_block)
         else:
             d = defer.succeed(block_codes.BLKCMD_ERROR_NOSEQUENCE)

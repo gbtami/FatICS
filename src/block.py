@@ -24,6 +24,8 @@ from block_codes import (BLOCK_START, BLOCK_SEPARATOR,
 
 if 1:
     def send_block(identifier, code, output, conn):
+        if not conn.user or not conn.user.is_online:
+            return
         conn.write('%c%s%c%d%c%s%c\n' %
             (BLOCK_START, identifier, BLOCK_SEPARATOR, code, BLOCK_SEPARATOR,
             output, BLOCK_END))

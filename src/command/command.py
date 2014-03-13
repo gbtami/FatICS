@@ -20,6 +20,7 @@ import admin
 import channel
 import global_
 import config
+import block_codes
 
 from twisted.internet import defer
 
@@ -39,6 +40,7 @@ class Command(object):
     def __init__(self, name, param_str, admin_level):
         assert(hasattr(self, 'run'))
         self.name = name
+        self.block_code = block_codes.__dict__["BLKCMD_%s" % name.upper()]
         self.param_str = param_str
         self.admin_level = admin_level
         global_.admin_commands[name] = self

@@ -37,11 +37,13 @@ illegal_char_re = re.compile('''[^\x20-\xfd]''')
 maciejg_re = '&#x([0-9a-f]+);'
 should_encode_re = re.compile(u'([^\x00-\x7e])')
 
+
 # Maciej format, supported by Raptor and Yafi
 def decode_maciejg(s):
     return re.sub(maciejg_re,
         lambda m: (unichr(int(m.group(1), 16)) if
             len(m.group(1)) <= 6 else m.group(0)), s)
+
 
 def encode_maciejg(s):
     s = s.decode('utf-8')
