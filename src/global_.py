@@ -90,7 +90,7 @@ curuser = None
 
 # load commands
 import command
-command # pacify pyflakes
+command  # pacify pyflakes
 
 
 @defer.inlineCallbacks

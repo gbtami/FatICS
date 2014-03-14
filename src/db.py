@@ -43,7 +43,7 @@ if 1:
             cursor = adbconn.cursor()
             cursor.execute("""SET time_zone='+00:00'""")
             cursor.execute("""SET charset utf8""")
-            cursor.execute("""SET wait_timeout=604800""") # 1 week
+            cursor.execute("""SET wait_timeout=604800""")  # 1 week
             cursor.close()
         global adb
         adb = adbapi.ConnectionPool("MySQLdb",

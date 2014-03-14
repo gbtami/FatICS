@@ -232,7 +232,7 @@ class Seek(MatchStringParser):
             color_char = '?'
         else:
             color_char = 'W' if self.side == WHITE else 'B'
-        auto_char = 'f' if self.manual else 't' # ugh
+        auto_char = 'f' if self.manual else 't'
         formula_char = 't' if self.formula else 'f'
         seekinfo_str = '<s> %d w=%s ti=%02d rt=%d%s t=%d i=%d r=%s tp=%s c=%s rr=%d-%d a=%s f=%s\n' % (
             self.num, self.a.name, _seekinfo_titles(self.a), int(self.rating),

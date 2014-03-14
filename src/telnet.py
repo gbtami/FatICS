@@ -40,22 +40,22 @@ import utf8
 
 # telnet codes
 ECHO = chr(1)
-TM = chr(6) # timing mark
+TM = chr(6)  # timing mark
 # Note that we violate RFC 854, which says: "On a host that never sends the
 # Telnet command Go Ahead (GA), the Telnet Server MUST attempt to negotiate
 # the Suppress Go Ahead option...." We only send WILL SGA in response to
 # DO SGA from the client.
-SGA = chr(3) # supress go-ahead
-IP = chr(244) # interrupt process
-AYT = chr(246) # are you there?
-EL = chr(248) # erase line
+SGA = chr(3)  # supress go-ahead
+IP = chr(244)  # interrupt process
+AYT = chr(246)  # are you there?
+EL = chr(248)  # erase line
 WILL = chr(251)
 WONT = chr(252)
 DO = chr(253)
 DONT = chr(254)
-IAC = chr(255) # interpret as command
+IAC = chr(255)  # interpret as command
 
-BS = chr(8) # backspace
+BS = chr(8)  # backspace
 
 
 class TelnetTransport(protocol.Protocol):

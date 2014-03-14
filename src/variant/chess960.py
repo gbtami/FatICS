@@ -579,7 +579,7 @@ class Position(object):
 
             self.fifty_count = int(fifty_count, 10)
             self.ply = 2 * (int(full_moves, 10) - 1) + int(not self.wtm)
-            self.start_ply = self.ply # 0 for new games
+            self.start_ply = self.ply  # 0 for new games
 
             if ep == '-':
                 self.ep = None
@@ -1260,53 +1260,6 @@ class Position(object):
                 i -= 2
 
         return False
-
-    def to_xfen(self):
-        p = []
-        for r in range(7, -1, -1):
-            num_empty = 0
-            for f in range(0, 8):
-                sq = 0x10 * r + f
-                pc = self.board[sq]
-                if pc == '-':
-                    num_empty += 1
-                else:
-                    if num_empty > 0:
-                        p.append(str(num_empty))
-                        num_empty = 0
-                    p.append(pc)
-            if num_empty > 0:
-                p.append(str(num_empty))
-                num_empty = 0
-            if r != 0:
-                p.append('/')
-        pos_str = ''.join(p)
-
-        stm_str = 'w' if self.wtm else 'b'
-
-        castling = ''
-        assert(False) # XXX currently this function is not used
-        if self.check_castle_flags(True, True):
-            castling += 'K'
-        if self.check_castle_flags(True, False):
-            castling += 'Q'
-        if self.check_castle_flags(False, True):
-            castling += 'k'
-        if self.check_castle_flags(False, False):
-            castling += 'q'
-        if castling == '':
-            castling = '-'
-
-        # we follow X-FEN rather than FEN: only print an en passant
-        # square if there is a legal en passant capture
-        if self.ep:
-            ep_str = sq_to_str(self.ep)
-            assert(ep_str[1] in ['3', '6'])
-        else:
-            ep_str = '-'
-
-        full_moves = self.ply // 2 + 1
-        return "%s %s %s %s %d %d" % (pos_str, stm_str, castling, ep_str, self.fifty_count, full_moves)
 
     def check_castle_flags(self, wtm, is_oo):
         return bool(self.castle_flags & (1 << (2 * int(wtm) + int(is_oo))))

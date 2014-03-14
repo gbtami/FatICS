@@ -107,7 +107,7 @@ class Fmessage(Command, FormatMessage):
                 message_id = msg['message_id']
                 msg['forwarder_name'] = conn.user.name
                 yield db.forward_message(conn.user.id_, u2.id_, message_id)
-                msg_str_u2 = self._format_msg(msg, u2) # localized for receiver
+                msg_str_u2 = self._format_msg(msg, u2)  # localized for receiver
 
                 if u2.vars_['mailmess']:
                     email.send_mail(conn.user, u2, msg_str_u2)
@@ -215,7 +215,7 @@ class Messages(Command, FormatMessage):
                 message_id = yield db.send_message(conn.user.id_, to.id_,
                     args[1])
                 msg = yield db.get_message(message_id)
-                msg_str_to = self._format_msg(msg, to) # localized for receiver
+                msg_str_to = self._format_msg(msg, to)  # localized for receiver
 
                 if to.vars_['mailmess']:
                     email.send_mail(conn.user, to, msg_str_to)

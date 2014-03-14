@@ -234,7 +234,7 @@ class Games(Command):
                     g.black_name, g.speed_variant.abbrev, rated_char,
                     g.white_time, g.inc)
 
-                wtime = btime = '0:00' # XXX
+                wtime = btime = '0:00'  # XXX
                 line = line + "%6s -%6s (%2d-%2d) %c: %2d\n\n" % (wtime, btime,
                     g.variant.pos.material[1], g.variant.pos.material[0],
                     'W' if g.variant.get_turn() else 'B',
@@ -244,7 +244,7 @@ class Games(Command):
                     gtype = "Exam."
                 else:
                     gtype = "Setup"
-                variant_char = rated_char = 'u' # XXX
+                variant_char = rated_char = 'u'  # XXX
                 line = "%3d (%s %4d %-11.11s %4d %-10.10s) [ %c%c%3d %3d] " % (
                     g.number, gtype, g.white_rating, g.white_name,
                     g.black_rating, g.black_name, variant_char,

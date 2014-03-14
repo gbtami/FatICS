@@ -19,7 +19,7 @@
 
 import time
 import pytz
-import calendar # for timegm
+import calendar
 
 from twisted.internet import defer
 

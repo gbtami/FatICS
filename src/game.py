@@ -545,8 +545,8 @@ class PlayedGame(Game):
             assert(len(moves) == chal.adjourned['ply_count'])
             for san_mv in moves:
                 mv = self.variant.pos.move_from_san(san_mv)
-                mv.time = 0.0 # XXX
-                mv.clock_time = None # XXX
+                mv.time = 0.0  # XXX
+                mv.clock_time = None  # XXX
                 self.variant.do_move(mv)
 
         assert(self.white.session.game is None)
@@ -650,7 +650,7 @@ class PlayedGame(Game):
         self.clock_name = adj['clock_name']
         self.clock = clock.clock_names[self.clock_name](self,
             adj['white_clock'], adj['black_clock'])
-        self.idn = adj['idn'] # for chess960
+        self.idn = adj['idn']  # for chess960
         if self.clock_name == 'overtime':
             self.overtime_move_num = adj['overtime_move_num']
             self.overtime_bonus = adj['overtime_bonus']

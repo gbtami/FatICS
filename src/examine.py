@@ -37,8 +37,8 @@ class ExaminedGame(Game):
 
         self.white_time = 0
         self.black_time = 0
-        self.white_rating = 0 # XXX
-        self.black_rating = 0 # XXX
+        self.white_rating = 0  # XXX
+        self.black_rating = 0  # XXX
         self.clock = clock.UntimedClock()
         self.inc = 0
         self.rated_str = 'unrated'

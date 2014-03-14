@@ -104,7 +104,7 @@ class DivSymbol(Symbol):
     def led(self, left):
         right = expression(80)
         if right == 0:
-            right = .001 # fudge factor
+            right = .001  # fudge factor
         return left // right
 
 

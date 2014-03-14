@@ -29,7 +29,7 @@ INITIAL_RD = 350
 
 # I solved 350 = sqrt(0^2 + 1051897*vol^2), so a rd of 0 would increase to
 # 350 in about 2 years.
-INITIAL_VOLATILITY = .00196 # 0.6
+INITIAL_VOLATILITY = .00196
 
 
 class Rating(object):

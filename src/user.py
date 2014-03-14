@@ -745,7 +745,7 @@ class RegUser(BaseUser):
         yield db.user_set_rating(self.id_, speed_variant.speed.id_,
             speed_variant.variant.id_, rating, rd, volatility, win, loss,
             draw, win + loss + draw, ltime)
-        yield self._load_ratings() # TODO: don't reload all ratings
+        yield self._load_ratings()  # TODO: don't reload all ratings
 
     def del_rating(self, sv):
         """Delete a rating for a given speed and variant.  Return a

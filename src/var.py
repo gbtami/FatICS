@@ -422,7 +422,7 @@ def init_ivars():
     BoolVar("startpos", False).add_as_ivar(5)
     BoolVar("block", False).add_as_ivar(6)
     BoolVar("gameinfo", False).add_as_ivar(7)
-    BoolVar("xdr", False).add_as_ivar(8) # ignored, possibly related to xml
+    BoolVar("xdr", False).add_as_ivar(8)  # ignored, possibly related to xml
     BoolVar("pendinfo", False).add_as_ivar(9)
     BoolVar("graph", False).add_as_ivar(10)
     BoolVar("seekinfo", False).add_as_ivar(11)
@@ -447,7 +447,7 @@ def init_ivars():
     BoolVar("fr", False).add_as_ivar(30)
     BoolVar("nowrap", False).add_as_ivar(31).set_hook(_set_nowrap)
     BoolVar("allresults", False).add_as_ivar(32)
-    BoolVar("obsping", False).add_as_ivar(33) # ignored
+    BoolVar("obsping", False).add_as_ivar(33)  # ignored
     BoolVar("singleboard", False).add_as_ivar(34)
 
     # This one does not seem to have a number.

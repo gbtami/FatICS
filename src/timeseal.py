@@ -25,7 +25,7 @@ import subprocess
 TIMESEAL_1_PING = '\n[G]\n'
 TIMESEAL_2_PING = '[G]\x00'
 ZIPSEAL_PING = '[G]\x00'
-TIMESEAL_PONG = '\x02\x39' # also known as "\x029" or "9"
+TIMESEAL_PONG = '\x02\x39'  # also known as "\x029" or "9"
 
 
 class TimesealError(Exception):
@@ -68,7 +68,7 @@ class Timeseal(object):
 
     def compress_zipseal(self, line):
         try:
-            line = line[0:1023] # XXX
+            line = line[0:1023]  # XXX
             self.zipseal_encoder.stdin.write('%04x%s' % (len(line), line))
             count_str = self.zipseal_encoder.stdout.read(4)
             count = int(count_str, 16)

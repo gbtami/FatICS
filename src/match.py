@@ -114,7 +114,7 @@ class MatchStringParser(object):
         self.time = None
         self.inc = None
         self.rated = None
-        self.side = None # the side requested, if any
+        self.side = None  # the side requested, if any
         self.idn = None
         # seeks only
         self.manual = None

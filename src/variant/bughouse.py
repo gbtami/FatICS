@@ -382,10 +382,10 @@ class Position(object):
         self.holding = {}
         self.bug_link = None
         for pc in 'PNBRQpnbrq':
-            self.holding[pc] = 0 # works with Python 2.6
+            self.holding[pc] = 0  # works with Python 2.6
         self.history = PositionHistory()
         self.set_pos(fen)
-        self.is_draw_nomaterial = False # never happens in bughouse
+        self.is_draw_nomaterial = False  # never happens in bughouse
         self.white_has_mating_material = True
         self.black_has_mating_material = True
         self.check_material()
@@ -478,7 +478,7 @@ class Position(object):
                 self.castle_flags = to_castle_flags(w_oo, w_ooo,
                     b_oo, b_ooo)
             self.hash ^= zobrist.castle_hash(self.castle_flags)
-            self.fifty_count = 0 # ignored in bughouse
+            self.fifty_count = 0  # ignored in bughouse
             self.ply = 2 * (int(full_moves, 10) - 1) + int(not self.wtm)
             self.start_ply = self.ply
 
