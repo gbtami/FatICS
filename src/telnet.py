@@ -81,10 +81,10 @@ class TelnetTransport(protocol.Protocol):
             self.protocolArgs = a
             self.protocolKwArgs = kw
 
-    def _write(self, bytes):
+    def _write(self, bytes_):
         if self.encoder is not None:
-            bytes = self.encoder(bytes)
-        self.transport.write(bytes)
+            bytes_ = self.encoder(bytes_)
+        self.transport.write(bytes_)
 
     def do(self, option):
         if self.send_IAC:
@@ -217,8 +217,8 @@ class TelnetTransport(protocol.Protocol):
             finally:
                 del self.protocol
 
-    def applicationDataReceived(self, bytes):
-        self.protocol.dataReceived(bytes)
+    def applicationDataReceived(self, bytes_):
+        self.protocol.dataReceived(bytes_)
 
     def _escape(self, data):
         if self.compatibility:

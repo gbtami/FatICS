@@ -227,7 +227,7 @@ class ExaminedGame(Game):
 
     @defer.inlineCallbacks
     def next_move(self, mv, conn):
-        self.moves = self.moves[0:self.variant.pos.ply]
+        self.moves = self.moves[0:self.variant.pos.ply - 1]
         self.moves.append(mv.to_san())
         #self.variant.pos.get_last_move().time = 0.0
         assert(self.variant.pos.get_last_move() == mv)

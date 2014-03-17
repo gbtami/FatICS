@@ -23,7 +23,7 @@ import time
 class TestExamine(Test):
     def test_examine_scratch(self):
         t = self.connect_as_guest('GuestPQLQ')
-        t.write('set style 12\n')
+        self.set_style_12(t)
 
         t.write('forward\n')
         self.expect('You are not examining a game', t)
@@ -78,6 +78,23 @@ class TestExamine(Test):
         t.write('forward\n')
         self.expect("You're at the end of the game.", t)
 
+        self.close(t)
+
+    def test_examine_scratch_variation(self):
+        t = self.connect_as_guest()
+        self.set_style_12(t)
+        t.write('e\n')
+        self.expect('scratch', t)
+        t.write('e4\n')
+        self.expect('moves: e4', t)
+        t.write('e5\n')
+        self.expect('moves: e5', t)
+        t.write('back 999\n')
+        self.expect('backs up 999 moves', t)
+        t.write('e4\n')
+        self.expect('moves: e4', t)
+        t.write('forward\n')
+        self.expect('end of the game', t)
         self.close(t)
 
     @with_player('testplayer')
