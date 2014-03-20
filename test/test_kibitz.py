@@ -170,6 +170,7 @@ class TestWhisper(Test):
         self.expect('now observing game 1', t3)
 
         t.write("whis This is a test whisper!\n")
+        self.expect('GuestABCD(U)(++++)[1] whispers: This is a test whisper!', t)
         self.expect('GuestABCD(U)(++++)[1] whispers: This is a test whisper!', t3)
         self.expect('(whispered to 1 player)', t)
         self.expect_not('whispers', t)
@@ -179,6 +180,7 @@ class TestWhisper(Test):
         t3.write('set kibitz 0\n')
         self.expect('You will not hear kibitzes', t3)
         t2.write("whisper Another test...\n")
+        self.expect('GuestEFGH(U)(++++)[1] whispers: Another test...', t2)
         self.expect('GuestEFGH(U)(++++)[1] whispers: Another test...', t3)
         self.expect('(whispered to 1 player)', t2)
         t3.write('set kibitz 1\n')
@@ -214,6 +216,7 @@ class TestWhisper(Test):
         self.expect('now observing game 1', t3)
 
         t.write("#This is a test whisper!\n")
+        self.expect('admin(*)(----)[1] whispers: This is a test whisper!', t)
         self.expect('admin(*)(----)[1] whispers: This is a test whisper!', t3)
         self.expect('(whispered to 1 player)', t)
 
@@ -251,12 +254,14 @@ class TestWhisper(Test):
         t3.write('asetrating testplayer lightning chess 999 350 .01 0 0 0\n')
         self.expect('Set lightning chess rating for testplayer.', t3)
         t2.write('whi .\n')
+        self.expect('whispers: .', t2)
         self.expect('(whispered to 0 players)', t2)
 
         t3.write('asetrating testplayer lightning chess 1001 350 .01 0 0 0\n')
         self.expect('Set lightning chess rating for testplayer.', t3)
         t2.write('whi .\n')
         self.expect('testplayer(1001)[1] whispers: .', t3)
+        self.expect('whispers: .', t2)
         self.expect('(whispered to 1 player)', t2)
         t3.write('set kiblevel 0\n')
 

@@ -61,6 +61,9 @@ class WhisperCommand(Command):
             plist |= g.bug_link.observers
         if g.gtype == EXAMINED:
             plist |= g.players
+        else:
+            # always show own whisper
+            plist.add(conn.user)
         for u in plist:
             if (u.vars_['kiblevel'] and int(rat) < u.vars_['kiblevel']
                     and not conn.user.is_admin()):
