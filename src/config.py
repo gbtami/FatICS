@@ -22,7 +22,7 @@ compatibility_port = 5000
 ssl_port = 5004
 websocket_port = 8080
 
-location = 'Fremont, Californa, USA'
+location = 'London, UK'
 
 db_host = "localhost"
 db_db = "chess"

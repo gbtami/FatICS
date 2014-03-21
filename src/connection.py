@@ -138,7 +138,7 @@ class Connection(basic.LineReceiver):
                     e.printTraceback()
                     self.d = None
                     self.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')
-                    self.write_nowrap('Error info: exception %s; line was "%s"\n' %
+                    self.write_nowrap('Error info: exception %s; line was "%r"\n' %
                         (e.getErrorMessage(), dline))
 
                     assert(False)
@@ -153,7 +153,7 @@ class Connection(basic.LineReceiver):
 
     def handleLine_quitting(self, line):
         # ignore
-        self.log('got line in quitting state: %s' % line)
+        pass
 
     @defer.inlineCallbacks
     def handleLine_login(self, line):
