@@ -74,7 +74,6 @@ class ExaminedGame(Game):
 
         self.gameinfo_str = '\n<g1> %d p=%d t=%s r=%d u=%d,%d it=%d,%d i=%d,%d pt=0 rt=%s,%s ts=%d,%d m=%d n=%d\n' % (self.number, self.private, self.speed_variant.legacy_str(), 0, user.is_guest, user.is_guest, 0, 0, 0, 0, 0, 0, user.has_timeseal(), user.has_timeseal(), 0, 0)
 
-
     @defer.inlineCallbacks
     def finish_init(self, user):
         if self.variant.name == 'chess960':

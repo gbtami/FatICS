@@ -265,6 +265,7 @@ class TestGameinfo(Test):
     def test_gameinfo_variant(self):
         t = self.connect_as_guest('GuestABCD')
         t2 = self.connect_as_guest('GuestEFGH')
+        self.set_style_12(t)
         t.write('iset gamei 1\n')
         self.expect('gameinfo set.', t)
         t.write("match guestefgh 20+5 u white zh\n")
@@ -272,6 +273,7 @@ class TestGameinfo(Test):
         t2.write('a\n')
 
         self.expect('<g1> 1 p=0 t=crazyhouse r=0 u=1,1 it=1200,5 i=1200,5 pt=0 rt=0,0 ts=0,0 m=2 n=0', t)
+        self.expect('<12> ', t)
 
         t.write('abort\n')
 
@@ -281,6 +283,7 @@ class TestGameinfo(Test):
     def test_gameinfo_examined(self):
         t = self.connect_as_guest()
         t2 = self.connect_as_guest()
+        self.set_style_12(t2)
         t2.write('iset gamei 1\n')
         self.expect('gameinfo set.', t2)
 
@@ -288,6 +291,7 @@ class TestGameinfo(Test):
         m = self.expect_re('Game (\d+)', t)
         t2.write('o %s\n' % m.group(1))
         self.expect('<g1> %s p=0 t=untimed r=0 u=1,1 it=0,0 i=0,0 pt=0 rt=0,0 ts=0,0 m=0 n=0' % m.group(1), t2)
+        self.expect('<12> ', t2)
 
         self.close(t)
         self.close(t2)

@@ -262,9 +262,9 @@ class Game(object):
         self.observers.add(u)
         u.write(_('You are now observing game %d.\n') % self.number)
         self.send_info_str(u)
-        self.send_board(u, isolated=True)
         if u.session.ivars['gameinfo']:
             u.write(self.gameinfo_str)
+        self.send_board(u, isolated=True)
 
     def send_info_str(self, u):
         u.write('Game %d: %s\n' % (self.number, self.info_str))
@@ -896,7 +896,6 @@ class PlayedGame(Game):
             elif self.variant.pos.is_draw_nomaterial:
                 yield self.result('Neither player has mating material',
                     '1/2-1/2')
-
 
     @defer.inlineCallbacks
     def result(self, msg, result_code):
