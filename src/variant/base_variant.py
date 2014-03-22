@@ -39,8 +39,8 @@ class BaseVariant(object):
             side = opp(side)
 
         s = []
-        s.append('\nGame %d: ' % self.game.number)
-        s.append(self.game.info_str + '\n')
+        s.append('\nGame %d (%s vs. %s)\n' % (self.game.number,
+            self.game.white_name, self.game.black_name))
 
         # unlike original FICS, we display user titles here; why not?
         #conn.write(_('Game %(num)d (%(wname)s vs. %(bname)s)\n\n') % {

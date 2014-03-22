@@ -141,8 +141,8 @@ class Connection(basic.LineReceiver):
                     self.write_nowrap('Error info: exception %s; line was "%r"\n' %
                         (e.getErrorMessage(), dline))
 
-                    assert(False)
                     self.loseConnection('error')
+                    raise e
                 self.d.addCallback(unpause)
                 if self.d:
                     self.d.addErrback(err)

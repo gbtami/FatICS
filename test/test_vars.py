@@ -278,6 +278,20 @@ class TestGameinfo(Test):
         self.close(t)
         self.close(t2)
 
+    def test_gameinfo_examined(self):
+        t = self.connect_as_guest()
+        t2 = self.connect_as_guest()
+        t2.write('iset gamei 1\n')
+        self.expect('gameinfo set.', t2)
+
+        t.write('e\n')
+        m = self.expect_re('Game (\d+)', t)
+        t2.write('o %s\n' % m.group(1))
+        self.expect('<g1> %s p=0 t=untimed r=0 u=1,1 it=0,0 i=0,0 pt=0 rt=0,0 ts=0,0 m=0 n=0' % m.group(1), t2)
+
+        self.close(t)
+        self.close(t2)
+
 # <d1> 314 5 e3 e2e3 100 59800 563
 class TestCompressMove(Test):
     def test_compressmove(self):

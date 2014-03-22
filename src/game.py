@@ -87,6 +87,7 @@ class Game(object):
         self.observers = set()
         self.pending_offers = []
         self.bug_link = None
+        self.private = False
 
         # (silently) remove each player's seeks
         for p in self.players:
@@ -262,6 +263,8 @@ class Game(object):
         u.write(_('You are now observing game %d.\n') % self.number)
         self.send_info_str(u)
         self.send_board(u, isolated=True)
+        if u.session.ivars['gameinfo']:
+            u.write(self.gameinfo_str)
 
     def send_info_str(self, u):
         u.write('Game %d: %s\n' % (self.number, self.info_str))
@@ -488,8 +491,6 @@ class PlayedGame(Game):
         self.clock_id = yield db.get_clock_id(self.clock_name)
         super(PlayedGame, self).__init__()
 
-        #self.flip = False
-        self.private = False
         self.rated_str = 'rated' if self.rated else 'unrated'
 
         # GuestBEZD (++++) admin (1000) unrated blitz 2 12
@@ -524,13 +525,9 @@ class PlayedGame(Game):
         # supposed to stand for "initial time", but compatibility
         # with FICS is more important than being logical.
         # TODO: add info about clock style, variant/speed to gameinfo string
-        if self.speed_variant.variant.name == 'chess':
-            vname = self.speed_variant.speed.name
-        else:
-            # XXX how do we convey the speed and variant, when the current
-            # format only gives one field?
-            vname = self.speed_variant.variant.name
-        self.gameinfo_str = '\n<g1> %d p=%d t=%s r=%d u=%d,%d it=%d,%d i=%d,%d pt=0 rt=%s,%s ts=%d,%d m=%d n=%d\n' % (self.number, self.private, vname, self.rated, self.white.is_guest, self.black.is_guest, self.initial_secs, self.inc, self.initial_secs, self.inc, self.white_rating.gameinfo_str(), self.black_rating.gameinfo_str(), self.white.has_timeseal(), self.black.has_timeseal(), 2 if self.minmovetime else 0, int(self.noescape))
+        # XXX how do we convey the speed and variant, when the current
+        # format only gives one field?
+        self.gameinfo_str = '\n<g1> %d p=%d t=%s r=%d u=%d,%d it=%d,%d i=%d,%d pt=0 rt=%s,%s ts=%d,%d m=%d n=%d\n' % (self.number, self.private, self.speed_variant.legacy_str(), self.rated, self.white.is_guest, self.black.is_guest, self.initial_secs, self.inc, self.initial_secs, self.inc, self.white_rating.gameinfo_str(), self.black_rating.gameinfo_str(), self.white.has_timeseal(), self.black.has_timeseal(), 2 if self.minmovetime else 0, int(self.noescape))
         if self.white.session.ivars['gameinfo']:
             self.white.write_nowrap(self.gameinfo_str)
         if self.black.session.ivars['gameinfo']:
@@ -900,12 +897,6 @@ class PlayedGame(Game):
                 yield self.result('Neither player has mating material',
                     '1/2-1/2')
 
-    def observe(self, u):
-        """ For some reason it seems that FICS only sends gameinfo strings
-        for played games, not examined games. """
-        super(PlayedGame, self).observe(u)
-        if u.session.ivars['gameinfo']:
-            u.write(self.gameinfo_str)
 
     @defer.inlineCallbacks
     def result(self, msg, result_code):

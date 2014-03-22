@@ -32,9 +32,10 @@ class TestStyle1(Test):
         t2.write('accept\n')
         self.expect('Creating: ', t)
         self.expect('Creating: ', t2)
+        self.expect('testplayer (----) admin (----) rated lightning crazyhouse 1 0', t)
 
         exp_text = '''
-Game 1: testplayer (----) admin (----) rated lightning crazyhouse 1 0
+Game 1 (testplayer vs. admin)
 
 Black holding: []
        ---------------------------------
@@ -59,8 +60,10 @@ White holding: []'''
         for line in exp_text.split('\n'):
             self.expect(line.replace('\n', '\r\n'), t)
 
+        self.expect('testplayer (----) admin (----) rated lightning crazyhouse 1 0', t2)
+
         exp_text = '''
-Game 1: testplayer (----) admin (----) rated lightning crazyhouse 1 0
+Game 1 (testplayer vs. admin)
 
 White holding: []
        ---------------------------------
@@ -88,7 +91,7 @@ Black holding: []'''
         t.write('e4\n')
 
         exp_text = '''
-Game 1: testplayer (----) admin (----) rated lightning crazyhouse 1 0
+Game 1 (testplayer vs. admin)
 
 Black holding: []
        ---------------------------------
@@ -114,7 +117,7 @@ White holding: []'''
             self.expect(line.replace('\n', '\r\n'), t)
 
         exp_text = '''
-Game 1: testplayer (----) admin (----) rated lightning crazyhouse 1 0
+Game 1 (testplayer vs. admin)
 
 White holding: []
        ---------------------------------
