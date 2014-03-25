@@ -574,7 +574,7 @@ class GatewayTest(Test):
         self.expect('127.0.0.1 added to the gateway list.', t)
 
         t2 = self.connect()
-        t2.write('%h192.168.0.1\n')
+        t2.write('%i192.168.0.1\n')
         t2.write('GuestLocal\n')
         self.expect('is not a registered name', t2)
         t2.write('\n')
@@ -589,7 +589,7 @@ class GatewayTest(Test):
         self.expect('127.0.0.1 removed from the gateway list.', t)
 
         t2 = self.connect()
-        t2.write('%h192.168.0.1\n')
+        t2.write('%i192.168.0.1\n')
         t2.write('GuestLocal\n')
         self.expect('is not a registered name', t2)
         t2.write('\n')

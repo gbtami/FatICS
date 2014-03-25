@@ -28,8 +28,7 @@ from timeseal import timeseal
 from twisted.internet import defer
 
 ivar_pat = re.compile(r'^%b([01]{32})')
-# TODO: change to however FICS does this
-host_pat = re.compile(r'^%h(\d+\.\d+\.\d+\.\d+)')
+host_pat = re.compile(r'^%i(\d+\.\d+\.\d+\.\d+)')
 # I'm not sure if any clients use it, but FICS quits on this command
 quit_pat = re.compile(r'^%q')
 
