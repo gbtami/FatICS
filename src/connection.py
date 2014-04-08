@@ -134,7 +134,7 @@ class Connection(basic.LineReceiver):
                     if e.check(defer.CancelledError):
                         e.trap(defer.CancelledError)
                         return None
-                    print('last line was: %s\n' % dline)
+                    print('last line was: %r\n' % dline)
                     e.printTraceback()
                     self.d = None
                     self.write('\nIt appears you have found a bug in FatICS. Please notify wmahan.\n')

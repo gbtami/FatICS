@@ -37,16 +37,29 @@ class Timeseal(object):
     _zipseal_pat = re.compile(r'''^([0-9a-f]+): (.*)\n$''')
     #zipseal_in = 0
     #zipseal_out = 0
+
     def __init__(self):
-        self.timeseal = subprocess.Popen(['timeseal/openseal_decoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        self.start_timeseal_decoder()
         self.zipseal_decoder = subprocess.Popen(['timeseal/zipseal_decoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         self.zipseal_encoder = subprocess.Popen(['timeseal/zipseal_encoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        self._last_line = None
+
+    def start_timeseal_decoder(self):
+        self.timeseal_decoder = subprocess.Popen(['timeseal/openseal_decoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 
     def decode_timeseal(self, line):
         # the decoder process will die if it gets a line that is too long
         assert(len(line) <= 1022)
-        self.timeseal.stdin.write(line + '\n')
-        dec = self.timeseal.stdout.readline()
+        try:
+            self.timeseal_decoder.stdin.write(line + '\n')
+        except IOError:
+            # restart the decoder process if it died
+            print("timeseal decoder died after line: %r" % self._last_line)
+            self.start_timeseal_decoder()
+            self.timeseal_decoder.stdin.write(line + '\n')
+        self._last_line = line
+
+        dec = self.timeseal_decoder.stdout.readline()
         m = self._timeseal_pat.match(dec)
         if not m:
             #print('timeseal failed to match: {{%r}}' % dec)
