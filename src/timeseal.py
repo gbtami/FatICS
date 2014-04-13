@@ -40,12 +40,16 @@ class Timeseal(object):
 
     def __init__(self):
         self.start_timeseal_decoder()
-        self.zipseal_decoder = subprocess.Popen(['timeseal/zipseal_decoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        self.start_zipseal_decoder()
         self.zipseal_encoder = subprocess.Popen(['timeseal/zipseal_encoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
-        self._last_line = None
+        self._last_timeseal_line = None
+        self._last_zipseal_line = None
 
     def start_timeseal_decoder(self):
         self.timeseal_decoder = subprocess.Popen(['timeseal/openseal_decoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+
+    def start_zipseal_decoder(self):
+        self.zipseal_decoder = subprocess.Popen(['timeseal/zipseal_decoder'], stdout=subprocess.PIPE, stdin=subprocess.PIPE)
 
     def decode_timeseal(self, line):
         # the decoder process will die if it gets a line that is too long
@@ -54,10 +58,11 @@ class Timeseal(object):
             self.timeseal_decoder.stdin.write(line + '\n')
         except IOError:
             # restart the decoder process if it died
-            print("timeseal decoder died after line: %r" % self._last_line)
+            print("timeseal decoder died after line: %r"
+                % self._last_timeseal_line)
             self.start_timeseal_decoder()
             self.timeseal_decoder.stdin.write(line + '\n')
-        self._last_line = line
+        self._last_timeseal_line = line
 
         dec = self.timeseal_decoder.stdout.readline()
         m = self._timeseal_pat.match(dec)
@@ -71,7 +76,14 @@ class Timeseal(object):
             line = line.encode('utf-8')
         # the decoder process will die if it gets a line that is too long
         assert(len(line) <= 1022)
-        self.zipseal_decoder.stdin.write(line + '\n')
+        try:
+            self.zipseal_decoder.stdin.write(line + '\n')
+        except IOError:
+            # restart the decoder process if it died
+            print("timeseal decoder died after line: %r"
+                % self._last_zipseal_line)
+            self.start_zipseal_decoder()
+            self.zipseal_decoder.stdin.write(line + '\n')
         dec = self.zipseal_decoder.stdout.readline()
         m = self._zipseal_pat.match(dec)
         if not m or int(m.group(1), 16) == 0:
